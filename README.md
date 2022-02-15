@@ -26,11 +26,16 @@
 
 ## About
 
-TODO...
+This is the first catalog of code smells specific for the [Elixir programming language][Elixir]. Originally created by Lucas Vegi and Marco Tulio Valente ([ASERG/DCC/UFMG][ASERG]), this catalog consists of 18 Elixir-specific smells.
+
+To better organize the kinds of impacts caused by these smells, we classify them into two different groups: __design-related smells__ <sup>[link](#design-related-smells)</sup> and __low-level concerns smells__ <sup>[link](#low-level-concerns-smells)</sup>.
+
+
+Please feel free to make pull requests and suggestions.
 
 ## Design-related smells
 
-TODO...
+Design-related smells are more complex, affect a coarse-grained code element, and are therefore harder to detect. Next, all 10 different smells classified as design-related are explained and exemplified:
 
 ### GenServer Envy
 
@@ -75,7 +80,7 @@ TODO...
 
 ## Low-level concerns smells
 
-TODO...
+Low-level concerns smells are more simple than design-related smells and affect a small part of the code. Next, all 8 different smells classified as low-level concerns are explained and exemplified:
 
 ### Working with invalid data
 
@@ -112,3 +117,5 @@ TODO...
 
 <!-- Links -->
 [Elixir Smells]: https://github.com/lucasvegi/Elixir-Code-Smells
+[Elixir]: http://elixir-lang.org
+[ASERG]: http://aserg.labsoft.dcc.ufmg.br/
