@@ -41,41 +41,61 @@ Design-related smells are more complex, affect a coarse-grained code element, an
 
 TODO...
 
+[▲ back to Index](#table-of-contents)
+
 ### Agent Obsession
 
 TODO...
+
+[▲ back to Index](#table-of-contents)
 
 ### Unsupervised process
 
 TODO...
 
+[▲ back to Index](#table-of-contents)
+
 ### Large messages between processes
 
 TODO...
+
+[▲ back to Index](#table-of-contents)
 
 ### Complex multi-clause function
 
 TODO...
 
+[▲ back to Index](#table-of-contents)
+
 ### Complex API error handling
 
 TODO...
+
+[▲ back to Index](#table-of-contents)
 
 ### Exceptions for control-flow
 
 TODO...
 
+[▲ back to Index](#table-of-contents)
+
 ### Untested polymorphic behavior
 
 TODO...
+
+[▲ back to Index](#table-of-contents)
 
 ### Code organization by process
 
 TODO...
 
+[▲ back to Index](#table-of-contents)
+
 ### Data manipulation by migration
 
 TODO...
+
+[▲ back to Index](#table-of-contents)
 
 
 ## Low-level concerns smells
@@ -86,33 +106,49 @@ Low-level concerns smells are more simple than design-related smells and affect 
 
 TODO...
 
+[▲ back to Index](#table-of-contents)
+
 ### Map/struct dynamic access
 
 TODO...
+
+[▲ back to Index](#table-of-contents)
 
 ### Unplanned value extraction
 
 TODO...
 
+[▲ back to Index](#table-of-contents)
+
 ### Modules with identical names
 
 TODO...
+
+[▲ back to Index](#table-of-contents)
 
 ### Unnecessary macro
 
 TODO...
 
+[▲ back to Index](#table-of-contents)
+
 ### App configuration for code libs
 
 TODO...
+
+[▲ back to Index](#table-of-contents)
 
 ### Compile-time app configuration
 
 TODO...
 
+[▲ back to Index](#table-of-contents)
+
 ### Dependency with "use" when an "import" is enough
 
 TODO...
+
+[▲ back to Index](#table-of-contents)
 
 
 <!-- Links -->
