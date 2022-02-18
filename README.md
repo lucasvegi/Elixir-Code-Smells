@@ -30,7 +30,6 @@ This is the first catalog of code smells specific for the [Elixir programming la
 
 To better organize the kinds of impacts caused by these smells, we classify them into two different groups: __design-related smells__ <sup>[link](#design-related-smells)</sup> and __low-level concerns smells__ <sup>[link](#low-level-concerns-smells)</sup>.
 
-
 Please feel free to make pull requests and suggestions.
 
 ## Design-related smells
@@ -63,7 +62,38 @@ TODO...
 
 ### Complex multi-clause function
 
-TODO...
+* __Problem:__ Using multi-clause functions in Elixir, to group functions of the same name, is not a code smell in itself. However, due to the great flexibility provided by this programming feature, some developers may abuse the number of guard clauses and pattern matchings in defining these grouped functions.
+
+* __Example:__ A recurrent example of abusive use of the multi-clause functions is when we’re trying to mix too much business logic into the function definitions. This makes it difficult to read and understand the logic involved in the functions, which may impair code maintainability. Some developers use documentation mechanisms such as @doc annotations to compensate for poor code readability, but unfortunately, with a multi-clause function, we can only use these annotations once per function name, particularly on the first or header function. As shown next, all other variations of the function need to be documented only with comments, a mechanism that cannot automate tests, leaving the code bug-proneness.
+
+  ```elixir
+  @doc """
+    Update sharp product with 0 or empty count
+    
+    ## Examples
+
+      iex> Namespace.Module.update(...)
+      {...expected result...}
+  """
+  def update(%Product{count: nil, material: material})
+    when name in ["metal", "glass"] do
+  # ...
+  end
+
+  # update blunt product
+  def update(%Product{count: count, material: material})
+    when count > 0 and material in ["metal", "glass"] do
+  # ...
+  end
+
+  # update animal...
+  def update(%Animal{count: 1, skin: skin})
+    when skin in ["fur", "hairy"] do
+  # ...
+  end
+  ```
+
+  Source: [link][MultiClauseExample]
 
 [▲ back to Index](#table-of-contents)
 
@@ -96,7 +126,6 @@ TODO...
 TODO...
 
 [▲ back to Index](#table-of-contents)
-
 
 ## Low-level concerns smells
 
@@ -150,8 +179,8 @@ TODO...
 
 [▲ back to Index](#table-of-contents)
 
-
 <!-- Links -->
 [Elixir Smells]: https://github.com/lucasvegi/Elixir-Code-Smells
 [Elixir]: http://elixir-lang.org
 [ASERG]: http://aserg.labsoft.dcc.ufmg.br/
+[MultiClauseExample]: https://syamilmj.com/2021-09-01-elixir-multi-clause-anti-pattern/
