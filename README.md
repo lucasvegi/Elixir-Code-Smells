@@ -70,7 +70,7 @@ ___
 
 * __Problem:__ Using multi-clause functions in Elixir, to group functions of the same name, is not a code smell in itself. However, due to the great flexibility provided by this programming feature, some developers may abuse the number of guard clauses and pattern matchings in defining these grouped functions.
 
-* __Example:__ A recurrent example of abusive use of the multi-clause functions is when we’re trying to mix too much business logic into the function definitions. This makes it difficult to read and understand the logic involved in the functions, which may impair code maintainability. Some developers use documentation mechanisms such as <code>@doc</code> annotations to compensate for poor code readability, but unfortunately, with a multi-clause function, we can only use these annotations once per function name, particularly on the first or header function. As shown next, all other variations of the function need to be documented only with comments, a mechanism that cannot automate tests, leaving the code bug-proneness.
+* __Example:__ A recurrent example of abusive use of the multi-clause functions is when we’re trying to mix too much business logic into the function definitions. This makes it difficult to read and understand the logic involved in the functions, which may impair code maintainability. Some developers use documentation mechanisms such as ``@doc`` annotations to compensate for poor code readability, but unfortunately, with a multi-clause function, we can only use these annotations once per function name, particularly on the first or header function. As shown next, all other variations of the function need to be documented only with comments, a mechanism that cannot automate tests, leaving the code bug-proneness.
 
   ```elixir
   @doc """
@@ -110,7 +110,7 @@ ___
 
 * __Problem:__ When a function alone assumes the responsibility of handling multiple possibilities of different errors returned by the same API endpoint, this function can become confusing.
 
-* __Example:__ An example of this code smell is when a function uses the <code>case</code> control-flow structure to handle these multiple variations of response types from an endpoint. This practice can make it long and low readable, as shown next.
+* __Example:__ An example of this code smell is when a function uses the ``case`` control-flow structure to handle these multiple variations of response types from an endpoint. This practice can make it long and low readable, as shown next.
 
   ```elixir
   def get_customer(customer_id) do
@@ -122,7 +122,7 @@ ___
   end
   ```
 
-* __Refactoring:__ As shown below, in this situation, instead of using the <code>case</code> control-flow structure, it is better to delegate the response variations handling to a specific function (multi-clause), using pattern matching for each API response variation.
+* __Refactoring:__ As shown below, in this situation, instead of using the ``case`` control-flow structure, it is better to delegate the response variations handling to a specific function (multi-clause), using pattern matching for each API response variation.
 
   ```elixir
   def get_customer(customer_id) when is_integer(customer_id) do
@@ -162,7 +162,7 @@ ___
 
 * __Problem:__ This code smell refers to functions that take protocol-dependent parameters and are therefore polymorphic. A polymorphic function itself does not represent a code smell, but some developers implement these more generic functions without accompanying guard clauses to verify that the types of parameters received implemented the required protocols.
 
-* __Example:__ An example of this code smell is when a function uses internally the function <code>to_string()</code> to convert data received by parameter. The function <code>to_string()</code> uses the protocol <code>String.Chars</code> for conversions. Many Elixir's data types like <code>BitString</code>, <code>Integer</code>, <code>Float</code>, and <code>URI</code> implement this protocol. However, as shown below, other Elixir's data types such as <code>Map</code> do not implement this protocol, thus making the behavior of the <code>dasherize/1</code> function unpredictable.
+* __Example:__ An example of this code smell is when a function uses internally the function ``to_string()`` to convert data received by parameter. The function ``to_string()`` uses the protocol ``String.Chars`` for conversions. Many Elixir's data types like ``BitString``, ``Integer``, ``Float``, and ``URI`` implement this protocol. However, as shown below, other Elixir's data types such as ``Map`` do not implement this protocol, thus making the behavior of the ``dasherize/1`` function unpredictable.
 
   ```elixir
   defmodule CodeSmells do
@@ -188,7 +188,7 @@ ___
   for %{first_name: "lucas", last_name: "vegi"} of type Map
   ```
 
-* __Refactoring:__ There are two main ways to improve the internal quality of code affected by this smell. 1) Write test cases (via <code>@doc</code>) that validate the function for data types that implement the desired protocol; and 2) Implement the function as multi-clause, directing its behavior through guard clauses, as shown below.
+* __Refactoring:__ There are two main ways to improve the internal quality of code affected by this smell. 1) Write test cases (via ``@doc``) that validate the function for data types that implement the desired protocol; and 2) Implement the function as multi-clause, directing its behavior through guard clauses, as shown below.
 
   ```elixir
   defmodule CodeSmells do
