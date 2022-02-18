@@ -79,7 +79,7 @@ ___
     ## Examples
 
       iex> Namespace.Module.update(...)
-      {...expected result...}
+      expected result...   
   """
   def update(%Product{count: nil, material: material})
     when name in ["metal", "glass"] do
@@ -158,38 +158,55 @@ ___
 
 ### Untested polymorphic behavior
 
+* __Category:__ Design-related smell.
+
 * __Problem:__ This code smell refers to functions that take protocol-dependent parameters and are therefore polymorphic. A polymorphic function itself does not represent a code smell, but some developers implement these more generic functions without accompanying guard clauses to verify that the types of parameters received implemented the required protocols.
 
-* __Example:__ An example of this code smell is when a function uses internally the function <code>to_string()</code> to convert data received by parameter. The function <code>to_string()</code> uses the Protocol <code>String.Chars</code> for conversions. Many Elixir's data types like <code>BitString</code>, <code>Integer</code>, <code>Float</code>, and <code>URI</code> implement this protocol. However, as shown below, other Elixir's data types such as <code>Map</code> do not implement this protocol, thus making the behavior of the <code>dasherize/1</code> function unpredictable.
+* __Example:__ An example of this code smell is when a function uses internally the function <code>to_string()</code> to convert data received by parameter. The function <code>to_string()</code> uses the protocol <code>String.Chars</code> for conversions. Many Elixir's data types like <code>BitString</code>, <code>Integer</code>, <code>Float</code>, and <code>URI</code> implement this protocol. However, as shown below, other Elixir's data types such as <code>Map</code> do not implement this protocol, thus making the behavior of the <code>dasherize/1</code> function unpredictable.
 
   ```elixir
-  defmodule Smell do
+  defmodule CodeSmells do
     def dasherize(data) do
       to_string(data)
       |> String.replace("_", "-")
     end
   end
 
-  ...Use Examples...
+  #...Use examples...
 
-  iex(1)> Smell.dasherize("Lucas_Vegi")
+  iex(1)> CodeSmells.dasherize("Lucas_Vegi")
   "Lucas-Vegi"
 
-  iex(2)> Smell.dasherize(10)
+  iex(2)> CodeSmells.dasherize(10)
   "10"
 
-  iex(3)> Smell.dasherize(URI.parse("http://www.code_smells.com"))
+  iex(3)> CodeSmells.dasherize(URI.parse("http://www.code_smells.com"))
   "http://www.code-smells.com"
 
-  iex(4)> Smell.dasherize(%{last_name: "vegi", first_name: "lucas"})
+  iex(4)> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
   ** (Protocol.UndefinedError) protocol String.Chars not implemented 
   for %{first_name: "lucas", last_name: "vegi"} of type Map
   ```
 
-* __Refactoring:__ There are two main ways to improve the internal quality of code affected by this smell. 1) Write test cases (via <code>@doc</code>) that validate the function for data types that implement the desired protocol; or 2) Implement the function as multi-clause, directing its behavior through guard clauses, as shown below.
+* __Refactoring:__ There are two main ways to improve the internal quality of code affected by this smell. 1) Write test cases (via <code>@doc</code>) that validate the function for data types that implement the desired protocol; and 2) Implement the function as multi-clause, directing its behavior through guard clauses, as shown below.
 
   ```elixir
-  defmodule Smell do
+  defmodule CodeSmells do
+    @doc """
+    Function that converts underscores to dashes.
+    Created to illustrate "Untested polymorphic behavior".
+
+    ## Examples
+
+        iex> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
+        "first-name, last-name"
+
+        iex> CodeSmells.dasherize("Lucas_Vegi")
+        "Lucas-Vegi"
+
+        iex> CodeSmells.dasherize(10)
+        "10"
+    """
     def dasherize(data) when is_map(data) do
       Map.keys(data)
       |> Enum.map(fn key -> "#{key}" end)
@@ -203,9 +220,9 @@ ___
     end
   end
 
-  ...Use Example...
+  #...Uses example...
 
-  iex(1)> Smell.dasherize(%{last_name: "vegi", first_name: "lucas"})
+  iex(1)> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
   "first-name, last-name"
   ```
 
