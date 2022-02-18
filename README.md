@@ -41,24 +41,28 @@ Design-related smells are more complex, affect a coarse-grained code element, an
 TODO...
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Agent Obsession
 
 TODO...
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Unsupervised process
 
 TODO...
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Large messages between processes
 
 TODO...
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Complex multi-clause function
 
@@ -77,49 +81,90 @@ TODO...
   """
   def update(%Product{count: nil, material: material})
     when name in ["metal", "glass"] do
-  # ...
+    # ...
   end
 
   # update blunt product
   def update(%Product{count: count, material: material})
     when count > 0 and material in ["metal", "glass"] do
-  # ...
+    # ...
   end
 
   # update animal...
   def update(%Animal{count: 1, skin: skin})
     when skin in ["fur", "hairy"] do
-  # ...
+    # ...
   end
   ```
 
   Source: [link][MultiClauseExample]
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Complex API error handling
 
-TODO...
+* __Problem:__ When a function alone assumes the responsibility of handling multiple possibilities of different errors returned by the same API endpoint, this function can become confusing.
+
+* __Example:__ An example of this code smell is when a function uses the <code>case</code> control-flow structure to handle these multiple variations of response types from an endpoint. This practice can make it long and low readable, as shown next.
+
+  ```elixir
+  def get_customer(customer_id) do
+    case get("/customers/#{customer_id}") do
+      {:ok, %Tesla.Env{status: 200, body: body}} -> {:ok, body}
+      {:ok, %Tesla.Env{body: body}} -> {:error, body}
+      {:error, _} = other -> other
+    end
+  end
+  ```
+
+* __Refactoring:__ As shown below, in this situation, instead of using the <code>case</code> control-flow structure, it is better to delegate the response variations handling to a specific function (multi-clause), using pattern matching for each API response variation.
+
+  ```elixir
+  def get_customer(customer_id) when is_integer(customer_id) do
+    "/customers/" <> customer_id
+    |> get()
+    |> handle_3rd_party_api_response()
+  end
+
+  defp handle_3rd_party_api_response({:ok, %Tesla.Env{status: 200, body: body}}) do 
+    {:ok, body}
+  end
+
+  defp handle_3rd_party_api_response({:ok, %Tesla.Env{body: body}}) do
+    {:error, body}
+  end
+
+  defp handle_3rd_party_api_response({:error, _} = other) do 
+    other
+  end
+  ```
+
+  Source: [link][ComplexErrorHandleExample]
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Exceptions for control-flow
 
 TODO...
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Untested polymorphic behavior
 
 TODO...
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Code organization by process
 
 TODO...
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Data manipulation by migration
 
@@ -136,42 +181,49 @@ Low-level concerns smells are more simple than design-related smells and affect 
 TODO...
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Map/struct dynamic access
 
 TODO...
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Unplanned value extraction
 
 TODO...
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Modules with identical names
 
 TODO...
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Unnecessary macro
 
 TODO...
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### App configuration for code libs
 
 TODO...
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Compile-time app configuration
 
 TODO...
 
 [▲ back to Index](#table-of-contents)
+___
 
 ### Dependency with "use" when an "import" is enough
 
@@ -184,3 +236,4 @@ TODO...
 [Elixir]: http://elixir-lang.org
 [ASERG]: http://aserg.labsoft.dcc.ufmg.br/
 [MultiClauseExample]: https://syamilmj.com/2021-09-01-elixir-multi-clause-anti-pattern/
+[ComplexErrorHandleExample]: https://elixirforum.com/t/what-are-sort-of-smells-do-you-tend-to-find-in-elixir-code/14971
