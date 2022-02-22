@@ -1,5 +1,8 @@
 # [Catalog of Elixir-specific code smells][Elixir Smells]
 
+[![GitHub last commit](https://img.shields.io/github/last-commit/lucasvegi/Elixir-Code-Smells)](https://github.com/lucasvegi/Elixir-Code-Smells/commits/main)
+[![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fgithub.com%2Flucasvegi%2FElixir-Code-Smells)](https://twitter.com/intent/tweet?text=Catalog%20of%20Elixir-specific%20code%20smells:&url=https%3A%2F%2Fgithub.com%2Flucasvegi%2FElixir-Code-Smells)
+
 ## Table of Contents
 
 * __[About](#about)__
@@ -151,7 +154,35 @@ ___
 
 ### Exceptions for control-flow
 
-TODO...
+* __Category:__ Design-related smell.
+
+* __Problem:__ This smell refers to codes that force developers to handle exceptions for control-flow. An exception handling itself does not represent a code smell, but when developers are deprived of the freedom to use other programming mechanisms to control-flow of your applications in the event of errors, this is considered a code smell.
+
+* __Example:__ An example of this code smell, as shown below, is when a library forces its clients to use ``try .. rescue`` statements to capture and evaluate errors, thus controlling the logical flow of their applications.
+
+  ```elixir
+  # Avoid using errors for control-flow.
+  try do
+    {:ok, value} = MyModule.janky_function()
+    "All good! #{value}."
+  rescue
+    e in RuntimeError ->
+      reason = e.message
+      "Uh oh! #{reason}."
+  end
+  ```
+
+* __Refactoring:__ A library author shall guarantee that clients are not required to use exceptions for control-flow in their applications. As shown below, this can be done by replacing exceptions with specific control-flow structures, such as the ``case`` statement along with pattern matchings. This refactoring gives clients more freedom to decide how to proceed in the event of errors, defining what is exceptional or not in different situations.
+
+  ```elixir
+  # Rather, use control-flow structures for control-flow.
+  case MyModule.janky_function() do
+    {:ok, value} -> "All good! #{value}."
+    {:error, reason} -> "Uh oh! #{reason}."
+  end
+  ```
+
+  These code examples are written by Tim Austin <sup>[neenjaw][neenjaw]</sup> and Angelika Tyborska <sup>[angelikatyborska][angelikatyborska]</sup>. Source: [link][ExceptionsForControlFlowExamples]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -312,3 +343,6 @@ TODO...
 [JoseValimExamples]: http://blog.plataformatec.com.br/2014/09/writing-assertive-code-with-elixir/
 [dimitarvp]: https://elixirforum.com/u/dimitarvp
 [MrDoops]: https://elixirforum.com/u/MrDoops
+[neenjaw]: https://exercism.org/profiles/neenjaw
+[angelikatyborska]: https://exercism.org/profiles/angelikatyborska
+[ExceptionsForControlFlowExamples]: https://exercism.org/tracks/elixir/concepts/try-rescue
