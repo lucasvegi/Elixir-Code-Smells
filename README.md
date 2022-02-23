@@ -224,19 +224,19 @@ ___
   ```elixir
   defmodule CodeSmells do
     @doc """
-    Function that converts underscores to dashes.
-    Created to illustrate "Untested polymorphic behavior".
+      Function that converts underscores to dashes.
+      Created to illustrate "Untested polymorphic behavior".
 
-    ## Examples
+      ## Examples
 
-        iex> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
-        "first-name, last-name"
+          iex> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
+          "first-name, last-name"
 
-        iex> CodeSmells.dasherize("Lucas_Vegi")
-        "Lucas-Vegi"
+          iex> CodeSmells.dasherize("Lucas_Vegi")
+          "Lucas-Vegi"
 
-        iex> CodeSmells.dasherize(10)
-        "10"
+          iex> CodeSmells.dasherize(10)
+          "10"
     """
     def dasherize(data) when is_map(data) do
       Map.keys(data)
@@ -271,7 +271,134 @@ ___
 
 ### Data manipulation by migration
 
-TODO...
+* __Category:__ Design-related smell.
+
+* __Problem:__ This code smell refers to modules that perform both data and structural changes in a database schema via ``Ecto.Migration``<sup>[link][Migration]</sup>. Migrations must be used exclusively to modify a database schema over time (e.g., including or excluding columns and tables). When this responsibility is mixed with the responsibility to manipulate data, the module becomes low cohesive, more difficult to test, and therefore more bug-proneness.
+
+* __Example:__ An example of this code smell is when an ``Ecto.Migration`` is used simultaneously to alter a table, adding a new column to it, and also to update all pre-existing data in that table, assigning a value to this new column. As shown below, in addition to adding the ``is_custom_shop`` column in the ``guitars`` table, this ``Ecto.Migration`` changes the value of this column for data of some specific guitar models.
+
+  ```elixir
+  defmodule GuitarStore.Repo.Migrations.AddIsCustomShopToGuitars do
+    use Ecto.Migration
+
+    import Ecto.Query
+    alias GuitarStore.Inventory.Guitar
+    alias GuitarStore.Repo
+
+    @doc """
+      A function that modifies the structure of table "guitars", 
+      adding column "is_custom_shop" to it. By default, all data 
+      pre-stored in this table will have the value false stored 
+      in this new column.
+
+      Also, this function updates the "is_custom_shop" column value 
+      of some guitar models to true.
+    """
+    def change do
+      alter table("guitars") do
+        add :is_custom_shop, :boolean, default: false
+      end
+      create index("guitars", ["is_custom_shop"])
+      
+      custom_shop_entries()
+      |> Enum.map(&update_guitars/1)
+    end
+
+    @doc """
+      A function that updates values of column "is_custom_shop" to true.
+    """
+    defp update_guitars({make, model, year}) do
+      from(g in Guitar,
+        where: g.make == ^make and g.model == ^model and g.year == ^year,
+        select: g
+      )
+      |> Repo.update_all(set: [is_custom_shop: true])
+    end
+
+    @doc """
+      Function that defines which guitar models that need to have the values 
+      of the "is_custom_shop" column updated to true.
+    """
+    defp custom_shop_entries() do
+      [
+        {"Gibson", "SG", 1999},
+        {"Fender", "Telecaster", 2020}
+      ]
+    end
+  end
+  ```
+
+  You can run this smelly migration above by going to the root of your project and typing the next command via console:
+  
+  ```elixir
+    mix ecto.migrate
+  ```
+  
+* __Refactoring:__ To remove this code smell is necessary to separate the data manipulation in a ``mix task`` <sup>[link][MixTask]</sup> different from the module that performs the structural changes of the database via ``Ecto.Migration``. This separation of responsibilities is a best practice for increasing code testability. As shown below, the module ``AddIsCustomShopToGuitars`` now use ``Ecto.Migration`` only to perfom structural changes in the database schema:
+
+  ```elixir
+  defmodule GuitarStore.Repo.Migrations.AddIsCustomShopToGuitars do
+    use Ecto.Migration
+
+    @doc """
+      A function that modifies the structure of table "guitars", 
+      adding column "is_custom_shop" to it. By default, all data 
+      pre-stored in this table will have the value false stored 
+      in this new column.
+    """
+    def change do
+      alter table("guitars") do
+        add :is_custom_shop, :boolean, default: false
+      end
+
+      create index("guitars", ["is_custom_shop"])
+    end
+  end
+  ```
+
+  The new mix task ``PopulateIsCustomShop``, shown next, has only the responsibility to perform data manipulation, thus improving the code testability:
+
+  ```elixir
+  defmodule Mix.Tasks.PopulateIsCustomShop do
+    @shortdoc "Populates is_custom_shop column"
+
+    use Mix.Task
+
+    import Ecto.Query
+    alias GuitarStore.Inventory.Guitar
+    alias GuitarStore.Repo
+
+    @requirements ["app.start"]
+
+    def run(_) do
+      custom_shop_entries()
+      |> Enum.map(&update_guitars/1)
+    end
+
+    defp update_guitars({make, model, year}) do
+      from(g in Guitar,
+        where: g.make == ^make and g.model == ^model and g.year == ^year,
+        select: g
+      )
+      |> Repo.update_all(set: [is_custom_shop: true])
+    end
+
+    defp custom_shop_entries() do
+      [
+        {"Gibson", "SG", 1999},
+        {"Fender", "Telecaster", 2020}
+      ]
+    end
+  end
+  ```  
+
+  You can run this ``mix task`` above typing the next command via console:
+  
+  ```elixir
+    mix populate_is_custom_shop
+  ```
+  
+  These examples are based on codes written by Carlos Souza. Source: [link][DataManipulationByMigrationExamples]
 
 [▲ back to Index](#table-of-contents)
 
@@ -346,3 +473,6 @@ TODO...
 [neenjaw]: https://exercism.org/profiles/neenjaw
 [angelikatyborska]: https://exercism.org/profiles/angelikatyborska
 [ExceptionsForControlFlowExamples]: https://exercism.org/tracks/elixir/concepts/try-rescue
+[DataManipulationByMigrationExamples]: https://www.idopterlabs.com.br/post/criando-uma-mix-task-em-elixir
+[Migration]: https://hexdocs.pm/ecto_sql/Ecto.Migration.html
+[MixTask]: https://hexdocs.pm/mix/Mix.html#module-mix-task
