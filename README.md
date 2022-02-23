@@ -264,7 +264,72 @@ ___
 
 ### Code organization by process
 
-TODO...
+* __Category:__ Design-related smell.
+
+* __Problem:__ This smell refers to codes unnecessarily organized by processes. A process itself does not represent a code smell, but it should only be used to model runtime properties (e.g., concurrency, access to shared resources, and event scheduling). When a process is used for code organization, it can create bottlenecks in the system.
+
+* __Example:__ An example of this code smell, as shown below, is a module or a library that implements calculator operations (e.g., add, and subtract) by means of a ``GenSever``<sup>[link][GenServer]</sup>. If the number of calls to this single process grows, this code organization can compromise the system performance, become a bottleneck.
+
+  ```elixir
+  defmodule Calculator do
+    use GenServer
+
+    def add(a, b, pid) do
+      GenServer.call(pid, {:add, a, b})
+    end
+
+    def subtract(a, b, pid) do
+      GenServer.call(pid, {:subtract, a, b})
+    end
+
+    def init(init_arg) do
+      {:ok, init_arg}
+    end
+
+    def handle_call({:add, a, b}, _from, state) do
+      {:reply, a + b, state}
+    end
+
+    def handle_call({:subtract, a, b}, _from, state) do
+      {:reply, a - b, state}
+    end
+  end
+
+  # Start the server
+  iex(1)> {:ok, pid} = GenServer.start_link(Calculator, :init) 
+  {:ok, #PID<0.132.0>}
+
+  #...Use examples...
+  iex(2)> Calculator.add(1, 5, pid)
+  6
+
+  iex(3)> Calculator.subtract(2, 3, pid)
+  -1
+  ```
+
+* __Refactoring:__ In Elixir, as shown next, code organization must be done only by modules and functions. Whenever possible, a library should not be organized imposing specific behavior such as parallelization to its clients. It is better to delegate this kind of code behavioral decision to the developers of clients, thus increasing the potential for code reuse of a library.
+
+  ```elixir
+  defmodule Calculator do
+    def add(a, b) do
+      a + b
+    end
+
+    def subtract(a, b) do
+      a - b
+    end
+  end
+
+  #...Use examples...
+
+  iex(1)> Calculator.add(1, 5)
+  6
+
+  iex(2)> Calculator.subtract(2, 3)
+  -1
+  ```
+  
+  These examples are based on codes written in Elixir's official documentation. Source: [link][CodeOrganizationByProcessExample]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -476,3 +541,5 @@ TODO...
 [DataManipulationByMigrationExamples]: https://www.idopterlabs.com.br/post/criando-uma-mix-task-em-elixir
 [Migration]: https://hexdocs.pm/ecto_sql/Ecto.Migration.html
 [MixTask]: https://hexdocs.pm/mix/Mix.html#module-mix-task
+[CodeOrganizationByProcessExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-using-processes-for-code-organization
+[GenServer]: https://hexdocs.pm/elixir/master/GenServer.html
