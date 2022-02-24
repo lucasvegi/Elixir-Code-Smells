@@ -268,16 +268,27 @@ ___
 
 * __Problem:__ This smell refers to codes unnecessarily organized by processes. A process itself does not represent a code smell, but it should only be used to model runtime properties (e.g., concurrency, access to shared resources, and event scheduling). When a process is used for code organization, it can create bottlenecks in the system.
 
-* __Example:__ An example of this code smell, as shown below, is a module or a library that implements calculator operations (e.g., add, and subtract) by means of a ``GenSever``<sup>[link][GenServer]</sup>. If the number of calls to this single process grows, this code organization can compromise the system performance, become a bottleneck.
+* __Example:__ An example of this code smell, as shown below, is a library that implements calculator operations (e.g., add, and subtract) by means of a ``GenSever`` process<sup>[link][GenServer]</sup>. If the number of calls to this single process grows, this code organization can compromise the system performance, become a bottleneck.
 
   ```elixir
   defmodule Calculator do
     use GenServer
 
+    @moduledoc """
+      Calculator that performs two basic arithmetic operations.
+      This code is unnecessarily organized by a GenServer process.
+    """
+
+    @doc """
+      Function to perform the sum of two values.
+    """
     def add(a, b, pid) do
       GenServer.call(pid, {:add, a, b})
     end
 
+    @doc """
+      Function to perform subtraction of two values.
+    """
     def subtract(a, b, pid) do
       GenServer.call(pid, {:subtract, a, b})
     end
@@ -295,7 +306,7 @@ ___
     end
   end
 
-  # Start the server
+  # Start a generic server process
   iex(1)> {:ok, pid} = GenServer.start_link(Calculator, :init) 
   {:ok, #PID<0.132.0>}
 
