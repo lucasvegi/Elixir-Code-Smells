@@ -57,9 +57,9 @@ ___
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ In Elixir, creating a process outside a supervision tree is not a code smell in itself. However, when a code creates a large number of long-running processes outside a supervision tree, this can make visibility and monitoring of these processes difficult, not allowing developers to fully control their applications.
+* __Problem:__ In Elixir, creating a process outside a supervision tree is not a code smell in itself. However, when a code creates a large number of long-running processes outside a supervision tree, this can turn visibility and monitoring of these processes difficult, therefore not allowing developers to fully control their applications.
 
-* __Example:__ The following code example, although simple, seeks to illustrate a library responsible for maintaining a numerical ``Counter`` through a ``GenServer`` process outside a supervision tree. Multiple different counters can be created simultaneously by a client (one process for each counter), making these unsupervised processes difficult to manage. This can cause problems with the initialization, restarts, and shutdown of a system.
+* __Example:__ The following code example seeks to illustrate a library responsible for maintaining a numerical ``Counter`` through a ``GenServer`` process outside a supervision tree. Multiple counters can be created simultaneously by a client (one process for each counter), making these unsupervised processes difficult to manage. This can cause problems with the initialization, restart, and shutdown of a system.
 
   ```elixir
   defmodule Counter do
@@ -140,7 +140,7 @@ ___
   7
   ```
 
-* __Refactoring:__ To ensure that clients of a library have full control over its systems, regardless of the number of processes used and the lifetime of each one, all processes must be started inside a supervision tree. As shown below, this code uses a ``Supervisor`` <sup>[link][Supervisor]</sup> as a supervision tree. When this Elixir application is started, two different counters (``Counter`` and ``C2``) are also started as child processes of the ``Supervisor`` named ``App.Supervisor``. Both of them are initialized with zero. By means of this supervision tree, is possible to manage the lifecycle of all child processes (e.g., stopping or restarting each one), improving the visibility of the entire app.
+* __Refactoring:__ To ensure that clients of a library have full control over their systems, regardless of the number of processes used and the lifetime of each one, all processes must be started inside a supervision tree. As shown below, this code uses a ``Supervisor`` <sup>[link][Supervisor]</sup> as a supervision tree. When this Elixir application is started, two different counters (``Counter`` and ``C2``) are also started as child processes of the ``Supervisor`` named ``App.Supervisor``. Both are initialized with zero. By means of this supervision tree, is possible to manage the lifecycle of all child processes (e.g., stopping or restarting each one), improving the visibility of the entire app.
 
   ```elixir
   defmodule SupervisedProcess.Application do
@@ -207,7 +207,7 @@ ___
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ Using multi-clause functions in Elixir, to group functions of the same name, is not a code smell in itself. However, due to the great flexibility provided by this programming feature, some developers may abuse the number of guard clauses and pattern matchings in defining these grouped functions.
+* __Problem:__ Using multi-clause functions in Elixir, to group functions of the same name, is not a code smell in itself. However, due to the great flexibility provided by this programming feature, some developers may abuse the number of guard clauses and pattern matchings when defining these grouped functions.
 
 * __Example:__ A recurrent example of abusive use of the multi-clause functions is when we’re trying to mix too much business logic into the function definitions. This makes it difficult to read and understand the logic involved in the functions, which may impair code maintainability. Some developers use documentation mechanisms such as ``@doc`` annotations to compensate for poor code readability, but unfortunately, with a multi-clause function, we can only use these annotations once per function name, particularly on the first or header function. As shown next, all other variations of the function need to be documented only with comments, a mechanism that cannot automate tests, leaving the code bug-proneness.
 
@@ -238,7 +238,7 @@ ___
   end
   ```
 
-  These examples are based on codes written by Syamil MJ. Source: [link][MultiClauseExample]
+  This examples is based on a original code by Syamil MJ. Source: [link][MultiClauseExample]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -247,9 +247,9 @@ ___
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ When a function alone assumes the responsibility of handling multiple possibilities of different errors returned by the same API endpoint, this function can become confusing.
+* __Problem:__ When a function assumes the responsibility of handling multiple errors returned by the same API endpoint, it can become confusing.
 
-* __Example:__ An example of this code smell is when a function uses the ``case`` control-flow structure to handle these multiple variations of response types from an endpoint. This practice can make it long and low readable, as shown next.
+* __Example:__ An example of this code smell is when a function uses the ``case`` control-flow structure to handle these multiple variations of response types from an endpoint. This practice can make the function more complex long and difficult to understand, as shown next.
 
   ```elixir
   def get_customer(customer_id) do
@@ -261,7 +261,7 @@ ___
   end
   ```
 
-* __Refactoring:__ As shown below, in this situation, instead of using the ``case`` control-flow structure, it is better to delegate the response variations handling to a specific function (multi-clause), using pattern matching for each API response variation.
+* __Refactoring:__ As shown below, in this situation, instead of using the ``case`` control-flow structure, it is better to delegate the responses handling to a specific function (multi-clause), using pattern matching for each API response variation.
 
   ```elixir
   def get_customer(customer_id) when is_integer(customer_id) do
@@ -283,7 +283,7 @@ ___
   end
   ```
 
-  These examples are based on codes written by Zack <sup>[MrDoops][MrDoops]</sup> and Dimitar Panayotov <sup>[dimitarvp][dimitarvp]</sup>. Source: [link][ComplexErrorHandleExample]
+  This example is based on code written by Zack <sup>[MrDoops][MrDoops]</sup> and Dimitar Panayotov <sup>[dimitarvp][dimitarvp]</sup>. Source: [link][ComplexErrorHandleExample]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -292,7 +292,7 @@ ___
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ This smell refers to codes that force developers to handle exceptions for control-flow. An exception handling itself does not represent a code smell, but when developers are deprived of the freedom to use other programming mechanisms to control-flow of your applications in the event of errors, this is considered a code smell.
+* __Problem:__ This smell refers to code that force developers to handle exceptions for control-flow. Exception handling itself does not represent a code smell, but when developers are deprived of the freedom to use other programming mechanisms to control-flow of your applications in the event of errors, this is considered a code smell.
 
 * __Example:__ An example of this code smell, as shown below, is when a library forces its clients to use ``try .. rescue`` statements to capture and evaluate errors, thus controlling the logical flow of their applications.
 
@@ -308,7 +308,7 @@ ___
   end
   ```
 
-* __Refactoring:__ A library author shall guarantee that clients are not required to use exceptions for control-flow in their applications. As shown below, this can be done by replacing exceptions with specific control-flow structures, such as the ``case`` statement along with pattern matchings. This refactoring gives clients more freedom to decide how to proceed in the event of errors, defining what is exceptional or not in different situations.
+* __Refactoring:__ A library author shall guarantee that clients are not required to use exceptions for control-flow in their applications. As shown below, this can be done by replacing exceptions with specific control-flow structures, such as the ``case`` statement along with pattern matching. This refactoring gives clients more freedom to decide how to proceed in the event of errors, defining what is exceptional or not in different situations.
 
   ```elixir
   # Rather, use control-flow structures for control-flow.
@@ -318,7 +318,7 @@ ___
   end
   ```
 
-  These code examples are written by Tim Austin <sup>[neenjaw][neenjaw]</sup> and Angelika Tyborska <sup>[angelikatyborska][angelikatyborska]</sup>. Source: [link][ExceptionsForControlFlowExamples]
+ This example was written by Tim Austin <sup>[neenjaw][neenjaw]</sup> and Angelika Tyborska <sup>[angelikatyborska][angelikatyborska]</sup>. Source: [link][ExceptionsForControlFlowExamples]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -327,9 +327,9 @@ ___
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ This code smell refers to functions that take protocol-dependent parameters and are therefore polymorphic. A polymorphic function itself does not represent a code smell, but some developers implement these more generic functions without accompanying guard clauses to verify that the types of parameters received implemented the required protocols.
+* __Problem:__ This code smell refers to functions that have protocol-dependent parameters and are therefore polymorphic. A polymorphic function itself does not represent a code smell, but some developers implement these generic functions without accompanying guard clauses (in this case, to verify whether the parameter types implement the required protocols).
 
-* __Example:__ An example of this code smell is when a function uses internally the function ``to_string()`` to convert data received by parameter. The function ``to_string()`` uses the protocol ``String.Chars`` for conversions. Many Elixir's data types like ``BitString``, ``Integer``, ``Float``, and ``URI`` implement this protocol. However, as shown below, other Elixir's data types such as ``Map`` do not implement this protocol, thus making the behavior of the ``dasherize/1`` function unpredictable.
+* __Example:__ An instance of this code smell happens when a function uses ``to_string()`` to convert data received by parameter. The function ``to_string()`` uses the protocol ``String.Chars`` for conversions. Many Elixir's data types like ``BitString``, ``Integer``, ``Float``, and ``URI`` implement this protocol. However, as shown below, other Elixir's data types such as ``Map`` do not implement it, thus making the behavior of the ``dasherize/1`` function unpredictable.
 
   ```elixir
   defmodule CodeSmells do
@@ -355,7 +355,7 @@ ___
   for %{first_name: "lucas", last_name: "vegi"} of type Map
   ```
 
-* __Refactoring:__ There are two main ways to improve the internal quality of code affected by this smell. 1) Write test cases (via ``@doc``) that validate the function for data types that implement the desired protocol; and 2) Implement the function as multi-clause, directing its behavior through guard clauses, as shown below.
+* __Refactoring:__ There are two main ways to improve code affected by this smell. 1) Write test cases (via ``@doc``) that validate the function for data types that implement the desired protocol; and 2) Implement the function as multi-clause, directing its behavior through guard clauses, as shown below.
 
   ```elixir
   defmodule CodeSmells do
@@ -393,7 +393,7 @@ ___
   "first-name, last-name"
   ```
 
-  These examples are based on codes written by José Valim. Source: [link][JoseValimExamples]
+  This example is based on code written by José Valim. Source: [link][JoseValimExamples]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -404,7 +404,7 @@ ___
 
 * __Problem:__ This smell refers to codes unnecessarily organized by processes. A process itself does not represent a code smell, but it should only be used to model runtime properties (e.g., concurrency, access to shared resources, and event scheduling). When a process is used for code organization, it can create bottlenecks in the system.
 
-* __Example:__ An example of this code smell, as shown below, is a library that implements calculator operations (e.g., add, and subtract) by means of a ``GenSever`` process<sup>[link][GenServer]</sup>. If the number of calls to this single process grows, this code organization can compromise the system performance, become a bottleneck.
+* __Example:__ An example of this code smell, as shown below, is a library that implements arithmetic operations (e.g., add, and subtract) by means of a ``GenSever`` process<sup>[link][GenServer]</sup>. If the number of calls to this single process grows, this code organization can compromise the system performance, therefore becoming a bottleneck.
 
   ```elixir
   defmodule Calculator do
@@ -454,7 +454,7 @@ ___
   -1
   ```
 
-* __Refactoring:__ In Elixir, as shown next, code organization must be done only by modules and functions. Whenever possible, a library should not be organized imposing specific behavior such as parallelization to its clients. It is better to delegate this kind of code behavioral decision to the developers of clients, thus increasing the potential for code reuse of a library.
+* __Refactoring:__ In Elixir, as shown next, code organization must be done only by modules and functions. Whenever possible, a library should not be organized imposing specific behavior such as parallelization to its clients. It is better to delegate this behavioral decision to the developers of clients, thus increasing the potential for code reuse of a library.
 
   ```elixir
   defmodule Calculator do
@@ -476,7 +476,7 @@ ___
   -1
   ```
   
-  These examples are based on codes written in Elixir's official documentation. Source: [link][CodeOrganizationByProcessExample]
+  This example is based on code provided in Elixir's official documentation. Source: [link][CodeOrganizationByProcessExample]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -485,9 +485,9 @@ ___
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ This code smell refers to modules that perform both data and structural changes in a database schema via ``Ecto.Migration``<sup>[link][Migration]</sup>. Migrations must be used exclusively to modify a database schema over time (e.g., including or excluding columns and tables). When this responsibility is mixed with the responsibility to manipulate data, the module becomes low cohesive, more difficult to test, and therefore more bug-proneness.
+* __Problem:__ This code smell refers to modules that perform both data and structural changes in a database schema via ``Ecto.Migration``<sup>[link][Migration]</sup>. Migrations must be used exclusively to modify a database schema over time (e.g., by including or excluding columns and tables). When this responsibility is mixed data manipulation code, the module becomes low cohesive, more difficult to test, and therefore more bug-proneness.
 
-* __Example:__ An example of this code smell is when an ``Ecto.Migration`` is used simultaneously to alter a table, adding a new column to it, and also to update all pre-existing data in that table, assigning a value to this new column. As shown below, in addition to adding the ``is_custom_shop`` column in the ``guitars`` table, this ``Ecto.Migration`` changes the value of this column for data of some specific guitar models.
+* __Example:__ An example of this code smell is when an ``Ecto.Migration`` is used simultaneously to alter a table, adding a new column to it, and also to update all pre-existing data in that table, assigning a value to this new column. As shown below, in addition to adding the ``is_custom_shop`` column in the ``guitars`` table, this ``Ecto.Migration`` changes the value of this column for some specific guitar models.
 
   ```elixir
   defmodule GuitarStore.Repo.Migrations.AddIsCustomShopToGuitars do
@@ -546,7 +546,7 @@ ___
     mix ecto.migrate
   ```
   
-* __Refactoring:__ To remove this code smell is necessary to separate the data manipulation in a ``mix task`` <sup>[link][MixTask]</sup> different from the module that performs the structural changes of the database via ``Ecto.Migration``. This separation of responsibilities is a best practice for increasing code testability. As shown below, the module ``AddIsCustomShopToGuitars`` now use ``Ecto.Migration`` only to perfom structural changes in the database schema:
+* __Refactoring:__ To remove this code smell, it is necessary to separate the data manipulation in a ``mix task`` <sup>[link][MixTask]</sup> different from the module that performs the structural changes in the database via ``Ecto.Migration``. This separation of responsibilities is a best practice for increasing code testability. As shown below, the module ``AddIsCustomShopToGuitars`` now use ``Ecto.Migration`` only to perfom structural changes in the database schema:
 
   ```elixir
   defmodule GuitarStore.Repo.Migrations.AddIsCustomShopToGuitars do
@@ -568,7 +568,7 @@ ___
   end
   ```
 
-  The new mix task ``PopulateIsCustomShop``, shown next, has only the responsibility to perform data manipulation, thus improving the code testability:
+  Furthermore, the new mix task ``PopulateIsCustomShop``, shown next, has only the responsibility to perform data manipulation, thus improving testability:
 
   ```elixir
   defmodule Mix.Tasks.PopulateIsCustomShop do
@@ -610,7 +610,7 @@ ___
     mix populate_is_custom_shop
   ```
   
-  These examples are based on codes written by Carlos Souza. Source: [link][DataManipulationByMigrationExamples]
+  This example is based on code originally written by Carlos Souza. Source: [link][DataManipulationByMigrationExamples]
 
 [▲ back to Index](#table-of-contents)
 
