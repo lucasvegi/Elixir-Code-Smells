@@ -195,7 +195,64 @@ ___
 
 ### Large messages between processes
 
-TODO...
+* __Category:__ Design-related smell.
+
+* __Problem:__ In Elixir, processes run isolatedly and concurrent to other ones. The communication between different processes is performed via message passing. The exchange of messages between processes is not a code smell in itself, however, when a huge structure is sent as a message from one process to another, the sender may become blocked. If these large messages exchanges occur frequently, the prolonged and frequent blocking of processes can cause a system to behave anomalously.
+
+* __Example:__ The following code is composed of two modules which will run in different processes each. As the names suggest, the ``Sender`` module has a function responsible for sending messages from one process to another (i.e., ``send_msg/3``). The ``Receiver`` module has a function to create a process to receive messages (i.e., ``create/0``) and another one to handle the received messages (i.e., ``run/0``). If a huge structure, such as a list with 1_000_000 different values, is sent frequently from ``Sender`` to ``Receiver``, the impacts of this smell could be felt.
+  
+  ```elixir
+  defmodule Receiver do
+    @doc """
+      Function for receiving messages from processes.
+    """
+    def run do
+      receive do
+        {:msg, msg_received} -> msg_received
+        {_, _} -> "won't match"
+      end
+    end
+
+    @doc """
+      Create a process to receive a message.
+      Messages are received in the run() function of Receiver.
+    """
+    def create do
+      spawn(Receiver, :run, [])
+    end
+  end
+  ```
+
+  ```elixir
+  defmodule Sender do
+    @doc """
+      Function for sending messages between processes.
+        pid_receiver: message recipient.
+        msg: messages of any type and size can be sent.
+        id_msg: used by receiver to decide what to do
+                when a message arrives.
+                Default is the atom :msg
+    """
+    def send_msg(pid_receiver, msg, id_msg \\ :msg) do
+      send(pid_receiver, {id_msg, msg})
+    end
+  end
+  ```
+  
+  Examples of large messages between processes:
+
+  ```elixir
+  iex(1)> pid = Receiver.create
+  #PID<0.144.0>
+
+  #Simulating a message with large content
+  iex(2)> msg = %{from: inspect(self()), to: inspect(pid), content: [1, 2, 3..1_000_000]}
+
+  iex(3)> Sender.send_msg(pid, msg)
+  {:msg, %{content: [1, 2, 3..1000000], from: "#PID<0.105.0>", to: "#PID<0.144.0>"}}
+  ```
+
+  This example is based on a original code by Samuel Mullen. Source: [link][LargeMessageExample]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -772,3 +829,4 @@ Please feel free to make pull requests and suggestions ([Discussions][Discussion
 [UnsupervisedProcessExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-spawning-unsupervised-processes
 [Supervisor]: https://hexdocs.pm/elixir/master/Supervisor.html
 [Discussions]: https://github.com/lucasvegi/Elixir-Code-Smells/discussions
+[LargeMessageExample]: https://samuelmullen.com/articles/elixir-processes-send-and-receive/
