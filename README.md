@@ -332,7 +332,7 @@ ___
   "Uh oh! invalid argument. Is not integer!."
   ```
 
-* __Refactoring:__ A library author shall guarantee that clients are not required to use exceptions for control-flow in their applications. As shown below, this can be done by refactoring the library ``MyModule``, providing two versions of the function that forces clients to use exceptions for control-flow (e.g., ``janky_function``). 1) a version with exceptions should have the same name as the smelly one, but with a trailing ! (i.e., ``janky_function!``); 2) Another version without exceptions should have a name identical to the original version (i.e., ``janky_function``), and should return the result wrapped in a tuple.
+* __Refactoring:__ A library author shall guarantee that clients are not required to use exceptions for control-flow in their applications. As shown below, this can be done by refactoring the library ``MyModule``, providing two versions of the function that forces clients to use exceptions for control-flow (e.g., ``janky_function``). 1) a version with the raised exceptions should have the same name as the smelly one, but with a trailing ! (i.e., ``janky_function!``); 2) Another version without raised exceptions should have a name identical to the original version (i.e., ``janky_function``), and should return the result wrapped in a tuple.
 
   ```elixir
   defmodule MyModule do
@@ -352,11 +352,11 @@ ___
       Alternative version without exceptions for control-flow.
     """
     def janky_function(value) do
-      if is_integer(value) do
-        #...
-        {:ok, "Result..."}
-      else
-        {:error, "invalid argument. Is not integer!"}
+      try do
+        {:ok, janky_function!(value)}
+      rescue
+        RuntimeError ->
+          {:error, "invalid argument. Is not integer!"}
       end
     end
   end
