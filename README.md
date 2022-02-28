@@ -5,7 +5,7 @@
 
 ## Table of Contents
 
-* __[About](#about)__
+* __[Introduction](#introduction)__
 * __[Design-related smells](#design-related-smells)__
   * [GenServer Envy](#genserver-envy)
   * [Agent Obsession](#agent-obsession)
@@ -26,14 +26,11 @@
   * [App configuration for code libs](#app-configuration-for-code-libs)
   * [Compile-time app configuration](#compile-time-app-configuration)
   * [Dependency with "use" when an "import" is enough](#dependency-with-use-when-an-import-is-enough)
+* __[About](#about)__
 
-## About
+## Introduction
 
-This is the first catalog of code smells specific for the [Elixir programming language][Elixir]. Originally created by Lucas Vegi and Marco Tulio Valente ([ASERG/DCC/UFMG][ASERG]), this catalog consists of 18 Elixir-specific smells.
-
-To better organize the kinds of impacts caused by these smells, we classify them into two different groups: __design-related smells__ <sup>[link](#design-related-smells)</sup> and __low-level concerns smells__ <sup>[link](#low-level-concerns-smells)</sup>.
-
-Please feel free to make pull requests and suggestions.
+TODO...
 
 ## Design-related smells
 
@@ -238,7 +235,7 @@ ___
   end
   ```
 
-  This examples is based on a original code by Syamil MJ. Source: [link][MultiClauseExample]
+  This example is based on a original code by Syamil MJ. Source: [link][MultiClauseExample]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -249,7 +246,7 @@ ___
 
 * __Problem:__ When a function assumes the responsibility of handling multiple errors returned by the same API endpoint, it can become confusing.
 
-* __Example:__ An example of this code smell is when a function uses the ``case`` control-flow structure to handle these multiple variations of response types from an endpoint. This practice can make the function more complex long and difficult to understand, as shown next.
+* __Example:__ An example of this code smell is when a function uses the ``case`` control-flow structure to handle these multiple variations of response types from an endpoint. This practice can make the function more complex, long, and difficult to understand, as shown next.
 
   ```elixir
   def get_customer(customer_id) do
@@ -292,33 +289,105 @@ ___
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ This smell refers to code that force developers to handle exceptions for control-flow. Exception handling itself does not represent a code smell, but when developers are deprived of the freedom to use other programming mechanisms to control-flow of your applications in the event of errors, this is considered a code smell.
+* __Problem:__ This smell refers to code that forces developers to handle exceptions for control-flow. Exception handling itself does not represent a code smell, but this should not be the only alternative available to developers to handle an error in client code. When developers have no freedom to decide if an error is exceptional or not, this is considered a code smell.
 
-* __Example:__ An example of this code smell, as shown below, is when a library forces its clients to use ``try .. rescue`` statements to capture and evaluate errors, thus controlling the logical flow of their applications.
+* __Example:__ An example of this code smell, as shown below, is when a library (e.g. ``MyModule``) forces its clients to use ``try .. rescue`` statements to capture and evaluate errors. This library does not allow developers to decide if an error is exceptional or not in their applications.
 
   ```elixir
-  # Avoid using errors for control-flow.
-  try do
-    {:ok, value} = MyModule.janky_function()
-    "All good! #{value}."
-  rescue
-    e in RuntimeError ->
-      reason = e.message
-      "Uh oh! #{reason}."
+  defmodule MyModule do
+    def janky_function(value) do
+      if is_integer(value) do
+        #...
+        "Result..."
+      else
+        raise RuntimeError, message: "invalid argument. Is not integer!"
+      end
+    end
   end
   ```
 
-* __Refactoring:__ A library author shall guarantee that clients are not required to use exceptions for control-flow in their applications. As shown below, this can be done by replacing exceptions with specific control-flow structures, such as the ``case`` statement along with pattern matching. This refactoring gives clients more freedom to decide how to proceed in the event of errors, defining what is exceptional or not in different situations.
+  ```elixir
+  defmodule Client do
+   
+    # Client forced to use exceptions for control-flow.
+    def foo(arg) do
+      try do
+        value = MyModule.janky_function(arg)
+        "All good! #{value}."
+      rescue
+        e in RuntimeError ->
+          reason = e.message
+          "Uh oh! #{reason}."
+      end
+    end
+
+  end
+
+  #...Use examples...
+
+  iex(1)> Client.foo(1)                   
+  "All good! Result...."
+
+  iex(2)> Client.foo("lucas")
+  "Uh oh! invalid argument. Is not integer!."
+  ```
+
+* __Refactoring:__ A library author shall guarantee that clients are not required to use exceptions for control-flow in their applications. As shown below, this can be done by refactoring the library ``MyModule``, providing two versions of the function that forces clients to use exceptions for control-flow (e.g., ``janky_function``). 1) a version with exceptions should have the same name as the smelly one, but with a trailing ! (i.e., ``janky_function!``); 2) Another version without exceptions should have a name identical to the original version (i.e., ``janky_function``), and should return the result wrapped in a tuple.
 
   ```elixir
-  # Rather, use control-flow structures for control-flow.
-  case MyModule.janky_function() do
-    {:ok, value} -> "All good! #{value}."
-    {:error, reason} -> "Uh oh! #{reason}."
+  defmodule MyModule do
+    @moduledoc """
+      Refactored library
+    """
+    def janky_function!(value) do
+      if is_integer(value) do
+        #...
+        "Result..."
+      else
+        raise RuntimeError, message: "invalid argument. Is not integer!"
+      end
+    end
+  
+    @doc """
+      Alternative version without exceptions for control-flow.
+    """
+    def janky_function(value) do
+      if is_integer(value) do
+        #...
+        {:ok, "Result..."}
+      else
+        {:error, "invalid argument. Is not integer!"}
+      end
+    end
   end
   ```
 
- This example was written by Tim Austin <sup>[neenjaw][neenjaw]</sup> and Angelika Tyborska <sup>[angelikatyborska][angelikatyborska]</sup>. Source: [link][ExceptionsForControlFlowExamples]
+  This refactoring gives clients more freedom to decide how to proceed in the event of errors, defining what is exceptional or not in different situations. As shown next, when an error is not exceptional, clients can use specific control-flow structures, such as the ``case`` statement along with pattern matching.
+
+  ```elixir
+  defmodule Client do
+   
+    #Clients now can also choose to use control-flow structures
+    #for control-flow when an error is not exceptional.
+    def foo(arg) do
+      case MyModule.janky_function(arg) do
+        {:ok, value} -> "All good! #{value}."
+        {:error, reason} -> "Uh oh! #{reason}."
+      end
+    end
+
+  end
+
+  #...Use examples...
+
+  iex(1)> Client.foo(1)                   
+  "All good! Result...."
+
+  iex(2)> Client.foo("lucas")
+  "Uh oh! invalid argument. Is not integer!."
+  ```
+
+  This example is based on code written by Tim Austin <sup>[neenjaw][neenjaw]</sup> and Angelika Tyborska <sup>[angelikatyborska][angelikatyborska]</sup>. Source: [link][ExceptionsForControlFlowExamples]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -673,6 +742,16 @@ TODO...
 
 [▲ back to Index](#table-of-contents)
 
+## About
+
+This catalog, composed of 18 code smells specific for the [Elixir programming language][Elixir], was originally proposed by Lucas Vegi and Marco Tulio Valente ([ASERG/DCC/UFMG][ASERG]).
+
+To better organize the impacts caused by these smells, we classify them into two different groups: __design-related smells__ <sup>[link](#design-related-smells)</sup> and __low-level concerns smells__ <sup>[link](#low-level-concerns-smells)</sup>.
+
+Please feel free to make pull requests and suggestions ([Discussions][Discussions] tab).
+
+[▲ back to Index](#table-of-contents)
+
 <!-- Links -->
 [Elixir Smells]: https://github.com/lucasvegi/Elixir-Code-Smells
 [Elixir]: http://elixir-lang.org
@@ -692,3 +771,4 @@ TODO...
 [GenServer]: https://hexdocs.pm/elixir/master/GenServer.html
 [UnsupervisedProcessExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-spawning-unsupervised-processes
 [Supervisor]: https://hexdocs.pm/elixir/master/Supervisor.html
+[Discussions]: https://github.com/lucasvegi/Elixir-Code-Smells/discussions
