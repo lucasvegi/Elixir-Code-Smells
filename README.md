@@ -65,6 +65,7 @@ ___
 
   ```elixir
   defmodule A do
+    #...
     def update(pid) do
       #...
       Agent.update(pid, fn _list -> 123 end)
@@ -75,6 +76,7 @@ ___
 
   ```elixir
   defmodule B do
+    #...
     def update(pid) do
       #...
       Agent.update(pid, fn content -> %{a: content} end)
@@ -85,6 +87,7 @@ ___
 
   ```elixir
   defmodule C do
+    #...
     def update(pid) do
       #...
       Agent.update(pid, fn content -> [:atom_value | [content]] end)
@@ -95,6 +98,7 @@ ___
 
   ```elixir
   defmodule D do
+    #...
     def get(pid) do
       #...
       Agent.get(pid, fn content -> content end)
