@@ -38,7 +38,19 @@ Design-related smells are more complex, affect a coarse-grained code element, an
 
 ### GenServer Envy
 
-TODO...
+* __Category:__ Design-related smell.
+
+* __Problem:__ In Elixir, processes can be primitively created by ``spawn/1`` and ``spawn_link/1`` functions. Although it is possible to create it this way, it is more common to use abstractions (e.g., [``Agent``][Agent], [``Task``][Task], and [``GenServer``][GenServer]) provided by Elixir to create processes. The use of each specific abstraction is not a code smell in itself, however, can be trouble when either a ``Task`` or ``Agent`` are used beyond its suggested purposes, being treated like ``GenServers``.
+
+* __Example:__ As shown next, ``Agent`` and ``Task`` are abstractions to create processes with specialized purposes. In contrast, ``GenServer`` is a more generic abstraction used to create processes for many different purposes:
+
+  * ``Agent``: As Elixir works on the principle of immutability, by default no value is shared between multiple places of code, abling read and write such as in a global variable. An ``Agent`` is a simple process abstraction focused on solving this limitation, abling processes to share states.
+  * ``Task``: This process abstraction is used when we only need to execute asynchronously some specific action, often in an isolated way, without communication with other processes.
+  * ``GenServer``: Is the most generic process abstraction. The main benefit of this abstraction is explicitly segregating the server and the client roles, thus providing a better API for the organization of processes communication. Besides that, ``GenServer`` can also encapsulate state (like an ``Agent``), provide sync and async calls (like a ``Task``), and more.
+  
+  Examples of this code smells is when ``Agents`` or ``Tasks`` are used for general purposes and not only to specialized ones such as its documentation suggests. To illustrate some smells occurrences, we will cite two specific situations. 1) When a ``Task`` is used not only to async execute an action, but also to frequently exchange messages with other processes; 2) When an ``Agent`` besides sharing some global value between processes, also frequently are used to execute isolated tasks that are not of interest to other processes.
+
+* __Refactoring:__ When an ``Agent`` or ``Task`` goes beyond its suggested use cases and becomes painful, is better to refactor it to a ``GenServer``.
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -830,3 +842,6 @@ Please feel free to make pull requests and suggestions ([Discussions][Discussion
 [Supervisor]: https://hexdocs.pm/elixir/master/Supervisor.html
 [Discussions]: https://github.com/lucasvegi/Elixir-Code-Smells/discussions
 [LargeMessageExample]: https://samuelmullen.com/articles/elixir-processes-send-and-receive/
+[Agent]: https://hexdocs.pm/elixir/1.13/Agent.html
+[Task]: https://hexdocs.pm/elixir/1.13/Task.html
+[GenServer]: https://hexdocs.pm/elixir/1.13/GenServer.html
