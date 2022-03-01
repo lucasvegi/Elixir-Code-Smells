@@ -57,7 +57,118 @@ ___
 
 ### Agent Obsession
 
-TODO...
+* __Category:__ Design-related smell.
+
+* __Problem:__ In Elixir, an ``Agent`` is a process abstraction focused on sharing information between processes by means of message passing. It is a simple wrapper around shared information, thus facilitating its read and update on any place of a code. The use of an ``Agent`` to share information is not a code smell in itself, however, when the responsibility for interacting directly with an ``Agent`` is spread across the entire system, this can be problematic. This bad practice can difficult the code maintenance and leave the code bug-proneness.
+
+* __Example:__ The following codes seek to illustrate this smell. The responsibility for interacting directly with the ``Agent`` is spread across four different modules (i.e, ``A``, ``B``, ``C``, and ``D``).
+
+  ```elixir
+  defmodule A do
+    def update(pid) do
+      #...
+      Agent.update(pid, fn _list -> 123 end)
+      #...
+    end
+  end
+  ```
+
+  ```elixir
+  defmodule B do
+    def update(pid) do
+      #...
+      Agent.update(pid, fn content -> %{a: content} end)
+      #...
+    end
+  end
+  ```
+
+  ```elixir
+  defmodule C do
+    def update(pid) do
+      #...
+      Agent.update(pid, fn content -> [:atom_value | [content]] end)
+      #...
+    end
+  end
+  ```
+
+  ```elixir
+  defmodule D do
+    def get(pid) do
+      #...
+      Agent.get(pid, fn content -> content end)
+      #...
+    end
+  end
+  ```
+  
+  This spreading of responsibility can generate duplicated code and difficult code maintenance. Besides that, as shown next, due to the lack of control over the format of the shared data, complex composed data can be shared. This freedom to use any format of data is dangerous and can induce developers to introduce bugs.
+
+  ```elixir
+  #start an agent with initial state of an empty list
+  iex(1)> {:ok, agent} = Agent.start_link fn -> [] end        
+  {:ok, #PID<0.135.0>}
+
+  #many data format (i.e., List, Map, Integer, Atom) are
+  #combined through direct access spread across the entire system
+  iex(2)> A.update(agent)
+  iex(3)> B.update(agent)
+  iex(4)> C.update(agent)
+    
+  #state of shared information
+  iex(5)> D.get(agent)
+  [:atom_value, %{a: 123}]
+  ```
+
+* __Refactoring:__ Instead of spreading direct access to an ``Agent`` over many places of the code, it is better to refactor this code by centralizing the responsibility for interacting with an ``Agent`` in a single module. This refactoring improves the maintainability by duplicated code removal and also allows you to limit the accepted format for shared data, reducing bug-proneness. As shown below, the module ``KV.Bucket`` is centralizing the responsibility for interacting with the ``Agent``. Any other place of the code that needs to access shared data must now delegate this action to ``KV.Bucket``. Also, ``KV.Bucket`` now only allows data to be shared in ``Map`` format.
+
+  ```elixir
+  defmodule KV.Bucket do
+    use Agent
+
+    @doc """
+    Starts a new bucket.
+    """
+    def start_link(_opts) do
+      Agent.start_link(fn -> %{} end)
+    end
+
+    @doc """
+    Gets a value from the `bucket` by `key`.
+    """
+    def get(bucket, key) do
+      Agent.get(bucket, &Map.get(&1, key))
+    end
+
+    @doc """
+    Puts the `value` for the given `key` in the `bucket`.
+    """
+    def put(bucket, key, value) do
+      Agent.update(bucket, &Map.put(&1, key, value))
+    end
+  end
+  ```
+
+  The following are examples of how to delegate to ``KV.Bucket`` access shared data provided by an ``Agent``.
+
+  ```elixir
+  #start an agent through a `KV.Bucket`
+  iex(1)> {:ok, bucket} = KV.Bucket.start_link(%{})
+  {:ok, #PID<0.114.0>}
+
+  #add shared values to the keys `milk` and `beer`
+  iex(2)> KV.Bucket.put(bucket, "milk", 3)
+  iex(3)> KV.Bucket.put(bucket, "beer", 7)
+
+  #accessing shared data of specific keys
+  iex(4)> KV.Bucket.get(bucket, "beer")   
+  7
+  iex(5)> KV.Bucket.get(bucket, "milk")
+  3
+  ```
+
+  These examples are based on codes written in Elixir's official documentation. Source: [link][AgentObsessionExample]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -845,3 +956,4 @@ Please feel free to make pull requests and suggestions ([Discussions][Discussion
 [Agent]: https://hexdocs.pm/elixir/1.13/Agent.html
 [Task]: https://hexdocs.pm/elixir/1.13/Task.html
 [GenServer]: https://hexdocs.pm/elixir/1.13/GenServer.html
+[AgentObsessionExample]: https://elixir-lang.org/getting-started/mix-otp/agent.html#agents
