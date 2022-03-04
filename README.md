@@ -906,7 +906,7 @@ Low-level concerns smells are more simple than design-related smells and affect 
     end
   end
 
-   #...Use examples...
+  #...Use examples...
 
   #with valid data is ok
   iex(1)> MyApp.foo(2)
@@ -932,7 +932,7 @@ Low-level concerns smells are more simple than design-related smells and affect 
     end
   end
 
-   #...Use examples...
+  #...Use examples...
 
   #with valid data is ok
   iex(1)> MyApp.foo(2)
@@ -947,7 +947,7 @@ Low-level concerns smells are more simple than design-related smells and affect 
         # 1
         "Lucas"
     
-    main_module.ex:10: MyApp.foo/1
+    my_app.ex:6: MyApp.foo/1
   ```
 
   This example is based on code provided in Elixir's official documentation. Source: [link][WorkingWithInvalidDataExample]
@@ -957,7 +957,92 @@ ___
 
 ### Map/struct dynamic access
 
-TODO...
+* __Category:__ Low-level concerns smells.
+
+* __Problem:__ In Elixir, it is possible to access values from ``Maps``, which are key-value data structures, either strictly or dynamically. When trying to dynamically access the value of a key from a ``Map``, if the informed key does not exist, a null value (``nil``) will be returned. This return can be confusing and does not allow developers to conclude whether the key is non-existent in the ``Map`` or just has no binded value. In this way, this code smell may omit bugs in the code.
+
+* __Example:__ The code shown below is an example of this smell. The function ``plot/1`` tries to draw a graphic to represent the position of a point in a cartesian plane. This function receives a parameter of ``Map`` type with the point attributes, which can be a point of a 2D or 3D cartesian coordinate system. To decide if a point is 2D or 3D, this function uses dynamic access to retrieve values of the ``Map`` keys:
+
+  ```elixir
+  defmodule Graphics do
+    def plot(point) do
+      #...some code...
+
+      # Dynamic access to use point values
+      {point[:x], point[:y], point[:z]}
+
+      #...some code...
+    end
+  end
+
+  #...Use examples...
+  iex(1)> point_2d = %{x: 2, y: 3}
+  %{x: 2, y: 3}
+
+  iex(2)> point_3d = %{x: 5, y: 6, z: nil} 
+  %{x: 5, y: 6, z: nil}
+
+  iex(3)> Graphics.plot(point_2d) 
+  {2, 3, nil}   # <= ambiguous return
+
+  iex(4)> Graphics.plot(point_3d)         
+  {5, 6, nil}
+  ```
+  
+  As can be seen in the example above, even when the key ``:z`` does not exist in the ``Map`` (``point_2d``), dynamic access returns the value ``nil``. This return can be dangerous because of its ambiguity. It is not possible to conclude from it whether the ``Map`` has the key ``:z`` or not. If the function relies on it to make decisions about how to plot a point, this can be problematic and even omit errors when testing the code.
+
+* __Refactoring:__ To remove this code smell, whenever a ``Map`` has keys of ``Atom`` type, replace the dynamic access to its values per strict access. When a non-existent key is strictly accessed, Elixir raises an error immediately, allowing developers to find bugs faster. The next code illustrates the refactoring of ``plot/1``, removing this smell:
+
+  ```elixir
+  defmodule Graphics do
+    def plot(point) do
+      #...some code...
+
+      # Strict access to use point values
+      {point.x, point.y, point.z}
+
+      #...some code...
+    end
+  end
+
+  #...Use examples...
+  iex(1)> point_2d = %{x: 2, y: 3}
+  %{x: 2, y: 3}
+
+  iex(2)> point_3d = %{x: 5, y: 6, z: nil} 
+  %{x: 5, y: 6, z: nil}
+
+  iex(3)> Graphics.plot(point_2d) 
+  ** (KeyError) key :z not found in: %{x: 2, y: 3} # <= explicitly warns that
+    graphic.ex:6: Graphics.plot/1                  # <= the z key does not exist!
+
+  iex(4)> Graphics.plot(point_3d)         
+  {5, 6, nil}
+  ```
+
+  As shown below, another alternative to refactor this smell is to replace ``Map`` per ``structs``, which are named maps. By default, structs only support strict access to values. In this way, its accesses always return clear and objective results:
+
+  ```elixir
+  defmodule Point do
+    @enforce_keys [:x, :y]
+    defstruct [x: nil, y: nil]
+  end
+
+  #...Use examples...
+  iex(1)> point = %Point{x: 2, y: 3}   
+  %Point{x: 2, y: 3}
+
+  iex(2)> point.x   # <= strict access to use point values
+  2
+
+  iex(3)> point.z   # <= trying to access a non-existent key
+  ** (KeyError) key :z not found in: %Point{x: 2, y: 3}
+
+  iex(4)> point[:x] # <= by default, struct does not support dynamic access 
+  ** (UndefinedFunctionError) ... (Point does not implement the Access behaviour)
+  ```
+
+  These examples are based on code written by José Valim. Source: [link][JoseValimExamples]
 
 [▲ back to Index](#table-of-contents)
 ___
