@@ -30,7 +30,21 @@
 
 ## Introduction
 
-TODO...
+Elixir is a new functional programming language whose popularity is rising in the industry <sup>[link][ElixirInProduction]</sup>. However, there are few works in the scientific literature focused on studying the internal quality of systems implemented in this language.
+
+In order to better understand what are the types of sub-optimal code structures that can harm the internal quality of Elixir systems, we scoured websites, blogs, forums, and videos (grey literature review), looking for specific code smells for Elixir that are discussed by its developers.
+
+As a result of this investigation, we proposed a catalog of 18 new smells specific to Elixir systems. These code smells have been categorized into two different groups, according to the type of impact and code extent they affect. This catalog of Elixir-specific code smells is presented below. Each code smell is documented using the following structure:
+
+* __Name:__ Unique identifier of the code smell. This name is important to facilitate communication between developers;
+* __Category:__ The portion of code affected by smell and its severity;
+* __Problem:__ How the code smell can harm code quality and what impacts this can have for developers;
+* __Example:__ Codes and textual descriptions to illustrate the occurrence of the code smell;
+* __Refactoring:__ Ways to change smelly codes in order to improve its qualities. Examples of refactored code are presented to illustrate these changes.
+
+The objective of this catalog of code smells is to instigate the improvement of the quality of code developed in Elixir. For this reason, we are interested in knowing Elixir's community opinion about these code smells: *Do you agree that these code smells can be harmful? Have you seen any of them in production code? Do you have any suggestions about some Elixir-specific code smell not cataloged by us?...*
+
+Please feel free to make pull requests and suggestions ([Discussions][Discussions] tab). We want to hear you!
 
 ## Design-related smells
 
@@ -961,3 +975,4 @@ Please feel free to make pull requests and suggestions ([Discussions][Discussion
 [Task]: https://hexdocs.pm/elixir/1.13/Task.html
 [GenServer]: https://hexdocs.pm/elixir/1.13/GenServer.html
 [AgentObsessionExample]: https://elixir-lang.org/getting-started/mix-otp/agent.html#agents
+[ElixirInProduction]: https://elixir-companies.com/
