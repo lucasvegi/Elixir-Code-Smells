@@ -30,7 +30,7 @@
 
 ## Introduction
 
-Elixir is a new functional programming language whose popularity is rising in the industry <sup>[link][ElixirInProduction]</sup>. However, there are few works in the scientific literature focused on studying the internal quality of systems implemented in this language.
+[Elixir][Elixir] is a new functional programming language whose popularity is rising in the industry <sup>[link][ElixirInProduction]</sup>. However, there are few works in the scientific literature focused on studying the internal quality of systems implemented in this language.
 
 In order to better understand what are the types of sub-optimal code structures that can harm the internal quality of Elixir systems, we scoured websites, blogs, forums, and videos (grey literature review), looking for specific code smells for Elixir that are discussed by its developers.
 
@@ -45,6 +45,8 @@ As a result of this investigation, we proposed a catalog of 18 new smells specif
 The objective of this catalog of code smells is to instigate the improvement of the quality of code developed in Elixir. For this reason, we are interested in knowing Elixir's community opinion about these code smells: *Do you agree that these code smells can be harmful? Have you seen any of them in production code? Do you have any suggestions about some Elixir-specific code smell not cataloged by us?...*
 
 Please feel free to make pull requests and suggestions ([Discussions][Discussions] tab). We want to hear you!
+
+[▲ back to Index](#table-of-contents)
 
 ## Design-related smells
 
@@ -887,7 +889,68 @@ Low-level concerns smells are more simple than design-related smells and affect 
 
 ### Working with invalid data
 
-TODO...
+* __Category:__ Low-level concerns smells.
+
+* __Problem:__ This code smell refers to a function that does not validate its parameters' types and therefore can produce internal non-predicted behavior. When an error is raised inside a function due to an invalid parameter value, this can confuse the developers and turns harder to locate and fix the error.
+
+* __Example:__ An example of this code smell is when a function receives an invalid parameter and internally repasses it to the calling of a function from a third-party library. This will cause an error raised deep inside the library function, which may be confusing for the developer who is working with invalid data. As shown next, the function ``foo/1`` is a client of a third-party library and doesn't validate its parameters at the boundary. In this way, is possible that invalid data is repassed from ``foo/1`` to the library, causing an error deep inside.
+
+  ```elixir
+  defmodule MyApp do
+    alias ThirdPartyLibrary, as: Library
+
+    def foo(invalid_data) do
+      #...some code...
+      Library.sum(1, invalid_data)
+      #...some code...
+    end
+  end
+
+   #...Use examples...
+
+  #with valid data is ok
+  iex(1)> MyApp.foo(2)
+  3
+
+  #with invalid data cause a confusing error deep inside
+  iex(2)> MyApp.foo("Lucas")
+  ** (ArithmeticError) bad argument in arithmetic expression: 1 + "Lucas"
+    :erlang.+(1, "Lucas")
+    library.ex:3: ThirdPartyLibrary.sum/2
+  ```
+
+* __Refactoring:__ To remove this code smell, client codes must validate their parameters right at the boundary with the user, via guard clauses or pattern matching. This will prevent errors from occurring deeply, making them easier to understand. This refactoring will also allow libraries to be implemented without worrying about creating internal protection mechanisms. The next code illustrates the refactoring of ``foo/1``, removing this smell:
+
+  ```elixir
+  defmodule MyApp do
+    alias ThirdPartyLibrary, as: Library
+
+    def foo(data) when is_integer(data) do
+      #...some code...
+      Library.sum(1, data)
+      #...some code...
+    end
+  end
+
+   #...Use examples...
+
+  #with valid data is ok
+  iex(1)> MyApp.foo(2)
+  3
+
+  #with invalid data errors are easy to locate and fix
+  iex(2)> MyApp.foo("Lucas")
+  ** (FunctionClauseError) no function clause matching in MyApp.foo/1    
+    
+    The following arguments were given to MyApp.foo/1:
+    
+        # 1
+        "Lucas"
+    
+    main_module.ex:10: MyApp.foo/1
+  ```
+
+  This example is based on code provided in Elixir's official documentation. Source: [link][WorkingWithInvalidDataExample]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -976,3 +1039,4 @@ Please feel free to make pull requests and suggestions ([Discussions][Discussion
 [GenServer]: https://hexdocs.pm/elixir/1.13/GenServer.html
 [AgentObsessionExample]: https://elixir-lang.org/getting-started/mix-otp/agent.html#agents
 [ElixirInProduction]: https://elixir-companies.com/
+[WorkingWithInvalidDataExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-working-with-invalid-data
