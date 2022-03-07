@@ -1056,7 +1056,7 @@ ___
 * __Example:__ The code shown below is an example of this smell. The function ``get_value/2`` tries to extract a value from a specific key of a URL query string. As it is not implemented using pattern matching, ``get_value/2`` always returns a value, regardless of the format of the URL query string passed as a parameter in the call. Sometimes the returns will be according to planning, however, if an URL query string with an unplanned format is informed in the call, ``get_value/2`` will extract incorrect values from it:
 
   ```elixir
-  defmodule Extraction do
+  defmodule Extract do
   
     @doc """
       Extract value from a key in a URL query string.
@@ -1074,21 +1074,21 @@ ___
   #...Use examples...
 
   #URL query string according to with the planned format - OK!
-  iex(1)> Extraction.get_value("name=Lucas&university=UFMG&lab=ASERG", "lab")  
+  iex(1)> Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "lab")  
   "ASERG"
 
-  iex(2)> Extraction.get_value("name=Lucas&university=UFMG&lab=ASERG", "university")
+  iex(2)> Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "university")
   "UFMG"
 
   #Unplanned URL query string format - Unplanned value extraction!
-  iex(3)> Extraction.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
+  iex(3)> Extract.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
   "institution"   # <= why not "institution=UFMG"? or only "UFMG"?
   ```
 
 * __Refactoring:__ To remove this code smell, ``get_value/2`` can be refactored through the use of pattern matching. Always which an unplanned URL query string format is used, the function will be crash instead return an unplanned value. This behavior, shown below, will allow clients to decide how to handle these errors and will not give a false impression that the code is working correctly when unplanned values are extracted:
 
   ```elixir
-  defmodule Extraction do
+  defmodule Extract do
 
     @doc """
       Extract value from a key in a URL query string.
@@ -1107,17 +1107,17 @@ ___
   #...Use examples...
 
   #URL query string according to with the planned format - OK!
-  iex(1)> Extraction.get_value("name=Lucas&university=UFMG&lab=ASERG", "name")      
+  iex(1)> Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "name")      
   "Lucas"
 
   #Unplanned URL query string format - Crash explaining the problem to the client!
-  iex(2)> Extraction.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
+  iex(2)> Extract.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
   ** (MatchError) no match of right hand side value: ["university", "institution", "UFMG"] 
-    extraction.ex:7: anonymous fn/2 in Extraction.get_value/2 # <= left hand: [key, value] pair
+    extract.ex:7: anonymous fn/2 in Extract.get_value/2 # <= left hand: [key, value] pair
   
-  iex(3)> Extraction.get_value("name=Lucas&university&lab=ASERG", "university")                  
+  iex(3)> Extract.get_value("name=Lucas&university&lab=ASERG", "university")                  
   ** (MatchError) no match of right hand side value: ["university"] 
-    extraction.ex:7: anonymous fn/2 in Extraction.get_value/2 # <= left hand: [key, value] pair
+    extract.ex:7: anonymous fn/2 in Extract.get_value/2 # <= left hand: [key, value] pair
   ```
   
   These examples are based on code written by José Valim. Source: [link][JoseValimExamples]
