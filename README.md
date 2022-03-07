@@ -1049,7 +1049,78 @@ ___
 
 ### Unplanned value extraction
 
-TODO...
+* __Category:__ Low-level concerns smells.
+
+* __Problem:__ In Elixir, there are many ways to extract key-related values from a URL query string. However, when pattern matching is not used for this purpose, depending on the format of the URL query string, the code may have undesired behavior, being able to extract unplanned values instead of forcing a crash. This unplanned value extraction can give a false impression that the code is working correctly, omitting bugs.
+
+* __Example:__ The code shown below is an example of this smell. The function ``get_value/2`` tries to extract a value from a specific key of a URL query string. As it is not implemented using pattern matching, ``get_value/2`` always returns a value, regardless of the format of the URL query string passed as a parameter in the call. Sometimes the returns will be according to planning, however, if an URL query string with an unplanned format is informed in the call, ``get_value/2`` will extract incorrect values from it:
+
+  ```elixir
+  defmodule Extraction do
+  
+    @doc """
+      Extract value from a key in a URL query string.
+    """
+    def get_value(string, desired_key) do
+      parts = String.split(string, "&")
+      Enum.find_value(parts, fn pair ->
+        key_value = String.split(pair, "=")
+        Enum.at(key_value, 0) == desired_key && Enum.at(key_value, 1)
+      end)
+    end
+    
+  end
+
+  #...Use examples...
+
+  #URL query string according to with the planned format - OK!
+  iex(1)> Extraction.get_value("name=Lucas&university=UFMG&lab=ASERG", "lab")  
+  "ASERG"
+
+  iex(2)> Extraction.get_value("name=Lucas&university=UFMG&lab=ASERG", "university")
+  "UFMG"
+
+  #Unplanned URL query string format - Unplanned value extraction!
+  iex(3)> Extraction.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
+  "institution"   # <= why not "institution=UFMG"? or only "UFMG"?
+  ```
+
+* __Refactoring:__ To remove this code smell, ``get_value/2`` can be refactored through the use of pattern matching. Always which an unplanned URL query string format is used, the function will be crash instead return an unplanned value. This behavior will allow clients to decide how to handle these errors and will not give a false impression that the code is working correctly when unplanned values are extracted:
+
+  ```elixir
+  defmodule Extraction do
+
+    @doc """
+      Extract value from a key in a URL query string.
+      Refactored by using pattern matching.
+    """
+    def get_value(string, desired_key) do
+      parts = String.split(string, "&")
+      Enum.find_value(parts, fn pair ->
+        [key, value] = String.split(pair, "=") # <= pattern matching
+        key == desired_key && value
+      end)
+    end
+
+  end
+
+  #...Use examples...
+
+  #URL query string according to with the planned format - OK!
+  iex(1)> Extraction.get_value("name=Lucas&university=UFMG&lab=ASERG", "name")      
+  "Lucas"
+
+  #Unplanned URL query string format - Crash explaining the problem to the client!
+  iex(2)> Extraction.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
+  ** (MatchError) no match of right hand side value: ["university", "institution", "UFMG"] 
+    extraction.ex:7: anonymous fn/2 in Extraction.get_value/2 # <= left hand: [key, value] pair
+  
+  iex(3)> Extraction.get_value("name=Lucas&university&lab=ASERG", "university")                  
+  ** (MatchError) no match of right hand side value: ["university"] 
+    extraction.ex:7: anonymous fn/2 in Extraction.get_value/2 # <= left hand: [key, value] pair
+  ```
+  
+  These examples are based on code written by José Valim. Source: [link][JoseValimExamples]
 
 [▲ back to Index](#table-of-contents)
 ___
