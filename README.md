@@ -1056,7 +1056,7 @@ ___
 * __Example:__ The code shown below is an example of this smell. The function ``get_value/2`` tries to extract a value from a specific key of a URL query string. As it is not implemented using pattern matching, ``get_value/2`` always returns a value, regardless of the format of the URL query string passed as a parameter in the call. Sometimes the returns will be according to planning, however, if an URL query string with an unplanned format is informed in the call, ``get_value/2`` will extract incorrect values from it:
 
   ```elixir
-  defmodule Extract do
+  defmodule Extraction do
   
     @doc """
       Extract value from a key in a URL query string.
@@ -1074,21 +1074,21 @@ ___
   #...Use examples...
 
   #URL query string according to with the planned format - OK!
-  iex(1)> Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "lab")  
+  iex(1)> Extraction.get_value("name=Lucas&university=UFMG&lab=ASERG", "lab")  
   "ASERG"
 
-  iex(2)> Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "university")
+  iex(2)> Extraction.get_value("name=Lucas&university=UFMG&lab=ASERG", "university")
   "UFMG"
 
   #Unplanned URL query string format - Unplanned value extraction!
-  iex(3)> Extract.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
+  iex(3)> Extraction.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
   "institution"   # <= why not "institution=UFMG"? or only "UFMG"?
   ```
 
-* __Refactoring:__ To remove this code smell, ``get_value/2`` can be refactored through the use of pattern matching. Always which an unplanned URL query string format is used, the function will be crash instead return an unplanned value. This behavior will allow clients to decide how to handle these errors and will not give a false impression that the code is working correctly when unplanned values are extracted:
+* __Refactoring:__ To remove this code smell, ``get_value/2`` can be refactored through the use of pattern matching. Always which an unplanned URL query string format is used, the function will be crash instead return an unplanned value. This behavior, shown below, will allow clients to decide how to handle these errors and will not give a false impression that the code is working correctly when unplanned values are extracted:
 
   ```elixir
-  defmodule Extract do
+  defmodule Extraction do
 
     @doc """
       Extract value from a key in a URL query string.
@@ -1107,17 +1107,17 @@ ___
   #...Use examples...
 
   #URL query string according to with the planned format - OK!
-  iex(1)> Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "name")      
+  iex(1)> Extraction.get_value("name=Lucas&university=UFMG&lab=ASERG", "name")      
   "Lucas"
 
   #Unplanned URL query string format - Crash explaining the problem to the client!
-  iex(2)> Extract.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
+  iex(2)> Extraction.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
   ** (MatchError) no match of right hand side value: ["university", "institution", "UFMG"] 
-    extract.ex:7: anonymous fn/2 in Extract.get_value/2 # <= left hand: [key, value] pair
+    extraction.ex:7: anonymous fn/2 in Extraction.get_value/2 # <= left hand: [key, value] pair
   
-  iex(3)> Extract.get_value("name=Lucas&university&lab=ASERG", "university")                  
+  iex(3)> Extraction.get_value("name=Lucas&university&lab=ASERG", "university")                  
   ** (MatchError) no match of right hand side value: ["university"] 
-    extract.ex:7: anonymous fn/2 in Extract.get_value/2 # <= left hand: [key, value] pair
+    extraction.ex:7: anonymous fn/2 in Extraction.get_value/2 # <= left hand: [key, value] pair
   ```
   
   These examples are based on code written by José Valim. Source: [link][JoseValimExamples]
@@ -1127,7 +1127,96 @@ ___
 
 ### Modules with identical names
 
-TODO...
+* __Category:__ Low-level concerns smells.
+
+* __Problem:__ This code smell is related to possible module name conflicts that can occur when a library is implemented. Due to a limitation of the Erlang VM (BEAM), also used by Elixir, only one instance of a module can be loaded at a time. If there are name conflicts between more than one module, they will be considered the same by BEAM and only one of them will be loaded. This can cause unwanted code behavior.
+
+* __Example:__ The code shown below is an example of this smell. Two different modules were defined with identical names (``Foo``). When BEAM tries to load both simultaneously, only the module defined in the file (``module_two.ex``) stay loaded, redefining the current version of ``Foo`` (``module_one.ex``) in memory. That turns impossible to call ``from_module_one/0``, for example:
+
+  ```elixir
+  defmodule Foo do
+    @moduledoc """
+      Defined in `module_one.ex` file.
+    """
+    def from_module_one do
+      "Function from module one!"
+    end
+  end
+  ```
+
+  ```elixir
+  defmodule Foo do
+    @moduledoc """
+      Defined in `module_two.ex` file.
+    """
+    def from_module_two do
+      "Function from module two!"
+    end
+  end
+  ```
+
+  When BEAM tries to load both simultaneously, only one will stay loaded due to name conflict:
+
+  ```elixir
+  iex(1)> c("module_one.ex")
+  [Foo]
+
+  iex(2)> c("module_two.ex")
+  warning: redefining module Foo (current version defined in memory)
+  module_two.ex:1
+  [Foo]
+
+  iex(3)> Foo.from_module_two()
+  "Function from module two!"
+
+  iex(4)> Foo.from_module_one() 
+  ** (UndefinedFunctionError) function Foo.from_module_one/0 is undefined...
+  ```
+
+* __Refactoring:__ To remove this code smell, a library must standardize the naming of its modules, always using its own name as a prefix (namespace) for all its module's names (e.g., ``LibraryName.ModuleName``). When a module file is within subdirectories of a library, the names of the subdirectories must also be used in the module naming (e.g., ``LibraryName.SubdirectoryName.ModuleName``). In the refactored code shown below, this module naming pattern was used. For this, the ``Foo`` module, defined in the file ``module_two.ex``, was also moved to the ``utils`` subdirectory. This refactoring, in addition to eliminating the internal conflict of names within the library, will prevent the occurrence of name conflicts with client codes:
+
+  ```elixir
+  defmodule MyLibrary.Foo do
+    @moduledoc """
+      Defined in `module_one.ex` file.
+      Name refactored!
+    """
+    def from_module_one do
+      "Function from module one!"
+    end
+  end
+  ```
+
+  ```elixir
+  defmodule MyLibrary.Utils.Foo do
+    @moduledoc """
+      Defined in `module_two.ex` file.
+      Name refactored!
+    """
+    def from_module_two do
+      "Function from module two!"
+    end
+  end
+  ```
+
+  When BEAM tries to load them simultaneously, both will stay loaded successfully:
+
+  ```elixir
+  iex(1)> c("module_one.ex")   
+  [MyLibrary.Foo]
+
+  iex(2)> c("module_two.ex")   
+  [MyLibrary.Utils.Foo]
+
+  iex(3)> MyLibrary.Foo.from_module_one()
+  "Function from module one!"
+
+  iex(4)> MyLibrary.Utils.Foo.from_module_two()
+  "Function from module two!"
+  ```
+
+  This example is based on the description provided in Elixir's official documentation. Source: [link][ModulesWithIdenticalNamesExample]
+
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -1196,3 +1285,4 @@ Please feel free to make pull requests and suggestions ([Discussions][Discussion
 [AgentObsessionExample]: https://elixir-lang.org/getting-started/mix-otp/agent.html#agents
 [ElixirInProduction]: https://elixir-companies.com/
 [WorkingWithInvalidDataExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-working-with-invalid-data
+[ModulesWithIdenticalNamesExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-defining-modules-that-are-not-in-your-namespace
