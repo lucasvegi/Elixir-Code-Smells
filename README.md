@@ -1169,7 +1169,7 @@ ___
   iex(3)> Foo.from_module_two()
   "Function from module two!"
 
-  iex(4)> Foo.from_module_one() 
+  iex(4)> Foo.from_module_one()  # <= impossible to call due to name conflict
   ** (UndefinedFunctionError) function Foo.from_module_one/0 is undefined...
   ```
 
@@ -1217,13 +1217,64 @@ ___
 
   This example is based on the description provided in Elixir's official documentation. Source: [link][ModulesWithIdenticalNamesExample]
 
-
 [▲ back to Index](#table-of-contents)
 ___
 
 ### Unnecessary macro
 
-TODO...
+* __Category:__ Low-level concerns smells.
+
+* __Problem:__ ``Macros`` are powerful meta-programming mechanisms that can be used in Elixir to extend the language. While implementing ``macros`` is not a code smell in itself, this meta-programming mechanism should only be used when absolutely necessary. Whenever a macro is implemented, and it was possible to solve the same problem using functions or other pre-existing Elixir structures, the code becomes unnecessarily more complex and less readable. Because ``macros`` are more difficult to implement and understand, their indiscriminate use can compromise the evolution of a system, reducing its maintainability.
+
+* __Example:__ The code shown below is an example of this smell. The ``MyMacro`` module implements the ``sum/2`` macro to perform the sum of two numbers received as parameters. While this code has no syntax errors and can be executed correctly to get the desired result, it is unnecessarily more complex. By implementing this functionality as a macro rather than a conventional function, the code became less clear and less objective:
+
+  ```elixir
+  defmodule MyMacro do
+    
+    defmacro sum(v1, v2) do
+      quote do
+        unquote(v1) + unquote(v2)
+      end
+    end
+
+  end
+
+  #...Use examples...
+
+  iex(1)> require MyMacro
+  MyMacro
+
+  iex(2)> MyMacro.sum(3, 5)
+  8
+
+  iex(3)> MyMacro.sum_macro(3+1, 5+6)
+  15
+  ```
+
+* __Refactoring:__ To remove this code smell, the developer simply must replace the unnecessary macro with structures that are simpler to write and understand, such as named functions. The code shown below is the result of the refactoring of the previous example. Basically, the ``sum/2`` macro has been transformed into a conventionally named function:
+
+  ```elixir
+  defmodule MyMacro do
+    
+    def sum(v1, v2) do   # <= macro became a named function!
+      v1 + v2
+    end
+
+  end
+
+  #...Use examples...
+
+  iex(1)> require MyMacro
+  MyMacro
+
+  iex(2)> MyMacro.sum(3, 5)
+  8
+
+  iex(3)> MyMacro.sum_macro(3+1, 5+6)
+  15
+  ```
+
+  This example is based on the description provided in Elixir's official documentation. Source: [link][UnnecessaryMacroExample]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -1286,3 +1337,4 @@ Please feel free to make pull requests and suggestions ([Discussions][Discussion
 [ElixirInProduction]: https://elixir-companies.com/
 [WorkingWithInvalidDataExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-working-with-invalid-data
 [ModulesWithIdenticalNamesExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-defining-modules-that-are-not-in-your-namespace
+[UnnecessaryMacroExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-macros
