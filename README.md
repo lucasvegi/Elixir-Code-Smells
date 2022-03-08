@@ -1247,7 +1247,7 @@ ___
   iex(2)> MyMacro.sum(3, 5)
   8
 
-  iex(3)> MyMacro.sum_macro(3+1, 5+6)
+  iex(3)> MyMacro.sum(3+1, 5+6)
   15
   ```
 
@@ -1270,7 +1270,7 @@ ___
   iex(2)> MyMacro.sum(3, 5)
   8
 
-  iex(3)> MyMacro.sum_macro(3+1, 5+6)
+  iex(3)> MyMacro.sum(3+1, 5+6)
   15
   ```
 
