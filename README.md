@@ -1301,7 +1301,7 @@ ___
   ```elixir
   defmodule DashSplitter do
     def split(string) when is_binary(string) do
-      parts = Application.fetch_env!(:app_config, :parts) # <= retrieve global config via id (atom).
+      parts = Application.fetch_env!(:app_config, :parts) # <= retrieve global config
       String.split(string, "-", parts: parts)             # <= parts: 3
     end
   end
@@ -1332,7 +1332,7 @@ ___
   iex(1)> DashSplitter.split("Lucas-Francisco-da-Matta-Vegi", [parts: 5])
   ["Lucas", "Francisco", "da", "Matta", "Vegi"]
 
-  iex(2)> DashSplitter.split("Lucas-Francisco-da-Matta-Vegi") #<= default config is used!       
+  iex(2)> DashSplitter.split("Lucas-Francisco-da-Matta-Vegi") #<= default config is used!
   ["Lucas", "Francisco-da-Matta-Vegi"]  
   ```
   
