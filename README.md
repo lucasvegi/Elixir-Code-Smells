@@ -1343,7 +1343,48 @@ ___
 
 ### Compile-time app configuration
 
-TODO...
+* __Category:__ Low-level concerns smells.
+
+* __Problem:__ As explained in the description of [App configuration for code libs](#app-configuration-for-code-libs), the ``Application Environment`` can be used to parameterize values in an Elixir system. Although it is not a good practice to use this mechanism in the implementation of libraries, sometimes can be unavoidable. If these parameterized values are assigned to ``module attributes``, it can be especially problematic. As ``module attribute`` values are defined at compile-time, when trying to assign ``Application Environment`` values to these attributes, warnings or errors can be triggered by Elixir. This happens because, when defining module attributes at compile-time, the ``Application Environment`` can be not yet available in memory.
+
+* __Example:__ The ``DashSplitter`` module represents a library. This module has an attribute ``@parts`` that has its constant value defined at compile-time by calling ``Application.fetch_env!/2``. The ``split/1`` function, implemented by this library, has the purpose of separating a string received via parameter into a certain number of parts. The character used as a separator in ``split/1`` is always ``"-"`` and the number of parts the string is split into is defined by the module attribute ``@parts``, as shown next:
+
+  ```elixir
+  defmodule DashSplitter do
+    @parts Application.fetch_env!(:app_config, :parts) # <= define module attribute 
+                                                          # at compile-time
+    def split(string) when is_binary(string) do
+      String.split(string, "-", parts: @parts) #<= reading from a module attribute
+    end
+
+  end
+  ```
+
+  Due to this compile-time configuration based on the ``Application Environment`` mechanism, Elixir can raise warnings or errors, as shown next, during compilation:
+
+  ```elixir
+  warning: Application.fetch_env!/2 is discouraged in the module body,
+  use Application.compile_env/3 instead...
+
+  ** (ArgumentError) could not fetch application environment :parts
+  for application :app_config because the application was not loaded nor
+  configured
+  ```
+
+* __Refactoring:__ To remove this code smell, when it is really unavoidable to use the ``Application Environment`` mechanism to configure library functions, this should be done at runtime and not during compilation. That is, instead of calling ``Application.fetch_env!(:app_config, :parts)`` at compile-time to set ``@parts``, this function must be called at runtime within ``split/1``. This will mitigate the risk that ``Application Environment`` is not yet available in memory when it is necessary to use it. Another possible refactoring, as shown below, is to replace the use of the ``Application.fetch_env!/2`` function to define ``@parts``, with the ``Application.compile_env/3``. The third parameter of ``Application.compile_env/3`` defines a default value that is returned whenever that ``Application Environment`` is not available in memory during the definition of ``@parts``. This prevents Elixir to raise an error at compile-time:
+
+  ```elixir
+  defmodule DashSplitter do
+    @parts Application.compile_env(:app_config, :parts, 3) # <= default value 3 prevents an error! 
+                                                      
+    def split(string) when is_binary(string) do
+      String.split(string, "-", parts: @parts) #<= reading from a module attribute
+    end
+
+  end
+  ```
+  
+  These examples are based on code provided in Elixir's official documentation. Source: [link][AppConfigurationForCodeLibsExample]
 
 [▲ back to Index](#table-of-contents)
 ___
