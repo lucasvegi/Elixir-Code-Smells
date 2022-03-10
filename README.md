@@ -1351,8 +1351,8 @@ ___
 
   ```elixir
   defmodule DashSplitter do
-    @parts Application.fetch_env!(:app_config, :parts) # <= define module attribute 
-                                                          # at compile-time
+    @parts Application.fetch_env!(:app_config, :parts) # <= define module attribute at compile-time
+                                                          
     def split(string) when is_binary(string) do
       String.split(string, "-", parts: @parts) #<= reading from a module attribute
     end
