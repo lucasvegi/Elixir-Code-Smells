@@ -34,7 +34,7 @@
 
 In order to better understand what are the types of sub-optimal code structures that can harm the internal quality of Elixir systems, we scoured websites, blogs, forums, and videos (grey literature review), looking for specific code smells for Elixir that are discussed by its developers.
 
-As a result of this investigation, we proposed a catalog of 18 new smells specific to Elixir systems. These code smells have been categorized into two different groups, according to the type of impact and code extent they affect. This catalog of Elixir-specific code smells is presented below. Each code smell is documented using the following structure:
+As a result of this investigation, we proposed a catalog of 18 new smells specific to Elixir systems. These code smells have been categorized into two different groups ([design-related](#design-related-smells) and [low-level concerns](#low-level-concerns-smells)), according to the type of impact and code extent they affect. This catalog of Elixir-specific code smells is presented below. Each code smell is documented using the following structure:
 
 * __Name:__ Unique identifier of the code smell. This name is important to facilitate communication between developers;
 * __Category:__ The portion of code affected by smell and its severity;
@@ -1351,8 +1351,8 @@ ___
 
   ```elixir
   defmodule DashSplitter do
-    @parts Application.fetch_env!(:app_config, :parts) # <= define module attribute at compile-time
-                                                          
+    @parts Application.fetch_env!(:app_config, :parts) # <= define module attribute 
+                                                          # at compile-time
     def split(string) when is_binary(string) do
       String.split(string, "-", parts: @parts) #<= reading from a module attribute
     end
@@ -1386,20 +1386,97 @@ ___
   
   These examples are based on code provided in Elixir's official documentation. Source: [link][AppConfigurationForCodeLibsExample]
 
+* __Remark:__ This code smell can be detected by [Credo][Credo], a static code analysis tool. During its checks, Credo raises this [warning][CredoWarningApplicationConfigInModuleAttribute] when this smell is found.
+
 [▲ back to Index](#table-of-contents)
 ___
 
 ### Dependency with "use" when an "import" is enough
 
-TODO...
+* __Category:__ Low-level concerns smells.
+
+* __Problem:__ Elixir has mechanisms like ``import``, ``alias``, and ``use`` to establish dependencies between modules. Establishing dependencies allows a module to call functions from other modules, facilitating code reuse. A code implemented with these mechanisms does not characterize a smell by itself, however, while the ``import`` and ``alias`` directives have lexical scope and only facilitate that a module to use functions of another, the ``use`` directive has a broader scope, something that can be problematic. The ``use`` directive allows a module to inject any type of code into another, including propagating dependencies. In this way, using the ``use`` directive makes code readability worse, because to understand exactly what will happen when it references a module, it is necessary to have knowledge of the internal details of the referenced module.
+
+* __Example:__ The code shown below is an example of this smell. Three different modules were defined -- ``ModuleA``, ``Library``, and ``ClientApp``. ``ClientApp`` is reusing code from the ``Library`` via the ``use`` directive, but is unaware of its internal details. Therefore, when ``Library`` is referenced by ``ClientApp``, it injects into ``ClientApp`` all the content present in its ``__using__/1`` macro. Due to the less readability of the code and the lack of knowledge of the internal details of the ``Library``, ``ClientApp`` defines a local function ``foo/0``. This will generate a conflict as ``ModuleA`` also has a function ``foo/0`` and when ``ClientApp`` referenced ``Library`` via the ``use`` directive it had a dependency for ``ModuleA`` propagated to itself:
+
+  ```elixir
+  defmodule ModuleA do
+    def foo do
+      "From Module A"
+    end
+  end
+  ```
+
+  ```elixir
+  defmodule Library do
+    defmacro __using__(_opts) do
+      quote do
+        import ModuleA  # <= propagating dependencies!
+
+        def from_lib do
+          "From Library"
+        end
+      end
+    end
+
+    def from_lib do
+      "From Library"
+    end
+  end
+  ```
+
+  ```elixir
+  defmodule ClientApp do
+    use Library
+
+    def foo do
+      "Local function from client app"
+    end
+
+    def from_client_app do
+      from_lib() <> " - " <> foo()
+    end
+
+  end
+  ```
+
+  When we try to compile ``ClientApp``, Elixir will detect the conflict and throw the following error:
+
+  ```elixir
+  iex(1)> c("client_app.ex") 
+
+  ** (CompileError) client_app.ex:4: imported ModuleA.foo/0 conflicts with local function
+  ```
+
+* __Refactoring:__ To remove this code smell, whenever it is enough, is better to replace ``use`` with ``alias`` or ``import`` when creating a dependency between an application and a library. This will make code behavior clearer due to improved readability. In the following code, ``ClientApp`` was refactored in this way, and with that, the conflict has previously shown no longer exists:
+
+  ```elixir
+  defmodule ClientApp do
+    import Library
+
+    def foo do
+      "Local function from client app"
+    end
+
+    def from_client_app do
+      from_lib() <> " - " <> foo()
+    end
+
+  end
+
+  #...Uses example...
+
+  iex(1)> ClientApp.from_client_app()
+  "From Library - Local function from client app"
+  ```
+
+  These examples are based on code provided in Elixir's official documentation. Source: [link][DependencyWithUseExample]
 
 [▲ back to Index](#table-of-contents)
 
 ## About
 
-This catalog, composed of 18 code smells specific for the [Elixir programming language][Elixir], was originally proposed by Lucas Vegi and Marco Tulio Valente ([ASERG/DCC/UFMG][ASERG]).
-
-To better organize the impacts caused by these smells, we classify them into two different groups: __design-related smells__ <sup>[link](#design-related-smells)</sup> and __low-level concerns smells__ <sup>[link](#low-level-concerns-smells)</sup>.
+This catalog was proposed by Lucas Vegi and Marco Tulio Valente, [ASERG/DCC/UFMG][ASERG] members, by means of scientific research. It was originally published in a paper at International Conference on Program Comprehension ([ICPC 2022 ERA][ICPC-ERA]).
 
 Please feel free to make pull requests and suggestions ([Discussions][Discussions] tab).
 
@@ -1436,3 +1513,7 @@ Please feel free to make pull requests and suggestions ([Discussions][Discussion
 [UnnecessaryMacroExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-macros
 [ApplicationEnvironment]: https://hexdocs.pm/elixir/1.13/Config.html
 [AppConfigurationForCodeLibsExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-application-configuration
+[CredoWarningApplicationConfigInModuleAttribute]: https://hexdocs.pm/credo/Credo.Check.Warning.ApplicationConfigInModuleAttribute.html
+[Credo]: https://hexdocs.pm/credo/overview.html
+[DependencyWithUseExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-use-when-an-import-is-enough
+[ICPC-ERA]: https://conf.researchr.org/track/icpc-2022/icpc-2022-era
