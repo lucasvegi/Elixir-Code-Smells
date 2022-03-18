@@ -1476,7 +1476,9 @@ ___
 
 ## About
 
-This catalog was proposed by Lucas Vegi and Marco Tulio Valente, [ASERG/DCC/UFMG][ASERG] members, by means of scientific research. It was originally published in a paper at International Conference on Program Comprehension ([ICPC 2022 ERA][ICPC-ERA]).
+This catalog was proposed by Lucas Vegi and Marco Tulio Valente, [ASERG/DCC/UFMG][ASERG] members.
+
+It was originally published in a paper at International Conference on Program Comprehension ([ICPC 2022 ERA][ICPC-ERA]). More info is available at the paper's preprint copy [arXiv.org][preprint-copy].
 
 Please feel free to make pull requests and suggestions ([Discussions][Discussions] tab).
 
@@ -1517,3 +1519,4 @@ Please feel free to make pull requests and suggestions ([Discussions][Discussion
 [Credo]: https://hexdocs.pm/credo/overview.html
 [DependencyWithUseExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-use-when-an-import-is-enough
 [ICPC-ERA]: https://conf.researchr.org/track/icpc-2022/icpc-2022-era
+[preprint-copy]: https://doi.org/10.48550/arXiv.2203.08877
