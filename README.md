@@ -1,7 +1,7 @@
 # [Catalog of Elixir-specific code smells][Elixir Smells]
 
 [![GitHub last commit](https://img.shields.io/github/last-commit/lucasvegi/Elixir-Code-Smells)](https://github.com/lucasvegi/Elixir-Code-Smells/commits/main)
-[![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fgithub.com%2Flucasvegi%2FElixir-Code-Smells)](https://twitter.com/intent/tweet?url=https%3A%2F%2Fgithub.com%2Flucasvegi%2FElixir-Code-Smells&text=Catalog%20of%20Elixir-specific%20code%20smells%3A&hashtags=elixir)
+[![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fgithub.com%2Flucasvegi%2FElixir-Code-Smells)](https://twitter.com/intent/tweet?url=https%3A%2F%2Fgithub.com%2Flucasvegi%2FElixir-Code-Smells&via=lucasvegi&text=Catalog%20of%20Elixir-specific%20code%20smells%3A&hashtags=MyElixirStatus%2CElixirLang)
 
 ## Table of Contents
 
