@@ -32,41 +32,41 @@
 
 [Elixir][Elixir] is a new functional programming language whose popularity is rising in the industry <sup>[link][ElixirInProduction]</sup>. However, there are few works in the scientific literature focused on studying the internal quality of systems implemented in this language.
 
-In order to better understand what are the types of sub-optimal code structures that can harm the internal quality of Elixir systems, we scoured websites, blogs, forums, and videos (grey literature review), looking for specific code smells for Elixir that are discussed by its developers.
+In order to better understand the types of sub-optimal code structures that can harm the internal quality of Elixir systems, we scoured websites, blogs, forums, and videos (grey literature review), looking for specific code smells for Elixir that are discussed by its developers.
 
-As a result of this investigation, we proposed a catalog of 18 new smells specific to Elixir systems. These code smells have been categorized into two different groups ([design-related](#design-related-smells) and [low-level concerns](#low-level-concerns-smells)), according to the type of impact and code extent they affect. This catalog of Elixir-specific code smells is presented below. Each code smell is documented using the following structure:
+As a result of this investigation, we have proposed a catalog of 18 new smells that are specific to Elixir systems. These code smells have been categorized into two different groups ([design-related](#design-related-smells) and [low-level concerns](#low-level-concerns-smells)), according to the type of impact and code extent they affect. This catalog of Elixir-specific code smells is presented below. Each code smell is documented using the following structure:
 
 * __Name:__ Unique identifier of the code smell. This name is important to facilitate communication between developers;
 * __Category:__ The portion of code affected by smell and its severity;
 * __Problem:__ How the code smell can harm code quality and what impacts this can have for developers;
-* __Example:__ Codes and textual descriptions to illustrate the occurrence of the code smell;
-* __Refactoring:__ Ways to change smelly codes in order to improve its qualities. Examples of refactored code are presented to illustrate these changes.
+* __Example:__ Code and textual descriptions to illustrate the occurrence of the code smell;
+* __Refactoring:__ Ways to change smelly code in order to improve its qualities. Examples of refactored code are presented to illustrate these changes.
 
 The objective of this catalog of code smells is to instigate the improvement of the quality of code developed in Elixir. For this reason, we are interested in knowing Elixir's community opinion about these code smells: *Do you agree that these code smells can be harmful? Have you seen any of them in production code? Do you have any suggestions about some Elixir-specific code smell not cataloged by us?...*
 
-Please feel free to make pull requests and suggestions ([Discussions][Discussions] tab). We want to hear you!
+Please feel free to make pull requests and suggestions ([Discussions][Discussions] tab). We want to hear from you!
 
 [▲ back to Index](#table-of-contents)
 
 ## Design-related smells
 
-Design-related smells are more complex, affect a coarse-grained code element, and are therefore harder to detect. Next, all 10 different smells classified as design-related are explained and exemplified:
+Design-related smells are more complex, affect a coarse-grained code element, and are therefore harder to detect. In this section, 10 different smells classified as design-related are explained and exemplified:
 
 ### GenServer Envy
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ In Elixir, processes can be primitively created by ``spawn/1`` and ``spawn_link/1`` functions. Although it is possible to create it this way, it is more common to use abstractions (e.g., [``Agent``][Agent], [``Task``][Task], and [``GenServer``][GenServer]) provided by Elixir to create processes. The use of each specific abstraction is not a code smell in itself, however, can be trouble when either a ``Task`` or ``Agent`` are used beyond its suggested purposes, being treated like ``GenServers``.
+* __Problem:__ In Elixir, processes can be primitively created by ``spawn/1`` and ``spawn_link/1`` functions. Although it is possible to create them this way, it is more common to use abstractions (e.g., [``Agent``][Agent], [``Task``][Task], and [``GenServer``][GenServer]) provided by Elixir to create processes. The use of each specific abstraction is not a code smell in itself; however, there can be trouble when either a ``Task`` or ``Agent`` is used beyond its suggested purposes, being treated like a ``GenServer``.
 
 * __Example:__ As shown next, ``Agent`` and ``Task`` are abstractions to create processes with specialized purposes. In contrast, ``GenServer`` is a more generic abstraction used to create processes for many different purposes:
 
-  * ``Agent``: As Elixir works on the principle of immutability, by default no value is shared between multiple places of code, abling read and write such as in a global variable. An ``Agent`` is a simple process abstraction focused on solving this limitation, abling processes to share states.
-  * ``Task``: This process abstraction is used when we only need to execute asynchronously some specific action, often in an isolated way, without communication with other processes.
-  * ``GenServer``: Is the most generic process abstraction. The main benefit of this abstraction is explicitly segregating the server and the client roles, thus providing a better API for the organization of processes communication. Besides that, ``GenServer`` can also encapsulate state (like an ``Agent``), provide sync and async calls (like a ``Task``), and more.
+  * ``Agent``: As Elixir works on the principle of immutability, by default no value is shared between multiple places of code, enabling read and write as in a global variable. An ``Agent`` is a simple process abstraction focused on solving this limitation, enabling processes to share state.
+  * ``Task``: This process abstraction is used when we only need to execute some specific action asynchronously, often in an isolated way, without communication with other processes.
+  * ``GenServer``: This is the most generic process abstraction. The main benefit of this abstraction is explicitly segregating the server and the client roles, thus providing a better API for the organization of processes communication. Besides that, a ``GenServer`` can also encapsulate state (like an ``Agent``), provide sync and async calls (like a ``Task``), and more.
   
-  Examples of this code smells is when ``Agents`` or ``Tasks`` are used for general purposes and not only to specialized ones such as its documentation suggests. To illustrate some smells occurrences, we will cite two specific situations. 1) When a ``Task`` is used not only to async execute an action, but also to frequently exchange messages with other processes; 2) When an ``Agent`` besides sharing some global value between processes, also frequently are used to execute isolated tasks that are not of interest to other processes.
+  Examples of this code smell appear when ``Agents`` or ``Tasks`` are used for general purposes and not only for specialized ones such as their documentation suggests. To illustrate some smell occurrences, we will cite two specific situations. 1) When a ``Task`` is used not only to async execute an action, but also to frequently exchange messages with other processes; 2) When an ``Agent``, beside sharing some global value between processes, is also frequently used to execute isolated tasks that are not of interest to other processes.
 
-* __Refactoring:__ When an ``Agent`` or ``Task`` goes beyond its suggested use cases and becomes painful, is better to refactor it to a ``GenServer``.
+* __Refactoring:__ When an ``Agent`` or ``Task`` goes beyond its suggested use cases and becomes painful, it is better to refactor it into a ``GenServer``.
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -75,9 +75,9 @@ ___
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ In Elixir, an ``Agent`` is a process abstraction focused on sharing information between processes by means of message passing. It is a simple wrapper around shared information, thus facilitating its read and update on any place of a code. The use of an ``Agent`` to share information is not a code smell in itself, however, when the responsibility for interacting directly with an ``Agent`` is spread across the entire system, this can be problematic. This bad practice can difficult the code maintenance and leave the code bug-proneness.
+* __Problem:__ In Elixir, an ``Agent`` is a process abstraction focused on sharing information between processes by means of message passing. It is a simple wrapper around shared information, thus facilitating its read and update from any place in the code. The use of an ``Agent`` to share information is not a code smell in itself; however, when the responsibility for interacting directly with an ``Agent`` is spread across the entire system, this can be problematic. This bad practice can increase the difficulty of code maintenance and make the code more prone to bugs.
 
-* __Example:__ The following codes seek to illustrate this smell. The responsibility for interacting directly with the ``Agent`` is spread across four different modules (i.e, ``A``, ``B``, ``C``, and ``D``).
+* __Example:__ The following code seeks to illustrate this smell. The responsibility for interacting directly with the ``Agent`` is spread across four different modules (i.e, ``A``, ``B``, ``C``, and ``D``).
 
   ```elixir
   defmodule A do
@@ -123,25 +123,25 @@ ___
   end
   ```
   
-  This spreading of responsibility can generate duplicated code and difficult code maintenance. Besides that, as shown next, due to the lack of control over the format of the shared data, complex composed data can be shared. This freedom to use any format of data is dangerous and can induce developers to introduce bugs.
+  This spreading of responsibility can generate duplicated code and make code maintenanc emore difficult. Also, due to the lack of control over the format of the shared data, complex composed data can be shared. This freedom to use any format of data is dangerous and can induce developers to introduce bugs.
 
   ```elixir
-  #start an agent with initial state of an empty list
+  # start an agent with initial state of an empty list
   iex(1)> {:ok, agent} = Agent.start_link fn -> [] end        
   {:ok, #PID<0.135.0>}
 
-  #many data format (i.e., List, Map, Integer, Atom) are
-  #combined through direct access spread across the entire system
+  # many data format (i.e., List, Map, Integer, Atom) are
+  # combined through direct access spread across the entire system
   iex(2)> A.update(agent)
   iex(3)> B.update(agent)
   iex(4)> C.update(agent)
     
-  #state of shared information
+  # state of shared information
   iex(5)> D.get(agent)
   [:atom_value, %{a: 123}]
   ```
 
-* __Refactoring:__ Instead of spreading direct access to an ``Agent`` over many places of the code, it is better to refactor this code by centralizing the responsibility for interacting with an ``Agent`` in a single module. This refactoring improves the maintainability by duplicated code removal and also allows you to limit the accepted format for shared data, reducing bug-proneness. As shown below, the module ``KV.Bucket`` is centralizing the responsibility for interacting with the ``Agent``. Any other place of the code that needs to access shared data must now delegate this action to ``KV.Bucket``. Also, ``KV.Bucket`` now only allows data to be shared in ``Map`` format.
+* __Refactoring:__ Instead of spreading direct access to an ``Agent`` over many places in the code, it is better to refactor this code by centralizing the responsibility for interacting with an ``Agent`` in a single module. This refactoring improves the maintainability by removing duplicated code; it also allows you to limit the accepted format for shared data, reducing bug-proneness. As shown below, the module ``KV.Bucket`` is centralizing the responsibility for interacting with the ``Agent``. Any other place in the code that needs to access shared data must now delegate this action to ``KV.Bucket``. Also, ``KV.Bucket`` now only allows data to be shared in ``Map`` format.
 
   ```elixir
   defmodule KV.Bucket do
@@ -170,25 +170,25 @@ ___
   end
   ```
 
-  The following are examples of how to delegate to ``KV.Bucket`` access shared data provided by an ``Agent``.
+  The following are examples of how to delegate access to shared data (provided by an ``Agent`) to ``KV.Bucket``.
 
   ```elixir
-  #start an agent through a `KV.Bucket`
+  # start an agent through a `KV.Bucket`
   iex(1)> {:ok, bucket} = KV.Bucket.start_link(%{})
   {:ok, #PID<0.114.0>}
 
-  #add shared values to the keys `milk` and `beer`
+  # add shared values to the keys `milk` and `beer`
   iex(2)> KV.Bucket.put(bucket, "milk", 3)
   iex(3)> KV.Bucket.put(bucket, "beer", 7)
 
-  #accessing shared data of specific keys
+  # accessing shared data of specific keys
   iex(4)> KV.Bucket.get(bucket, "beer")   
   7
   iex(5)> KV.Bucket.get(bucket, "milk")
   3
   ```
 
-  These examples are based on codes written in Elixir's official documentation. Source: [link][AgentObsessionExample]
+  These examples are based on code written in Elixir's official documentation. Source: [link][AgentObsessionExample]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -197,7 +197,7 @@ ___
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ In Elixir, creating a process outside a supervision tree is not a code smell in itself. However, when a code creates a large number of long-running processes outside a supervision tree, this can turn visibility and monitoring of these processes difficult, therefore not allowing developers to fully control their applications.
+* __Problem:__ In Elixir, creating a process outside a supervision tree is not a code smell in itself. However, when code creates a large number of long-running processes outside a supervision tree, this can make visibility and monitoring of these processes difficult, preventing developers from fully controlling their applications.
 
 * __Example:__ The following code example seeks to illustrate a library responsible for maintaining a numerical ``Counter`` through a ``GenServer`` process outside a supervision tree. Multiple counters can be created simultaneously by a client (one process for each counter), making these unsupervised processes difficult to manage. This can cause problems with the initialization, restart, and shutdown of a system.
 
@@ -280,7 +280,7 @@ ___
   7
   ```
 
-* __Refactoring:__ To ensure that clients of a library have full control over their systems, regardless of the number of processes used and the lifetime of each one, all processes must be started inside a supervision tree. As shown below, this code uses a ``Supervisor`` <sup>[link][Supervisor]</sup> as a supervision tree. When this Elixir application is started, two different counters (``Counter`` and ``C2``) are also started as child processes of the ``Supervisor`` named ``App.Supervisor``. Both are initialized with zero. By means of this supervision tree, is possible to manage the lifecycle of all child processes (e.g., stopping or restarting each one), improving the visibility of the entire app.
+* __Refactoring:__ To ensure that clients of a library have full control over their systems, regardless of the number of processes used and the lifetime of each one, all processes must be started inside a supervision tree. As shown below, this code uses a ``Supervisor`` <sup>[link][Supervisor]</sup> as a supervision tree. When this Elixir application is started, two different counters (``Counter`` and ``C2``) are also started as child processes of the ``Supervisor`` named ``App.Supervisor``. Both are initialized with zero. By means of this supervision tree, it is possible to manage the lifecycle of all child processes (e.g., stopping or restarting each one), improving the visibility of the entire app.
 
   ```elixir
   defmodule SupervisedProcess.Application do
@@ -289,7 +289,7 @@ ___
     @impl true
     def start(_type, _args) do
       children = [
-        # The counters are Supervisor childs started via Counter.start(0)
+        # The counters are Supervisor childs started via Counter.start(0).
         %{
           id: Counter,
           start: {Counter, :start, [0]}
@@ -340,9 +340,9 @@ ___
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ In Elixir, processes run isolatedly and concurrent to other ones. The communication between different processes is performed via message passing. The exchange of messages between processes is not a code smell in itself, however, when a huge structure is sent as a message from one process to another, the sender may become blocked. If these large messages exchanges occur frequently, the prolonged and frequent blocking of processes can cause a system to behave anomalously.
+* __Problem:__ In Elixir, processes run in an isolated manner, often concurrently with other Elixir. Communication between different processes is performed via message passing. The exchange of messages between processes is not a code smell in itself; however, when a huge structure is sent as a message from one process to another, the sender may become blocked. If these large message exchanges occur frequently, the prolonged and frequent blocking of processes can cause a system to behave anomalously.
 
-* __Example:__ The following code is composed of two modules which will run in different processes each. As the names suggest, the ``Sender`` module has a function responsible for sending messages from one process to another (i.e., ``send_msg/3``). The ``Receiver`` module has a function to create a process to receive messages (i.e., ``create/0``) and another one to handle the received messages (i.e., ``run/0``). If a huge structure, such as a list with 1_000_000 different values, is sent frequently from ``Sender`` to ``Receiver``, the impacts of this smell could be felt.
+* __Example:__ The following code is composed of two modules which will each run in a different process. As the names suggest, the ``Sender`` module has a function responsible for sending messages from one process to another (i.e., ``send_msg/3``). The ``Receiver`` module has a function to create a process to receive messages (i.e., ``create/0``) and another one to handle the received messages (i.e., ``run/0``). If a huge structure, such as a list with 1_000_000 different values, is sent frequently from ``Sender`` to ``Receiver``, the impacts of this smell could be felt.
   
   ```elixir
   defmodule Receiver do
@@ -404,9 +404,9 @@ ___
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ Using multi-clause functions in Elixir, to group functions of the same name, is not a code smell in itself. However, due to the great flexibility provided by this programming feature, some developers may abuse the number of guard clauses and pattern matchings when defining these grouped functions.
+* __Problem:__ Using multi-clause functions in Elixir, to group functions of the same name, is not a code smell in itself. However, due to the great flexibility provided by this programming feature, some developers may abuse the number of guard clauses and pattern matches when defining these grouped functions.
 
-* __Example:__ A recurrent example of abusive use of the multi-clause functions is when we’re trying to mix too much business logic into the function definitions. This makes it difficult to read and understand the logic involved in the functions, which may impair code maintainability. Some developers use documentation mechanisms such as ``@doc`` annotations to compensate for poor code readability, but unfortunately, with a multi-clause function, we can only use these annotations once per function name, particularly on the first or header function. As shown next, all other variations of the function need to be documented only with comments, a mechanism that cannot automate tests, leaving the code bug-proneness.
+* __Example:__ A recurrent example of abusive use of the multi-clause functions is when we’re trying to mix too much business logic into the function definitions. This makes it difficult to read and understand the logic involved in the functions, which may impair code maintainability. Some developers use documentation mechanisms such as ``@doc`` annotations to compensate for poor code readability, but unfortunately, with a multi-clause function, we can only use these annotations once per function name, particularly on the first or header function. As shown next, all other variations of the function need to be documented only with comments, a mechanism that cannot automate tests, leaving the code prone to bugs.
 
   ```elixir
   @doc """
@@ -446,7 +446,7 @@ ___
 
 * __Problem:__ When a function assumes the responsibility of handling multiple errors returned by the same API endpoint, it can become confusing.
 
-* __Example:__ An example of this code smell is when a function uses the ``case`` control-flow structure to handle these multiple variations of response types from an endpoint. This practice can make the function more complex, long, and difficult to understand, as shown next.
+* __Example:__ An example of this code smell is when a function uses the ``case`` control-flow structure to handle  multiple variations of response types from an endpoint. This practice can make the function more complex, long, and difficult to understand, as shown next.
 
   ```elixir
   def get_customer(customer_id) do
@@ -532,7 +532,7 @@ ___
   "Uh oh! invalid argument. Is not integer!."
   ```
 
-* __Refactoring:__ A library author shall guarantee that clients are not required to use exceptions for control-flow in their applications. As shown below, this can be done by refactoring the library ``MyModule``, providing two versions of the function that forces clients to use exceptions for control-flow (e.g., ``janky_function``). 1) a version with the raised exceptions should have the same name as the smelly one, but with a trailing ! (i.e., ``janky_function!``); 2) Another version without raised exceptions should have a name identical to the original version (i.e., ``janky_function``), and should return the result wrapped in a tuple.
+* __Refactoring:__ Library authors should guarantee that clients are not required to use exceptions for control-flow in their applications. As shown below, this can be done by refactoring the library ``MyModule``, providing two versions of the function that forces clients to use exceptions for control-flow (e.g., ``janky_function``). 1) a version with the raised exceptions should have the same name as the smelly one, but with a trailing ! (i.e., ``janky_function!``); 2) Another version, without raised exceptions, should have a name identical to the original version (i.e., ``janky_function``), and should return the result wrapped in a tuple.
 
   ```elixir
   defmodule MyModule do
@@ -567,8 +567,8 @@ ___
   ```elixir
   defmodule Client do
    
-    #Clients now can also choose to use control-flow structures
-    #for control-flow when an error is not exceptional.
+    # Clients now can also choose to use control-flow structures
+    # for control-flow when an error is not exceptional.
     def foo(arg) do
       case MyModule.janky_function(arg) do
         {:ok, value} -> "All good! #{value}."
@@ -598,7 +598,7 @@ ___
 
 * __Problem:__ This code smell refers to functions that have protocol-dependent parameters and are therefore polymorphic. A polymorphic function itself does not represent a code smell, but some developers implement these generic functions without accompanying guard clauses (in this case, to verify whether the parameter types implement the required protocols).
 
-* __Example:__ An instance of this code smell happens when a function uses ``to_string()`` to convert data received by parameter. The function ``to_string()`` uses the protocol ``String.Chars`` for conversions. Many Elixir's data types like ``BitString``, ``Integer``, ``Float``, and ``URI`` implement this protocol. However, as shown below, other Elixir's data types such as ``Map`` do not implement it, thus making the behavior of the ``dasherize/1`` function unpredictable.
+* __Example:__ An instance of this code smell happens when a function uses ``to_string()`` to convert data received by parameter. The function ``to_string()`` uses the protocol ``String.Chars`` for conversions. Many Elixir data types (e.g., ``BitString``, ``Integer``, ``Float``, ``URI``) implement this protocol. However, as shown below, other Elixir data types (e.g., ``Map``) do not implement it, thus making the behavior of the ``dasherize/1`` function unpredictable.
 
   ```elixir
   defmodule CodeSmells do
@@ -671,9 +671,9 @@ ___
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ This smell refers to codes unnecessarily organized by processes. A process itself does not represent a code smell, but it should only be used to model runtime properties (e.g., concurrency, access to shared resources, and event scheduling). When a process is used for code organization, it can create bottlenecks in the system.
+* __Problem:__ This smell refers to code that is unnecessarily organized by processes. A process itself does not represent a code smell, but it should only be used to model runtime properties (e.g., concurrency, access to shared resources, event scheduling). When a process is used for code organization, it can create bottlenecks in the system.
 
-* __Example:__ An example of this code smell, as shown below, is a library that implements arithmetic operations (e.g., add, and subtract) by means of a ``GenSever`` process<sup>[link][GenServer]</sup>. If the number of calls to this single process grows, this code organization can compromise the system performance, therefore becoming a bottleneck.
+* __Example:__ An example of this code smell, as shown below, is a library that implements arithmetic operations (e.g., add, subtract) by means of a ``GenSever`` process<sup>[link][GenServer]</sup>. If the number of calls to this single process grows, this code organization can compromise the system performance, therefore becoming a bottleneck.
 
   ```elixir
   defmodule Calculator do
@@ -723,7 +723,7 @@ ___
   -1
   ```
 
-* __Refactoring:__ In Elixir, as shown next, code organization must be done only by modules and functions. Whenever possible, a library should not be organized imposing specific behavior such as parallelization to its clients. It is better to delegate this behavioral decision to the developers of clients, thus increasing the potential for code reuse of a library.
+* __Refactoring:__ In Elixir, as shown next, code organization must be done only by modules and functions. Whenever possible, a library should not impose specific behavior (such as parallelization) on its clients. It is better to delegate this behavioral decision to the developers of clients, thus increasing the potential for code reuse of a library.
 
   ```elixir
   defmodule Calculator do
@@ -754,7 +754,7 @@ ___
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ This code smell refers to modules that perform both data and structural changes in a database schema via ``Ecto.Migration``<sup>[link][Migration]</sup>. Migrations must be used exclusively to modify a database schema over time (e.g., by including or excluding columns and tables). When this responsibility is mixed data manipulation code, the module becomes low cohesive, more difficult to test, and therefore more bug-proneness.
+* __Problem:__ This code smell refers to modules that perform both data and structural changes in a database schema via ``Ecto.Migration``<sup>[link][Migration]</sup>. Migrations must be used exclusively to modify a database schema over time (e.g., by including or excluding columns and tables). When this responsibility is mixed with data manipulation code, the module becomes less cohesive, more difficult to test, and therefore more prone to bugs.
 
 * __Example:__ An example of this code smell is when an ``Ecto.Migration`` is used simultaneously to alter a table, adding a new column to it, and also to update all pre-existing data in that table, assigning a value to this new column. As shown below, in addition to adding the ``is_custom_shop`` column in the ``guitars`` table, this ``Ecto.Migration`` changes the value of this column for some specific guitar models.
 
@@ -873,7 +873,7 @@ ___
   end
   ```  
 
-  You can run this ``mix task`` above typing the next command via console:
+  You can run this ``mix task`` above by typing the next command via console:
   
   ```elixir
     mix populate_is_custom_shop
@@ -891,9 +891,9 @@ Low-level concerns smells are more simple than design-related smells and affect 
 
 * __Category:__ Low-level concerns smells.
 
-* __Problem:__ This code smell refers to a function that does not validate its parameters' types and therefore can produce internal non-predicted behavior. When an error is raised inside a function due to an invalid parameter value, this can confuse the developers and turns harder to locate and fix the error.
+* __Problem:__ This code smell refers to a function that does not validate its parameters' types and therefore can produce internal non-predicted behavior. When an error is raised inside a function due to an invalid parameter value, this can confuse the developers and make it harder to locate and fix the error.
 
-* __Example:__ An example of this code smell is when a function receives an invalid parameter and internally repasses it to the calling of a function from a third-party library. This will cause an error raised deep inside the library function, which may be confusing for the developer who is working with invalid data. As shown next, the function ``foo/1`` is a client of a third-party library and doesn't validate its parameters at the boundary. In this way, is possible that invalid data is repassed from ``foo/1`` to the library, causing an error deep inside.
+* __Example:__ An example of this code smell is when a function receives an invalid parameter and then passes it to a function from a third-party library. This will cause an error (raised deep inside the library function), which may be confusing for the developer who is working with invalid data. As shown next, the function ``foo/1`` is a client of a third-party library and doesn't validate its parameters at the boundary. In this way, it is possible that invalid data will be passed from ``foo/1`` to the library, causing a mysterious error.
 
   ```elixir
   defmodule MyApp do
@@ -908,7 +908,7 @@ Low-level concerns smells are more simple than design-related smells and affect 
 
   #...Use examples...
 
-  #with valid data is ok
+  # with valid data is ok
   iex(1)> MyApp.foo(2)
   3
 
@@ -919,7 +919,7 @@ Low-level concerns smells are more simple than design-related smells and affect 
     library.ex:3: ThirdPartyLibrary.sum/2
   ```
 
-* __Refactoring:__ To remove this code smell, client codes must validate their parameters right at the boundary with the user, via guard clauses or pattern matching. This will prevent errors from occurring deeply, making them easier to understand. This refactoring will also allow libraries to be implemented without worrying about creating internal protection mechanisms. The next code illustrates the refactoring of ``foo/1``, removing this smell:
+* __Refactoring:__ To remove this code smell, client code must validate input parameters at the boundary with the user, via guard clauses or pattern matching. This will prevent errors from occurring deeply, making them easier to understand. This refactoring will also allow libraries to be implemented without worrying about creating internal protection mechanisms. The next code illustrates the refactoring of ``foo/1``, removing this smell:
 
   ```elixir
   defmodule MyApp do
@@ -938,7 +938,7 @@ Low-level concerns smells are more simple than design-related smells and affect 
   iex(1)> MyApp.foo(2)
   3
 
-  #with invalid data errors are easy to locate and fix
+  # with invalid data errors are easy to locate and fix
   iex(2)> MyApp.foo("Lucas")
   ** (FunctionClauseError) no function clause matching in MyApp.foo/1    
     
@@ -959,7 +959,7 @@ ___
 
 * __Category:__ Low-level concerns smells.
 
-* __Problem:__ In Elixir, it is possible to access values from ``Maps``, which are key-value data structures, either strictly or dynamically. When trying to dynamically access the value of a key from a ``Map``, if the informed key does not exist, a null value (``nil``) will be returned. This return can be confusing and does not allow developers to conclude whether the key is non-existent in the ``Map`` or just has no binded value. In this way, this code smell may omit bugs in the code.
+* __Problem:__ In Elixir, it is possible to access values from ``Maps``, which are key-value data structures, either strictly or dynamically. When trying to dynamically access the value of a key from a ``Map``, if the informed key does not exist, a null value (``nil``) will be returned. This return can be confusing and does not allow developers to conclude whether the key is non-existent in the ``Map`` or just has no bound value. In this way, this code smell may cause bugs in the code.
 
 * __Example:__ The code shown below is an example of this smell. The function ``plot/1`` tries to draw a graphic to represent the position of a point in a cartesian plane. This function receives a parameter of ``Map`` type with the point attributes, which can be a point of a 2D or 3D cartesian coordinate system. To decide if a point is 2D or 3D, this function uses dynamic access to retrieve values of the ``Map`` keys:
 
@@ -989,7 +989,7 @@ ___
   {5, 6, nil}
   ```
   
-  As can be seen in the example above, even when the key ``:z`` does not exist in the ``Map`` (``point_2d``), dynamic access returns the value ``nil``. This return can be dangerous because of its ambiguity. It is not possible to conclude from it whether the ``Map`` has the key ``:z`` or not. If the function relies on it to make decisions about how to plot a point, this can be problematic and even omit errors when testing the code.
+  As can be seen in the example above, even when the key ``:z`` does not exist in the ``Map`` (``point_2d``), dynamic access returns the value ``nil``. This return can be dangerous because of its ambiguity. It is not possible to conclude from it whether the ``Map`` has the key ``:z`` or not. If the function relies on the return value to make decisions about how to plot a point, this can be problematic and even cause errors when testing the code.
 
 * __Refactoring:__ To remove this code smell, whenever a ``Map`` has keys of ``Atom`` type, replace the dynamic access to its values per strict access. When a non-existent key is strictly accessed, Elixir raises an error immediately, allowing developers to find bugs faster. The next code illustrates the refactoring of ``plot/1``, removing this smell:
 
@@ -1020,7 +1020,7 @@ ___
   {5, 6, nil}
   ```
 
-  As shown below, another alternative to refactor this smell is to replace ``Map`` per ``structs``, which are named maps. By default, structs only support strict access to values. In this way, its accesses always return clear and objective results:
+  As shown below, another alternative to refactor this smell is to replace a ``Map`` with a ``struct`` (named map). By default, structs only support strict access to values. In this way, accesses will always return clear and objective results:
 
   ```elixir
   defmodule Point do
@@ -1051,9 +1051,9 @@ ___
 
 * __Category:__ Low-level concerns smells.
 
-* __Problem:__ In Elixir, there are many ways to extract key-related values from a URL query string. However, when pattern matching is not used for this purpose, depending on the format of the URL query string, the code may have undesired behavior, being able to extract unplanned values instead of forcing a crash. This unplanned value extraction can give a false impression that the code is working correctly, omitting bugs.
+* __Problem:__ In Elixir, there are many ways to extract key-related values from a URL query string. However, when pattern matching is not used for this purpose, depending on the format of the URL query string, the code may have undesired behavior, such as being able to extract unplanned values instead of forcing a crash. This unplanned value extraction can give a false impression that the code is working correctly, causing bugs.
 
-* __Example:__ The code shown below is an example of this smell. The function ``get_value/2`` tries to extract a value from a specific key of a URL query string. As it is not implemented using pattern matching, ``get_value/2`` always returns a value, regardless of the format of the URL query string passed as a parameter in the call. Sometimes the returns will be according to planning, however, if an URL query string with an unplanned format is informed in the call, ``get_value/2`` will extract incorrect values from it:
+* __Example:__ The code shown below is an example of this smell. The function ``get_value/2`` tries to extract a value from a specific key of a URL query string. As it is not implemented using pattern matching, ``get_value/2`` always returns a value, regardless of the format of the URL query string passed as a parameter in the call. Sometimes the returned value will be valid; however, if a URL query string with an unexpected format is used in the call, ``get_value/2`` will extract incorrect values from it:
 
   ```elixir
   defmodule Extract do
@@ -1073,19 +1073,19 @@ ___
 
   #...Use examples...
 
-  #URL query string according to with the planned format - OK!
+  # URL query string according to with the planned format - OK!
   iex(1)> Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "lab")  
   "ASERG"
 
   iex(2)> Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "university")
   "UFMG"
 
-  #Unplanned URL query string format - Unplanned value extraction!
+  # Unplanned URL query string format - Unplanned value extraction!
   iex(3)> Extract.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
   "institution"   # <= why not "institution=UFMG"? or only "UFMG"?
   ```
 
-* __Refactoring:__ To remove this code smell, ``get_value/2`` can be refactored through the use of pattern matching. Always which an unplanned URL query string format is used, the function will be crash instead return an unplanned value. This behavior, shown below, will allow clients to decide how to handle these errors and will not give a false impression that the code is working correctly when unplanned values are extracted:
+* __Refactoring:__ To remove this code smell, ``get_value/2`` can be refactored through the use of pattern matching. So, if an unexpected URL query string format is used, the function will be crash instead of returning an invalid value. This behavior, shown below, will allow clients to decide how to handle these errors and will not give a false impression that the code is working correctly when unexpected values are extracted:
 
   ```elixir
   defmodule Extract do
@@ -1106,11 +1106,11 @@ ___
 
   #...Use examples...
 
-  #URL query string according to with the planned format - OK!
+  # URL query string according to with the planned format - OK!
   iex(1)> Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "name")      
   "Lucas"
 
-  #Unplanned URL query string format - Crash explaining the problem to the client!
+  # Unplanned URL query string format - Crash explaining the problem to the client!
   iex(2)> Extract.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
   ** (MatchError) no match of right hand side value: ["university", "institution", "UFMG"] 
     extract.ex:7: anonymous fn/2 in Extract.get_value/2 # <= left hand: [key, value] pair
@@ -1131,7 +1131,7 @@ ___
 
 * __Problem:__ This code smell is related to possible module name conflicts that can occur when a library is implemented. Due to a limitation of the Erlang VM (BEAM), also used by Elixir, only one instance of a module can be loaded at a time. If there are name conflicts between more than one module, they will be considered the same by BEAM and only one of them will be loaded. This can cause unwanted code behavior.
 
-* __Example:__ The code shown below is an example of this smell. Two different modules were defined with identical names (``Foo``). When BEAM tries to load both simultaneously, only the module defined in the file (``module_two.ex``) stay loaded, redefining the current version of ``Foo`` (``module_one.ex``) in memory. That turns impossible to call ``from_module_one/0``, for example:
+* __Example:__ The code shown below is an example of this smell. Two different modules were defined with identical names (``Foo``). When BEAM tries to load both simultaneously, only the module defined in the file (``module_two.ex``) stay loaded, redefining the current version of ``Foo`` (``module_one.ex``) in memory. That makes it impossible to call ``from_module_one/0``, for example:
 
   ```elixir
   defmodule Foo do
@@ -1155,7 +1155,7 @@ ___
   end
   ```
 
-  When BEAM tries to load both simultaneously, only one will stay loaded due to name conflict:
+  When BEAM tries to load both simultaneously, the name conflict causes only one of them to stay loaded:
 
   ```elixir
   iex(1)> c("module_one.ex")
@@ -1173,7 +1173,7 @@ ___
   ** (UndefinedFunctionError) function Foo.from_module_one/0 is undefined...
   ```
 
-* __Refactoring:__ To remove this code smell, a library must standardize the naming of its modules, always using its own name as a prefix (namespace) for all its module's names (e.g., ``LibraryName.ModuleName``). When a module file is within subdirectories of a library, the names of the subdirectories must also be used in the module naming (e.g., ``LibraryName.SubdirectoryName.ModuleName``). In the refactored code shown below, this module naming pattern was used. For this, the ``Foo`` module, defined in the file ``module_two.ex``, was also moved to the ``utils`` subdirectory. This refactoring, in addition to eliminating the internal conflict of names within the library, will prevent the occurrence of name conflicts with client codes:
+* __Refactoring:__ To remove this code smell, a library must standardize the naming of its modules, always using its own name as a prefix (namespace) for all its module's names (e.g., ``LibraryName.ModuleName``). When a module file is within subdirectories of a library, the names of the subdirectories must also be used in the module naming (e.g., ``LibraryName.SubdirectoryName.ModuleName``). In the refactored code shown below, this module naming pattern was used. For this, the ``Foo`` module, defined in the file ``module_two.ex``, was also moved to the ``utils`` subdirectory. This refactoring, in addition to eliminating the internal conflict of names within the library, will prevent the occurrence of name conflicts with client code:
 
   ```elixir
   defmodule MyLibrary.Foo do
@@ -1251,7 +1251,7 @@ ___
   15
   ```
 
-* __Refactoring:__ To remove this code smell, the developer simply must replace the unnecessary macro with structures that are simpler to write and understand, such as named functions. The code shown below is the result of the refactoring of the previous example. Basically, the ``sum/2`` macro has been transformed into a conventionally named function:
+* __Refactoring:__ To remove this code smell, the developer must replace the unnecessary macro with structures that are simpler to write and understand, such as named functions. The code shown below is the result of the refactoring of the previous example. Basically, the ``sum/2`` macro has been transformed into a conventional named function:
 
   ```elixir
   defmodule MyMacro do
@@ -1345,7 +1345,7 @@ ___
 
 * __Category:__ Low-level concerns smells.
 
-* __Problem:__ As explained in the description of [App configuration for code libs](#app-configuration-for-code-libs), the ``Application Environment`` can be used to parameterize values in an Elixir system. Although it is not a good practice to use this mechanism in the implementation of libraries, sometimes can be unavoidable. If these parameterized values are assigned to ``module attributes``, it can be especially problematic. As ``module attribute`` values are defined at compile-time, when trying to assign ``Application Environment`` values to these attributes, warnings or errors can be triggered by Elixir. This happens because, when defining module attributes at compile-time, the ``Application Environment`` can be not yet available in memory.
+* __Problem:__ As explained in the description of [App configuration for code libs](#app-configuration-for-code-libs), the ``Application Environment`` can be used to parameterize values in an Elixir system. Although it is not a good practice to use this mechanism in the implementation of libraries, sometimes this can be unavoidable. If these parameterized values are assigned to ``module attributes``, it can be especially problematic. As ``module attribute`` values are defined at compile-time, when trying to assign ``Application Environment`` values to these attributes, warnings or errors can be triggered by Elixir. This happens because, when defining module attributes at compile time, the ``Application Environment`` is not yet available in memory.
 
 * __Example:__ The ``DashSplitter`` module represents a library. This module has an attribute ``@parts`` that has its constant value defined at compile-time by calling ``Application.fetch_env!/2``. The ``split/1`` function, implemented by this library, has the purpose of separating a string received via parameter into a certain number of parts. The character used as a separator in ``split/1`` is always ``"-"`` and the number of parts the string is split into is defined by the module attribute ``@parts``, as shown next:
 
@@ -1371,7 +1371,7 @@ ___
   configured
   ```
 
-* __Refactoring:__ To remove this code smell, when it is really unavoidable to use the ``Application Environment`` mechanism to configure library functions, this should be done at runtime and not during compilation. That is, instead of calling ``Application.fetch_env!(:app_config, :parts)`` at compile-time to set ``@parts``, this function must be called at runtime within ``split/1``. This will mitigate the risk that ``Application Environment`` is not yet available in memory when it is necessary to use it. Another possible refactoring, as shown below, is to replace the use of the ``Application.fetch_env!/2`` function to define ``@parts``, with the ``Application.compile_env/3``. The third parameter of ``Application.compile_env/3`` defines a default value that is returned whenever that ``Application Environment`` is not available in memory during the definition of ``@parts``. This prevents Elixir to raise an error at compile-time:
+* __Refactoring:__ To remove this code smell, when it is really unavoidable to use the ``Application Environment`` mechanism to configure library functions, this should be done at runtime and not during compilation. That is, instead of calling ``Application.fetch_env!(:app_config, :parts)`` at compile-time to set ``@parts``, this function must be called at runtime within ``split/1``. This will mitigate the risk that ``Application Environment`` is not yet available in memory when it is necessary to use it. Another possible refactoring, as shown below, is to replace the use of the ``Application.fetch_env!/2`` function to define ``@parts``, with the ``Application.compile_env/3``. The third parameter of ``Application.compile_env/3`` defines a default value that is returned whenever that ``Application Environment`` is not available in memory during the definition of ``@parts``. This prevents Elixir from raising an error at compile-time:
 
   ```elixir
   defmodule DashSplitter do
@@ -1395,9 +1395,9 @@ ___
 
 * __Category:__ Low-level concerns smells.
 
-* __Problem:__ Elixir has mechanisms like ``import``, ``alias``, and ``use`` to establish dependencies between modules. Establishing dependencies allows a module to call functions from other modules, facilitating code reuse. A code implemented with these mechanisms does not characterize a smell by itself, however, while the ``import`` and ``alias`` directives have lexical scope and only facilitate that a module to use functions of another, the ``use`` directive has a broader scope, something that can be problematic. The ``use`` directive allows a module to inject any type of code into another, including propagating dependencies. In this way, using the ``use`` directive makes code readability worse, because to understand exactly what will happen when it references a module, it is necessary to have knowledge of the internal details of the referenced module.
+* __Problem:__ Elixir has mechanisms such as ``import``, ``alias``, and ``use`` to establish dependencies between modules. Establishing dependencies allows a module to call functions from other modules, facilitating code reuse. A code implemented with these mechanisms does not characterize a smell by itself; however, while the ``import`` and ``alias`` directives have lexical scope and only facilitate that a module to use functions of another, the ``use`` directive has a broader scope, something that can be problematic. The ``use`` directive allows a module to inject any type of code into another, including propagating dependencies. In this way, using the ``use`` directive makes code readability worse, because to understand exactly what will happen when it references a module, it is necessary to have knowledge of the internal details of the referenced module.
 
-* __Example:__ The code shown below is an example of this smell. Three different modules were defined -- ``ModuleA``, ``Library``, and ``ClientApp``. ``ClientApp`` is reusing code from the ``Library`` via the ``use`` directive, but is unaware of its internal details. Therefore, when ``Library`` is referenced by ``ClientApp``, it injects into ``ClientApp`` all the content present in its ``__using__/1`` macro. Due to the less readability of the code and the lack of knowledge of the internal details of the ``Library``, ``ClientApp`` defines a local function ``foo/0``. This will generate a conflict as ``ModuleA`` also has a function ``foo/0`` and when ``ClientApp`` referenced ``Library`` via the ``use`` directive it had a dependency for ``ModuleA`` propagated to itself:
+* __Example:__ The code shown below is an example of this smell. Three different modules were defined -- ``ModuleA``, ``Library``, and ``ClientApp``. ``ClientApp`` is reusing code from the ``Library`` via the ``use`` directive, but is unaware of its internal details. Therefore, when ``Library`` is referenced by ``ClientApp``, it injects into ``ClientApp`` all the content present in its ``__using__/1`` macro. Due to the decreased readability of the code and the lack of knowledge of the internal details of the ``Library``, ``ClientApp`` defines a local function ``foo/0``. This will generate a conflict as ``ModuleA`` also has a function ``foo/0``; when ``ClientApp`` referenced ``Library`` via the ``use`` directive, it has a dependency for ``ModuleA`` propagated to itself:
 
   ```elixir
   defmodule ModuleA do
@@ -1448,7 +1448,7 @@ ___
   ** (CompileError) client_app.ex:4: imported ModuleA.foo/0 conflicts with local function
   ```
 
-* __Refactoring:__ To remove this code smell, whenever it is enough, is better to replace ``use`` with ``alias`` or ``import`` when creating a dependency between an application and a library. This will make code behavior clearer due to improved readability. In the following code, ``ClientApp`` was refactored in this way, and with that, the conflict has previously shown no longer exists:
+* __Refactoring:__ To remove this code smell, it may be possible to replace ``use`` with ``alias`` or ``import`` when creating a dependency between an application and a library. This will make code behavior clearer, due to improved readability. In the following code, ``ClientApp`` was refactored in this way, and with that, the conflict as previously shown no longer exists:
 
   ```elixir
   defmodule ClientApp do
