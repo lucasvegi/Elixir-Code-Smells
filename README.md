@@ -123,7 +123,7 @@ ___
   end
   ```
   
-  This spreading of responsibility can generate duplicated code and make code maintenanc emore difficult. Also, due to the lack of control over the format of the shared data, complex composed data can be shared. This freedom to use any format of data is dangerous and can induce developers to introduce bugs.
+  This spreading of responsibility can generate duplicated code and make code maintenance more difficult. Also, due to the lack of control over the format of the shared data, complex composed data can be shared. This freedom to use any format of data is dangerous and can induce developers to introduce bugs.
 
   ```elixir
   # start an agent with initial state of an empty list
@@ -170,7 +170,7 @@ ___
   end
   ```
 
-  The following are examples of how to delegate access to shared data (provided by an ``Agent`) to ``KV.Bucket``.
+  The following are examples of how to delegate access to shared data (provided by an ``Agent``) to ``KV.Bucket``.
 
   ```elixir
   # start an agent through a `KV.Bucket`
