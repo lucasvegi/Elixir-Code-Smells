@@ -289,7 +289,7 @@ ___
     @impl true
     def start(_type, _args) do
       children = [
-        # The counters are Supervisor childs started via Counter.start(0).
+        # The counters are Supervisor children started via Counter.start(0).
         %{
           id: Counter,
           start: {Counter, :start, [0]}
@@ -815,7 +815,7 @@ ___
     mix ecto.migrate
   ```
   
-* __Refactoring:__ To remove this code smell, it is necessary to separate the data manipulation in a ``mix task`` <sup>[link][MixTask]</sup> different from the module that performs the structural changes in the database via ``Ecto.Migration``. This separation of responsibilities is a best practice for increasing code testability. As shown below, the module ``AddIsCustomShopToGuitars`` now use ``Ecto.Migration`` only to perfom structural changes in the database schema:
+* __Refactoring:__ To remove this code smell, it is necessary to separate the data manipulation in a ``mix task`` <sup>[link][MixTask]</sup> different from the module that performs the structural changes in the database via ``Ecto.Migration``. This separation of responsibilities is a best practice for increasing code testability. As shown below, the module ``AddIsCustomShopToGuitars`` now use ``Ecto.Migration`` only to perform structural changes in the database schema:
 
   ```elixir
   defmodule GuitarStore.Repo.Migrations.AddIsCustomShopToGuitars do
