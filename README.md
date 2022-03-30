@@ -1476,9 +1476,11 @@ ___
 
 ## About
 
-This catalog was proposed by Lucas Vegi and Marco Tulio Valente, [ASERG/DCC/UFMG][ASERG] members.
+This catalog was proposed by Lucas Vegi and Marco Tulio Valente, from [ASERG/DCC/UFMG][ASERG].
 
-It was originally published in the paper *__"Code Smells in Elixir: Early Results from a Grey Literature Review"__* at International Conference on Program Comprehension ([ICPC 2022 ERA][ICPC-ERA]). More info is available at the paper's preprint copy [arXiv.org][preprint-copy].
+For more info see the following paper:
+
+* [Code Smells in Elixir: Early Results from a Grey Literature Review][preprint-copy], International Conference on Program Comprehension (ICPC), 2022.
 
 Please feel free to make pull requests and suggestions ([Discussions][Discussions] tab).
 
