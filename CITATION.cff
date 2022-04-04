@@ -7,7 +7,7 @@ message: 'If you use this catalog, please cite it as below.'
 type: dataset
 authors:
   - given-names: Lucas
-    family-names: Francisco da Matta Vegi
+    family-names: Vegi
     email: lucasvegi@gmail.com
     affiliation: UFMG
     orcid: 'https://orcid.org/0000-0002-7999-7098'
@@ -16,10 +16,7 @@ authors:
     email: mtvalente@gmail.com
     affiliation: UFMG
     orcid: 'https://orcid.org/0000-0002-8180-7548'
-identifiers:
-  - type: url
-    value: 'https://github.com/lucasvegi/Elixir-Code-Smells'
-url: 'https://doi.org/10.48550/arXiv.2203.08877'
+url: 'https://github.com/lucasvegi/Elixir-Code-Smells'
 keywords:
   - elixir
   - code smells
