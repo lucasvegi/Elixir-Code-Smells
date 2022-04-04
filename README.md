@@ -44,7 +44,7 @@ As a result of this investigation, we have proposed a catalog of 18 new smells t
 
 The objective of this catalog of code smells is to instigate the improvement of the quality of code developed in Elixir. For this reason, we are interested in knowing Elixir's community opinion about these code smells: *Do you agree that these code smells can be harmful? Have you seen any of them in production code? Do you have any suggestions about some Elixir-specific code smell not cataloged by us?...*
 
-Please feel free to make pull requests and suggestions ([Discussions][Discussions] tab). We want to hear from you!
+Please feel free to make pull requests and suggestions ([Issues][Issues] tab). We want to hear from you!
 
 [▲ back to Index](#table-of-contents)
 
@@ -1482,7 +1482,7 @@ For more info see the following paper:
 
 * [Code Smells in Elixir: Early Results from a Grey Literature Review][preprint-copy], International Conference on Program Comprehension (ICPC), 2022.
 
-Please feel free to make pull requests and suggestions ([Discussions][Discussions] tab).
+Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 
 [▲ back to Index](#table-of-contents)
 
@@ -1506,6 +1506,7 @@ Please feel free to make pull requests and suggestions ([Discussions][Discussion
 [UnsupervisedProcessExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-spawning-unsupervised-processes
 [Supervisor]: https://hexdocs.pm/elixir/master/Supervisor.html
 [Discussions]: https://github.com/lucasvegi/Elixir-Code-Smells/discussions
+[Issues]: https://github.com/lucasvegi/Elixir-Code-Smells/issues
 [LargeMessageExample]: https://samuelmullen.com/articles/elixir-processes-send-and-receive/
 [Agent]: https://hexdocs.pm/elixir/1.13/Agent.html
 [Task]: https://hexdocs.pm/elixir/1.13/Task.html
