@@ -1,0 +1,29 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Catalog of Elixir-specific code smells
+message: 'If you use this catalog, please cite it as below.'
+type: dataset
+authors:
+  - given-names: Lucas
+    family-names: Francisco da Matta Vegi
+    email: lucasvegi@gmail.com
+    affiliation: UFMG
+    orcid: 'https://orcid.org/0000-0002-7999-7098'
+  - given-names: Marco Tulio
+    family-names: Valente
+    email: mtvalente@gmail.com
+    affiliation: UFMG
+    orcid: 'https://orcid.org/0000-0002-8180-7548'
+identifiers:
+  - type: url
+    value: 'https://github.com/lucasvegi/Elixir-Code-Smells'
+url: 'https://doi.org/10.48550/arXiv.2203.08877'
+keywords:
+  - elixir
+  - code smells
+  - software quality
+license: MIT
+version: '1.0'
+date-released: '2022-02-15'
