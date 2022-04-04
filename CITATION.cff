@@ -6,7 +6,7 @@ title: Catalog of Elixir-specific code smells
 message: 'If you use this catalog, please cite it as below.'
 type: dataset
 authors:
-  - given-names: Lucas Francisco da Matta
+  - given-names: Lucas Francisco Matta
     family-names: Vegi
     email: lucasvegi@gmail.com
     affiliation: UFMG
