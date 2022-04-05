@@ -38,5 +38,5 @@ preferred-citation:
   pages: 5
   start: 1 # First page number
   end: 5 # Last page number
-  title: "Code Smells in Elixir: Early Results from a Grey Literature Review"
+  title: "Code smells in Elixir: early results from a grey literature review"
   year: 2022
