@@ -1,10 +1,5 @@
-# This CITATION.cff file was generated with cffinit.
-# Visit https://bit.ly/cffinit to generate yours today!
-
 cff-version: 1.2.0
-title: Catalog of Elixir-specific code smells
 message: 'If you use this catalog, please cite it as below.'
-type: dataset
 authors:
   - given-names: Lucas Francisco Matta
     family-names: Vegi
@@ -16,11 +11,32 @@ authors:
     email: mtvalente@gmail.com
     affiliation: UFMG
     orcid: 'https://orcid.org/0000-0002-8180-7548'
+title: 'Catalog of Elixir-specific code smells'
+version: '1.0'
+date-released: '2022-02-15'
 url: 'https://github.com/lucasvegi/Elixir-Code-Smells'
 keywords:
   - elixir
   - code smells
-  - software quality
+  - functional programming
 license: MIT
-version: '1.0'
-date-released: '2022-02-15'
+preferred-citation:
+  type: conference-paper
+  authors:
+  - given-names: Lucas Francisco Matta
+    family-names: Vegi
+    email: lucasvegi@dcc.ufmg.br
+    affiliation: Federal University of Minas Gerais (UFMG)
+    orcid: 'https://orcid.org/0000-0002-7999-7098'
+  - given-names: Marco Tulio
+    family-names: Valente
+    email: mtov@dcc.ufmg.br
+    affiliation: Federal University of Minas Gerais (UFMG)
+    orcid: 'https://orcid.org/0000-0002-8180-7548'
+  doi: "10.1145/3524610.3527881"  
+  conference: "30th International Conference on Program Comprehension (ICPC'22)"
+  pages: 5
+  start: 1 # First page number
+  end: 5 # Last page number
+  title: "Code Smells in Elixir: Early Results from a Grey Literature Review"
+  year: 2022
