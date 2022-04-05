@@ -33,6 +33,7 @@ preferred-citation:
     affiliation: Federal University of Minas Gerais (UFMG)
     orcid: 'https://orcid.org/0000-0002-8180-7548'
   doi: "10.1145/3524610.3527881"  
+  references:
   - type: conference-paper
     conference:
       - name: "30th International Conference on Program Comprehension (ICPC'22)"
