@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: 'If you use this catalog, please cite it as below.'
 authors:
-  - given-names: Lucas Francisco Matta
+  - given-names: Lucas Francisco da Matta
     family-names: Vegi
     email: lucasvegi@gmail.com
     affiliation: UFMG
@@ -23,7 +23,7 @@ license: MIT
 preferred-citation:
   type: conference-paper
   authors:
-  - given-names: Lucas Francisco Matta
+  - given-names: Lucas Francisco da Matta
     family-names: Vegi
     email: lucasvegi@dcc.ufmg.br
     affiliation: Federal University of Minas Gerais (UFMG)
