@@ -21,7 +21,6 @@ keywords:
   - functional programming
 license: MIT
 preferred-citation:
-  type: conference-paper
   authors:
   - given-names: Lucas Francisco Matta
     family-names: Vegi
@@ -34,7 +33,11 @@ preferred-citation:
     affiliation: Federal University of Minas Gerais (UFMG)
     orcid: 'https://orcid.org/0000-0002-8180-7548'
   doi: "10.1145/3524610.3527881"  
-  conference: "30th International Conference on Program Comprehension (ICPC'22)"
+  - type: conference-paper
+    conference:
+      - name: "30th International Conference on Program Comprehension (ICPC'22)"
+        city: "Virtual Event"
+        country: "USA"
   pages: 5
   start: 1 # First page number
   end: 5 # Last page number
