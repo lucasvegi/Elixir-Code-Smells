@@ -658,18 +658,19 @@ ___
         %type{} = data # <= MatchError if data is a default Map
         case type do
           URI -> raise ArgumentError,
-            message: "invalid argument. Does not make sense to dasherize URI!"
+                    message: "invalid argument. Does not make sense to dasherize URI!"
           _   -> "..."
         end
       rescue
-        MatchError -> raise ArgumentError,
-          message: "invalid argument. Map type does not implement String.Chars!"
+        MatchError -> 
+                raise ArgumentError,
+                   message: "invalid argument. Map type does not implement String.Chars!"
       end
     end
 
     def dasherize(data) when is_number(data) do
       raise ArgumentError,
-        message: "invalid argument. Does not make sense to dasherize #{data}!"
+         message: "invalid argument. Does not make sense to dasherize #{data}!"
     end
 
     def dasherize(data) do
