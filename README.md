@@ -631,67 +631,52 @@ ___
   for %{first_name: "lucas", last_name: "vegi"} of type Map
   ```
 
-* __Refactoring:__ There are two main alternatives to improve code affected by this smell. 1) You can either remove the protocol use (i.e., ``to_string/1``), by adding multi-clauses on ``dasherize/1`` or just remove it; or 2) You can document that ``dasherize/1`` uses the protocol ``String.Chars`` for conversions. As shown next, these alternatives can be combined. We refactored using ``@doc`` to validate ``dasherize/1`` for desired data types that implement ``String.Chars`` and to document the protocol use consequences. Although numeric types and ``URI`` implement ``String.Chars``, we restrict them because we think they don't make sense for the function (this is not a rule!). We kept the protocol in use for ``dasherize/1`` support other data types that implement it, in addition to ``BitString`` and the types we restricted.
+* __Refactoring:__ There are two main alternatives to improve code affected by this smell. __1)__ You can either remove the protocol use (i.e., ``to_string/1``), by adding multi-clauses on ``dasherize/1`` or just remove it; or __2)__ You can document that ``dasherize/1`` uses the protocol ``String.Chars`` for conversions, showing its consequences. As shown next, we refactored using the first alternative, removing the protocol and restricting ``dasherize/1`` parameter only to desired data types (i.e., ``BitString`` and ``Atom``). Besides that, we use ``@doc`` to validate ``dasherize/1`` for desired inputs and to document the behavior to some types that we think don't make sense for the function (e.g., ``Integer`` and ``URI``).
 
   ```elixir
   defmodule CodeSmells do
     @doc """
       Function that converts underscores to dashes.
-        data: Must be of a data type that implements the protocol String.Chars
+
+      ## Parameter
+        data: only BitString and Atom are supported.
 
       ## Examples
 
-          iex> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
-          ** (ArgumentError) invalid argument. Map type does not implement String.Chars!
-
-          iex> CodeSmells.dasherize(URI.parse("http://www.code_smells.com"))
-          ** (ArgumentError) invalid argument. Does not make sense to dasherize URI!
-
-          iex> CodeSmells.dasherize(10)
-          ** (ArgumentError) invalid argument. Does not make sense to dasherize 10!
+          iex> CodeSmells.dasherize(:lucas_vegi)
+          "lucas-vegi"
 
           iex> CodeSmells.dasherize("Lucas_Vegi")
           "Lucas-Vegi"
+
+          iex> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
+          ** (FunctionClauseError) no function clause matching in CodeSmells.dasherize/1
+
+          iex> CodeSmells.dasherize(URI.parse("http://www.code_smells.com"))
+          ** (FunctionClauseError) no function clause matching in CodeSmells.dasherize/1
+
+          iex> CodeSmells.dasherize(10)
+          ** (FunctionClauseError) no function clause matching in CodeSmells.dasherize/1
     """
-    def dasherize(data) when is_map(data) do
-      try do
-        %type{} = data # <= MatchError if data is a default Map
-        case type do
-          URI -> raise ArgumentError,
-                    message: "invalid argument. Does not make sense to dasherize URI!"
-          _   -> "..."
-        end
-      rescue
-        MatchError -> 
-                raise ArgumentError,
-                   message: "invalid argument. Map type does not implement String.Chars!"
-      end
+    def dasherize(data) when is_atom(data) do
+      dasherize(Atom.to_string(data))
     end
 
-    def dasherize(data) when is_number(data) do
-      raise ArgumentError,
-         message: "invalid argument. Does not make sense to dasherize #{data}!"
-    end
-
-    def dasherize(data) do
-      to_string(data)
-      |> String.replace("_", "-")
+    def dasherize(data) when is_binary(data) do
+      String.replace(data, "_", "-")
     end
   end
 
   #...Use examples...
 
-  iex(1)> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
-  ** (ArgumentError) invalid argument. Map type does not implement String.Chars!
+  iex(1)> CodeSmells.dasherize(:lucas_vegi)
+  "lucas-vegi"
 
   iex(2)> CodeSmells.dasherize("Lucas_Vegi")
   "Lucas-Vegi"
 
   iex(3)> CodeSmells.dasherize(10)
-  ** (ArgumentError) invalid argument. Does not make sense to dasherize 10!
-
-  iex(4)> CodeSmells.dasherize(URI.parse("http://www.code_smells.com"))
-  ** (ArgumentError) invalid argument. Does not make sense to dasherize URI!
+  ** (FunctionClauseError) no function clause matching in CodeSmells.dasherize/1
   ```
 
   This example is based on code written by José Valim ([@josevalim][jose-valim]). Source: [link][JoseValimExamples]
