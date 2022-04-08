@@ -623,7 +623,7 @@ ___
   iex(2)> CodeSmells.dasherize(10)  #<= Makes sense?
   "10"
 
-  iex(3)> CodeSmells.dasherize(URI.parse("http://www.code_smells.com")) #<= Makes sense? Maybe...
+  iex(3)> CodeSmells.dasherize(URI.parse("http://www.code_smells.com")) #<= Makes sense? Maybe.
   "http://www.code-smells.com"
 
   iex(4)> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
