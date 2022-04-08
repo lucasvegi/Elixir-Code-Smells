@@ -605,7 +605,7 @@ ___
 
 * __Problem:__ This code smell refers to functions that have protocol-dependent parameters and are therefore polymorphic. A polymorphic function itself does not represent a code smell, but some developers implement these generic functions without accompanying guard clauses, allowing to pass parameters that do not implement the required protocol or that have no meaning.
 
-* __Example:__ An instance of this code smell happens when a function uses ``to_string()`` to convert data received by parameter. The function ``to_string()`` uses the protocol ``String.Chars`` for conversions. Many Elixir data types (e.g., ``BitString``, ``Integer``, ``Float``, ``URI``) implement this protocol. However, as shown below, other Elixir data types (e.g., ``Map``) do not implement it, thus making the behavior of the ``dasherize/1`` function unpredictable. Besides that, it may not make sense to dasherize a ``URI`` or a number as shown next.
+* __Example:__ An instance of this code smell happens when a function uses ``to_string()`` to convert data received by parameter. The function ``to_string()`` uses the protocol ``String.Chars`` for conversions. Many Elixir data types (e.g., ``BitString``, ``Integer``, ``Float``, ``URI``) implement this protocol. However, as shown below, other Elixir data types (e.g., ``Map``) do not implement it and can cause an error in ``dasherize/1`` function. Depending on the situation, this behavior can be desired or not. Besides that, it may not make sense to dasherize a ``URI`` or a number as shown next.
 
   ```elixir
   defmodule CodeSmells do
@@ -623,7 +623,7 @@ ___
   iex(2)> CodeSmells.dasherize(10)  #<= Makes sense?
   "10"
 
-  iex(3)> CodeSmells.dasherize(URI.parse("http://www.code_smells.com")) #<= Makes sense? Maybe.
+  iex(3)> CodeSmells.dasherize(URI.parse("http://www.code_smells.com")) #<= Makes sense?
   "http://www.code-smells.com"
 
   iex(4)> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
@@ -631,34 +631,44 @@ ___
   for %{first_name: "lucas", last_name: "vegi"} of type Map
   ```
 
-* __Refactoring:__ There are three main alternatives to improve code affected by this smell. 1) Remove the protocol call ``to_string/1``; 2) Write test cases (via ``@doc``) that validate the function for data types that implement the desired protocol and document the protocol use consequences clearly; or 3) Implement the function as multi-clause, adding guard clauses to restrict the protocol. Next, we refactored using alternatives 2) and 3). Numeric types have been restricted as they don't make sense for the function ``dasherize/1``.
+* __Refactoring:__ There are two main alternatives to improve code affected by this smell. 1) You can either remove the protocol use (i.e., ``to_string/1``), by adding multi-clauses on ``dasherize/1`` or just remove it; or 2) You can document that ``dasherize/1`` uses the protocol ``String.Chars`` for conversions. As shown next, these alternatives can be combined. We refactored using ``@doc`` to validate ``dasherize/1`` for desired data types that implement ``String.Chars`` and to document the protocol use consequences. Although numeric types and ``URI`` implement ``String.Chars``, we restrict them because we think they don't make sense for the function (this is not a rule!). We kept the protocol in use for ``dasherize/1`` support other data types that implement it, in addition to ``BitString`` and the types we restricted.
 
   ```elixir
   defmodule CodeSmells do
     @doc """
       Function that converts underscores to dashes.
-      Created to illustrate "Untested polymorphic behavior".
+        data: Must be of a data type that implements the protocol String.Chars
 
       ## Examples
 
           iex> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
-          "first-name, last-name"
+          ** (ArgumentError) invalid argument. Map type does not implement String.Chars!
 
-          iex> CodeSmells.dasherize("Lucas_Vegi")
-          "Lucas-Vegi"
+          iex> CodeSmells.dasherize(URI.parse("http://www.code_smells.com"))
+          ** (ArgumentError) invalid argument. Does not make sense to dasherize URI!
 
           iex> CodeSmells.dasherize(10)
           ** (ArgumentError) invalid argument. Does not make sense to dasherize 10!
+
+          iex> CodeSmells.dasherize("Lucas_Vegi")
+          "Lucas-Vegi"
     """
     def dasherize(data) when is_map(data) do
-      Map.keys(data)
-      |> Enum.map(fn key -> "#{key}" end)
-      |> Enum.join(", ")
-      |> dasherize()
+      try do
+        %type{} = data # <= MatchError if data is a default Map
+        case type do
+          URI -> raise ArgumentError,
+            message: "invalid argument. Does not make sense to dasherize URI!"
+          _   -> "..."
+        end
+      rescue
+        MatchError -> raise ArgumentError,
+          message: "invalid argument. Map type does not implement String.Chars!"
+      end
     end
 
     def dasherize(data) when is_number(data) do
-      raise ArgumentError, 
+      raise ArgumentError,
         message: "invalid argument. Does not make sense to dasherize #{data}!"
     end
 
@@ -671,13 +681,16 @@ ___
   #...Use examples...
 
   iex(1)> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
-  "first-name, last-name"
+  ** (ArgumentError) invalid argument. Map type does not implement String.Chars!
 
   iex(2)> CodeSmells.dasherize("Lucas_Vegi")
   "Lucas-Vegi"
 
   iex(3)> CodeSmells.dasherize(10)
   ** (ArgumentError) invalid argument. Does not make sense to dasherize 10!
+
+  iex(4)> CodeSmells.dasherize(URI.parse("http://www.code_smells.com"))
+  ** (ArgumentError) invalid argument. Does not make sense to dasherize URI!
   ```
 
   This example is based on code written by José Valim ([@josevalim][jose-valim]). Source: [link][JoseValimExamples]
