@@ -442,7 +442,7 @@ ___
   end
   ```
 
-  This example is based on a original code by Syamil MJ. Source: [link][MultiClauseExample]
+  This example is based on a original code by Syamil MJ ([@syamilmj][syamilmj]). Source: [link][MultiClauseExample]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -603,9 +603,9 @@ ___
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ This code smell refers to functions that have protocol-dependent parameters and are therefore polymorphic. A polymorphic function itself does not represent a code smell, but some developers implement these generic functions without accompanying guard clauses (in this case, to verify whether the parameter types implement the required protocols).
+* __Problem:__ This code smell refers to functions that have protocol-dependent parameters and are therefore polymorphic. A polymorphic function itself does not represent a code smell, but some developers implement these generic functions without accompanying guard clauses, allowing to pass parameters that do not implement the required protocol or that have no meaning.
 
-* __Example:__ An instance of this code smell happens when a function uses ``to_string()`` to convert data received by parameter. The function ``to_string()`` uses the protocol ``String.Chars`` for conversions. Many Elixir data types (e.g., ``BitString``, ``Integer``, ``Float``, ``URI``) implement this protocol. However, as shown below, other Elixir data types (e.g., ``Map``) do not implement it, thus making the behavior of the ``dasherize/1`` function unpredictable.
+* __Example:__ An instance of this code smell happens when a function uses ``to_string()`` to convert data received by parameter. The function ``to_string()`` uses the protocol ``String.Chars`` for conversions. Many Elixir data types (e.g., ``BitString``, ``Integer``, ``Float``, ``URI``) implement this protocol. However, as shown below, other Elixir data types (e.g., ``Map``) do not implement it, thus making the behavior of the ``dasherize/1`` function unpredictable. Besides that, it may not make sense to dasherize a ``URI`` or a number as shown next.
 
   ```elixir
   defmodule CodeSmells do
@@ -620,10 +620,10 @@ ___
   iex(1)> CodeSmells.dasherize("Lucas_Vegi")
   "Lucas-Vegi"
 
-  iex(2)> CodeSmells.dasherize(10)
+  iex(2)> CodeSmells.dasherize(10)  #<= Makes sense?
   "10"
 
-  iex(3)> CodeSmells.dasherize(URI.parse("http://www.code_smells.com"))
+  iex(3)> CodeSmells.dasherize(URI.parse("http://www.code_smells.com")) #<= Makes sense? Maybe...
   "http://www.code-smells.com"
 
   iex(4)> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
@@ -631,7 +631,7 @@ ___
   for %{first_name: "lucas", last_name: "vegi"} of type Map
   ```
 
-* __Refactoring:__ There are two main ways to improve code affected by this smell. 1) Write test cases (via ``@doc``) that validate the function for data types that implement the desired protocol; and 2) Implement the function as multi-clause, directing its behavior through guard clauses, as shown below.
+* __Refactoring:__ There are three main alternatives to improve code affected by this smell. 1) Remove the protocol call ``to_string/1``; 2) Write test cases (via ``@doc``) that validate the function for data types that implement the desired protocol and document the protocol use consequences clearly; or 3) Implement the function as multi-clause, adding guard clauses to restrict the protocol. Next, we refactored using alternatives 2) and 3). Numeric types have been restricted as they don't make sense for the function ``dasherize/1``.
 
   ```elixir
   defmodule CodeSmells do
@@ -648,7 +648,7 @@ ___
           "Lucas-Vegi"
 
           iex> CodeSmells.dasherize(10)
-          "10"
+          ** (ArgumentError) invalid argument. Does not make sense to dasherize 10!
     """
     def dasherize(data) when is_map(data) do
       Map.keys(data)
@@ -657,19 +657,30 @@ ___
       |> dasherize()
     end
 
+    def dasherize(data) when is_number(data) do
+      raise ArgumentError, 
+        message: "invalid argument. Does not make sense to dasherize #{data}!"
+    end
+
     def dasherize(data) do
       to_string(data)
       |> String.replace("_", "-")
     end
   end
 
-  #...Uses example...
+  #...Use examples...
 
   iex(1)> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
   "first-name, last-name"
+
+  iex(2)> CodeSmells.dasherize("Lucas_Vegi")
+  "Lucas-Vegi"
+
+  iex(3)> CodeSmells.dasherize(10)
+  ** (ArgumentError) invalid argument. Does not make sense to dasherize 10!
   ```
 
-  This example is based on code written by José Valim. Source: [link][JoseValimExamples]
+  This example is based on code written by José Valim ([@josevalim][jose-valim]). Source: [link][JoseValimExamples]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -1049,7 +1060,7 @@ ___
   ** (UndefinedFunctionError) ... (Point does not implement the Access behaviour)
   ```
 
-  These examples are based on code written by José Valim. Source: [link][JoseValimExamples]
+  These examples are based on code written by José Valim ([@josevalim][jose-valim]). Source: [link][JoseValimExamples]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -1127,7 +1138,7 @@ ___
     extract.ex:7: anonymous fn/2 in Extract.get_value/2 # <= left hand: [key, value] pair
   ```
   
-  These examples are based on code written by José Valim. Source: [link][JoseValimExamples]
+  These examples are based on code written by José Valim ([@josevalim][jose-valim]). Source: [link][JoseValimExamples]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -1530,3 +1541,5 @@ Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 [DependencyWithUseExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-use-when-an-import-is-enough
 [ICPC-ERA]: https://conf.researchr.org/track/icpc-2022/icpc-2022-era
 [preprint-copy]: https://doi.org/10.48550/arXiv.2203.08877
+[jose-valim]: https://github.com/josevalim
+[syamilmj]: https://github.com/syamilmj
