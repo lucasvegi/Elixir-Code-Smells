@@ -442,6 +442,55 @@ ___
   end
   ```
 
+* __Refactoring:__ As shown below, a possible solution to this smell is to break the business rules that are mixed up in a single complex multi-clause function in several different simple functions. Each function can have a specific ``@doc``, describing its behavior and parameters received. While this refactoring sounds simple, it can have a lot of impact on the function's current clients, so be careful!
+
+  ```elixir
+  @doc """
+    Update sharp product
+
+    ## Parameter
+      struct: %Product{...}
+    
+    ## Examples
+
+      iex> Namespace.Module.update_sharp_product(%Product{...})
+      expected result...   
+  """
+  def update_sharp_product(struct) do
+    # ...
+  end
+
+  @doc """
+    Update blunt product
+
+    ## Parameter
+      struct: %Product{...}
+    
+    ## Examples
+
+      iex> Namespace.Module.update_blunt_product(%Product{...})
+      expected result...   
+  """
+  def update_blunt_product(struct) do
+    # ...
+  end
+
+  @doc """
+    Update animal
+
+    ## Parameter
+      struct: %Animal{...}
+    
+    ## Examples
+
+      iex> Namespace.Module.update_animal(%Animal{...})
+      expected result...   
+  """
+  def update_animal(struct) do
+    # ...
+  end
+  ```
+
   This example is based on a original code by Syamil MJ ([@syamilmj][syamilmj]). Source: [link][MultiClauseExample]
 
 [▲ back to Index](#table-of-contents)
