@@ -12,7 +12,7 @@
   * [Unsupervised process](#unsupervised-process)
   * [Large messages between processes](#large-messages-between-processes)
   * [Complex multi-clause function](#complex-multi-clause-function)
-  * [Complex API error handling](#complex-api-error-handling)
+  * [Complex branching](#complex-branching)
   * [Exceptions for control-flow](#exceptions-for-control-flow)
   * [Untested polymorphic behavior](#untested-polymorphic-behavior)
   * [Code organization by process](#code-organization-by-process)
@@ -496,13 +496,15 @@ ___
 [▲ back to Index](#table-of-contents)
 ___
 
-### Complex API error handling
+### Complex branching
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ When a function assumes the responsibility of handling multiple errors returned by the same API endpoint, it can become confusing.
+* __Note:__ Formerly known as "Complex API error handling".
 
-* __Example:__ An example of this code smell is when a function uses the ``case`` control-flow structure to handle  multiple variations of response types from an endpoint. This practice can make the function more complex, long, and difficult to understand, as shown next.
+* __Problem:__ When a function assumes the responsibility of handling multiple errors alone, it can increase its cyclomatic complexity (metric of control-flow) and become incomprehensible. This situation can configure a specific instance of "Long function", a traditional code smell, but has implications of its own. Under these circumstances, this function could get very confusing, difficult to maintain and test, and therefore bug-proneness.
+
+* __Example:__ An example of this code smell is when a function uses the ``case`` control-flow structure or other similar constructs (e.g., ``cond``, or ``receive``) to handle multiple variations of response types returned by the same API endpoint. This practice can make the function more complex, long, and difficult to understand, as shown next.
 
   ```elixir
   def get_customer(customer_id) do
@@ -514,29 +516,35 @@ ___
   end
   ```
 
-* __Refactoring:__ As shown below, in this situation, instead of using the ``case`` control-flow structure, it is better to delegate the responses handling to a specific function (multi-clause), using pattern matching for each API response variation.
+  Although ``get_customer/1`` is not really long in this example, it could be. Thinking about this more complex scenario, where a large number of different responses can be provided to the same endpoint, is not a good idea to concentrate all on a single function. This is a risky scenario, where a little typo, or any problem introduced by the programmer in handling a response type, could eventually compromise the handling of all responses from the endpoint (if the function raises an exception, for example).
+
+* __Refactoring:__ As shown below, in this situation, instead of concentrating all handlings within the same function,  creating a complex branching, it is better to delegate each branch (handling of a response type) to a different private function. In this way, the code will be cleaner, more concise, and readable.
 
   ```elixir
   def get_customer(customer_id) when is_integer(customer_id) do
-    "/customers/" <> customer_id
-    |> get()
-    |> handle_3rd_party_api_response()
+    case get("/customers/#{customer_id}") do
+      {:ok, %Tesla.Env{status: 200, body: body}} -> success_api_response(body)
+      {:ok, %Tesla.Env{body: body}} -> x_error_api_response(body)
+      {:error, _} = other -> y_error_api_response(other)
+    end
   end
 
-  defp handle_3rd_party_api_response({:ok, %Tesla.Env{status: 200, body: body}}) do 
+  defp success_api_response(body) do
     {:ok, body}
   end
 
-  defp handle_3rd_party_api_response({:ok, %Tesla.Env{body: body}}) do
+  defp x_error_api_response(body) do
     {:error, body}
   end
 
-  defp handle_3rd_party_api_response({:error, _} = other) do 
+  defp y_error_api_response(other) do
     other
   end
   ```
 
-  This example is based on code written by Zack <sup>[MrDoops][MrDoops]</sup> and Dimitar Panayotov <sup>[dimitarvp][dimitarvp]</sup>. Source: [link][ComplexErrorHandleExample]
+  While this example of refactoring ``get_customer/1`` might seem quite more verbose than the original code, remember to imagine a scenario where ``get_customer/1`` is responsible for handling a number much larger than three different types of possible responses. This is the smelly scenario!
+
+  This example is based on code written by Zack <sup>[MrDoops][MrDoops]</sup> and Dimitar Panayotov <sup>[dimitarvp][dimitarvp]</sup>. Source: [link][ComplexErrorHandleExample]. We got suggestions from José Valim ([@josevalim][jose-valim]) on the refactoring.
 
 [▲ back to Index](#table-of-contents)
 ___
