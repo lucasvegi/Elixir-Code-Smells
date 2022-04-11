@@ -595,24 +595,25 @@ ___
     @moduledoc """
       Refactored library
     """
-    def janky_function!(value) do
-      if is_integer(value) do
-        #...
-        "Result..."
-      else
-        raise RuntimeError, message: "invalid argument. Is not integer!"
-      end
-    end
-  
+    
     @doc """
-      Alternative version without exceptions for control-flow.
+      Refactored version without exceptions for control-flow.
     """
     def janky_function(value) do
-      try do
-        {:ok, janky_function!(value)}
-      rescue
-        RuntimeError ->
-          {:error, "invalid argument. Is not integer!"}
+      if is_integer(value) do
+        #...
+        {:ok, "Result..."}
+      else
+        {:error, "invalid argument. Is not integer!"}
+      end
+    end
+
+    def janky_function!(value) do
+      case janky_function(value) do
+        {:ok, result} -> 
+          result
+        {:error, message} -> 
+          raise RuntimeError, message: message
       end
     end
   end
