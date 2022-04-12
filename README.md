@@ -16,6 +16,7 @@
   * [Complex branching](#complex-branching)
   * [Exceptions for control-flow](#exceptions-for-control-flow)
   * [Untested polymorphic behavior](#untested-polymorphic-behavior)
+  * [Alternative return types](#alternative-return-types) [^**]
   * [Code organization by process](#code-organization-by-process)
   * [Data manipulation by migration](#data-manipulation-by-migration)
 * __[Low-level concerns smells](#low-level-concerns-smells)__
@@ -37,7 +38,7 @@
 
 In order to better understand the types of sub-optimal code structures that can harm the internal quality of Elixir systems, we scoured websites, blogs, forums, and videos (grey literature review), looking for specific code smells for Elixir that are discussed by its developers.
 
-As a result of this investigation, we have initially proposed a catalog of 18 new smells that are specific to Elixir systems. Other smells are being suggested by the community, so this catalog is constantly being updated __(currently 19 smells)__. These code smells are categorized into two different groups ([design-related](#design-related-smells) and [low-level concerns](#low-level-concerns-smells)), according to the type of impact and code extent they affect. This catalog of Elixir-specific code smells is presented below. Each code smell is documented using the following structure:
+As a result of this investigation, we have initially proposed a catalog of 18 new smells that are specific to Elixir systems. Other smells are being suggested by the community, so this catalog is constantly being updated __(currently 20 smells)__. These code smells are categorized into two different groups ([design-related](#design-related-smells) and [low-level concerns](#low-level-concerns-smells)), according to the type of impact and code extent they affect. This catalog of Elixir-specific code smells is presented below. Each code smell is documented using the following structure:
 
 * __Name:__ Unique identifier of the code smell. This name is important to facilitate communication between developers;
 * __Category:__ The portion of code affected by smell and its severity;
@@ -782,6 +783,69 @@ ___
   ```
 
   This example is based on code written by José Valim ([@josevalim][jose-valim]). Source: [link][JoseValimExamples]
+
+[▲ back to Index](#table-of-contents)
+___
+
+### Alternative return types
+
+* __Category:__ Design-related smell.
+
+* __Note:__ This smell was suggested by the community via issues ([#6][Alternative-return-type-issue]).
+
+* __Problem:__ This code smell refers to functions that receive options (e.g., ``keyword list``) parameters that drastically change its return type. Because options are optional and sometimes set dynamically, if they change the return type it may be hard to understand what the function actually returns.
+
+* __Example:__ An example of this code smell, as shown below, is when a library (e.g. ``AlternativeInteger``) has a multi-clause function ``parse/2`` with many alternative return types. Depending on the options received as a parameter, the function will have a different return type.
+
+  ```elixir
+  defmodule AlternativeInteger do
+    def parse(string, opts) when is_list(opts) do
+      case opts[:discard_rest] do
+        true -> #only an integer value convert from string parameter
+        _   ->  #another return type (e.g., tuple)
+      end
+    end
+
+    def parse(string, opts \\ :default) do
+      #another return type (e.g., tuple)
+    end
+  end
+
+  #...Use examples...
+
+  iex(1)> AlternativeInteger.parse("13")
+  {13, "..."}
+
+  iex(2)> AlternativeInteger.parse("13", discard_rest: true)
+  13
+
+  iex(3)> AlternativeInteger.parse("13", discard_rest: false)
+  {13, "..."}
+  ```
+
+* __Refactoring:__ To refactor this smell, as shown next, it's better to add in the library a specific function for each return type (e.g., ``parse_no_rest/1``), no longer delegating this to an options parameter.
+
+  ```elixir
+  defmodule AlternativeInteger do
+    def parse_no_rest(string) do
+      #only an integer value convert from string parameter
+    end
+
+    def parse(string) do
+      #another return type (e.g., tuple)
+    end
+  end
+
+  #...Use examples...
+
+  iex(1)> AlternativeInteger.parse("13")
+  {13, "..."}
+
+  iex(2)> AlternativeInteger.parse_no_rest("13")
+  13
+  ```
+
+  This example and the refactoring are proposed by José Valim ([@josevalim][jose-valim])
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -1645,3 +1709,4 @@ Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 [jose-valim]: https://github.com/josevalim
 [syamilmj]: https://github.com/syamilmj
 [Complex-extraction-in-clauses-issue]: https://github.com/lucasvegi/Elixir-Code-Smells/issues/9
+[Alternative-return-type-issue]: https://github.com/lucasvegi/Elixir-Code-Smells/issues/6
