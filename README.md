@@ -12,6 +12,7 @@
   * [Unsupervised process](#unsupervised-process)
   * [Large messages between processes](#large-messages-between-processes)
   * [Complex multi-clause function](#complex-multi-clause-function)
+  * [Complex extraction in clauses](#complex-extraction-in-clauses) [^**]
   * [Complex branching](#complex-branching)
   * [Exceptions for control-flow](#exceptions-for-control-flow)
   * [Untested polymorphic behavior](#untested-polymorphic-behavior)
@@ -28,13 +29,15 @@
   * [Dependency with "use" when an "import" is enough](#dependency-with-use-when-an-import-is-enough)
 * __[About](#about)__
 
+[^**]: This code smell was suggested by the Elixir community.
+
 ## Introduction
 
 [Elixir][Elixir] is a new functional programming language whose popularity is rising in the industry <sup>[link][ElixirInProduction]</sup>. However, there are few works in the scientific literature focused on studying the internal quality of systems implemented in this language.
 
 In order to better understand the types of sub-optimal code structures that can harm the internal quality of Elixir systems, we scoured websites, blogs, forums, and videos (grey literature review), looking for specific code smells for Elixir that are discussed by its developers.
 
-As a result of this investigation, we have proposed a catalog of 18 new smells that are specific to Elixir systems. These code smells have been categorized into two different groups ([design-related](#design-related-smells) and [low-level concerns](#low-level-concerns-smells)), according to the type of impact and code extent they affect. This catalog of Elixir-specific code smells is presented below. Each code smell is documented using the following structure:
+As a result of this investigation, we have initially proposed a catalog of 18 new smells that are specific to Elixir systems. Other smells are being suggested by the community, so this catalog is constantly being updated __(currently 19 smells)__. These code smells are categorized into two different groups ([design-related](#design-related-smells) and [low-level concerns](#low-level-concerns-smells)), according to the type of impact and code extent they affect. This catalog of Elixir-specific code smells is presented below. Each code smell is documented using the following structure:
 
 * __Name:__ Unique identifier of the code smell. This name is important to facilitate communication between developers;
 * __Category:__ The portion of code affected by smell and its severity;
@@ -492,6 +495,47 @@ ___
   ```
 
   This example is based on a original code by Syamil MJ ([@syamilmj][syamilmj]). Source: [link][MultiClauseExample]
+
+[▲ back to Index](#table-of-contents)
+___
+
+### Complex extraction in clauses
+
+* __Category:__ Design-related smell.
+
+* __Note:__ This smell was suggested by the community via issues ([#9][Complex-extraction-in-clauses-issue]).
+
+* __Problem:__ When we use multi-clause functions, it is possible to extract values in the clauses for further usage and for pattern matching/guard checking. This extraction itself does not represent a code smell, but when you have too many clauses or too many arguments, it becomes hard to know which extracted parts are used for pattern/guards and what is used only inside the function body. This smell is related to [Complex multi-clause function](#complex-multi-clause-function), but with implications of its own. It impairs the code readability in a different way.
+
+* __Example:__ The following code, although simple, tries to illustrate the occurrence of this code smell. The multi-clause function ``drive/1`` is extracting fields of an ``%User{}`` struct in its clauses for further usage (``name``) and for pattern/guard checking (``age``). 
+
+  ```elixir
+  def drive(%User{name: name, age: age}) when age >= 18 do
+    "#{name} can drive"
+  end
+
+  def drive(%User{name: name, age: age}) when age < 18 do
+    "#{name} cannot drive"
+  end
+  ```
+  
+  While the example is small and looks like a clear code, try to imagine a situation where ``drive/1`` was more complex, having many more clauses, arguments, and extractions. This is the really smelly code!
+
+* __Refactoring:__ As shown below, a possible solution to this smell is to extract only pattern/guard related variables in the signature once you have many arguments or multiple clauses:
+
+  ```elixir
+  def drive(%User{age: age} = user) when age >= 18 do
+    %User{name: name} = user
+    "#{name} can drive"
+  end
+
+  def drive(%User{age: age} = user) when age < 18 do
+    %User{name: name} = user
+    "#{name} cannot drive"
+  end
+  ```
+
+  This example and the refactoring are proposed by José Valim ([@josevalim][jose-valim])
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -1600,3 +1644,4 @@ Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 [preprint-copy]: https://doi.org/10.48550/arXiv.2203.08877
 [jose-valim]: https://github.com/josevalim
 [syamilmj]: https://github.com/syamilmj
+[Complex-extraction-in-clauses-issue]: https://github.com/lucasvegi/Elixir-Code-Smells/issues/9
