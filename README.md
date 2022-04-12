@@ -14,6 +14,7 @@
   * [Complex multi-clause function](#complex-multi-clause-function)
   * [Complex extraction in clauses](#complex-extraction-in-clauses) [^**]
   * [Complex branching](#complex-branching)
+  * [Complex else clauses in with](#complex-else-clauses-in-with) [^**]
   * [Exceptions for control-flow](#exceptions-for-control-flow)
   * [Untested polymorphic behavior](#untested-polymorphic-behavior)
   * [Alternative return types](#alternative-return-types) [^**]
@@ -30,7 +31,7 @@
   * [Dependency with "use" when an "import" is enough](#dependency-with-use-when-an-import-is-enough)
 * __[About](#about)__
 
-[^**]: This code smell was suggested by the Elixir community.
+[^**]: These code smells were suggested by the Elixir community.
 
 ## Introduction
 
@@ -38,7 +39,7 @@
 
 In order to better understand the types of sub-optimal code structures that can harm the internal quality of Elixir systems, we scoured websites, blogs, forums, and videos (grey literature review), looking for specific code smells for Elixir that are discussed by its developers.
 
-As a result of this investigation, we have initially proposed a catalog of 18 new smells that are specific to Elixir systems. Other smells are being suggested by the community, so this catalog is constantly being updated __(currently 20 smells)__. These code smells are categorized into two different groups ([design-related](#design-related-smells) and [low-level concerns](#low-level-concerns-smells)), according to the type of impact and code extent they affect. This catalog of Elixir-specific code smells is presented below. Each code smell is documented using the following structure:
+As a result of this investigation, we have initially proposed a catalog of 18 new smells that are specific to Elixir systems. Other smells are being suggested by the community, so this catalog is constantly being updated __(currently 21 smells)__. These code smells are categorized into two different groups ([design-related](#design-related-smells) and [low-level concerns](#low-level-concerns-smells)), according to the type of impact and code extent they affect. This catalog of Elixir-specific code smells is presented below. Each code smell is documented using the following structure:
 
 * __Name:__ Unique identifier of the code smell. This name is important to facilitate communication between developers;
 * __Category:__ The portion of code affected by smell and its severity;
@@ -590,6 +591,57 @@ ___
   While this example of refactoring ``get_customer/1`` might seem quite more verbose than the original code, remember to imagine a scenario where ``get_customer/1`` is responsible for handling a number much larger than three different types of possible responses. This is the smelly scenario!
 
   This example is based on code written by Zack <sup>[MrDoops][MrDoops]</sup> and Dimitar Panayotov <sup>[dimitarvp][dimitarvp]</sup>. Source: [link][ComplexErrorHandleExample]. We got suggestions from José Valim ([@josevalim][jose-valim]) on the refactoring.
+
+[▲ back to Index](#table-of-contents)
+___
+
+### Complex else clauses in with
+
+* __Category:__ Design-related smell.
+
+* __Note:__ This smell was suggested by the community via issues ([#7][Complex-else-clauses-in-with-issue]).
+
+* __Problem:__ This code smell refers to ``with`` statements that flatten all its error clauses into a single complex ``else`` block. This situation is harmful to the code readability and maintainability because difficult to know from which clause the error value came.
+
+* __Example:__ An example of this code smell, as shown below, is a function ``open_decoded_file/1`` that read a base 64 encoded string content from a file and returns a decoded binary string. This function uses a ``with`` statement that needs to handle two possible errors, all of which are concentrated in a single complex ``else`` block.
+
+  ```elixir
+  def open_decoded_file(path) do
+    with {:ok, encoded} <- File.read(path),
+         {:ok, value} <- Base.decode64(encoded) do
+      value
+    else
+        {:error, _} -> :badfile
+        :error -> :badencoding
+    end
+  end
+  ```
+
+* __Refactoring:__ As shown below, in this situation, instead of concentrating all error handlings within a single complex ``else`` block, it is better to normalize the return types in specific private functions. In this way, due to its organization, the code will be cleaner and more readable.
+
+  ```elixir
+  def open_decoded_file(path) do
+    with {:ok, encoded} <- file_read(path),
+         {:ok, value} <- base_decode64(encoded) do
+      value
+  end
+
+  defp file_read(path) do
+    case File.read(path) do
+      {:ok, contents} -> {:ok, contents}
+      {:error, _} -> :badfile
+    end
+  end
+
+  defp base_decode64(contents) do
+    case Base.decode64(contents) do
+      {:ok, contents} -> {:ok, contents}
+      :error -> :badencoding
+    end
+  end
+  ```
+
+  This example and the refactoring are proposed by José Valim ([@josevalim][jose-valim])
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -1710,3 +1762,4 @@ Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 [syamilmj]: https://github.com/syamilmj
 [Complex-extraction-in-clauses-issue]: https://github.com/lucasvegi/Elixir-Code-Smells/issues/9
 [Alternative-return-type-issue]: https://github.com/lucasvegi/Elixir-Code-Smells/issues/6
+[Complex-else-clauses-in-with-issue]: https://github.com/lucasvegi/Elixir-Code-Smells/issues/7
