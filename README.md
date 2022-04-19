@@ -1121,7 +1121,7 @@ ___
 
 ## Low-level concerns smells
 
-Low-level concerns smells are more simple than design-related smells and affect a small part of the code. Next, all 8 different smells classified as low-level concerns are explained and exemplified:
+Low-level concerns smells are more simple than design-related smells and affect a small part of the code. Next, all 9 different smells classified as low-level concerns are explained and exemplified:
 
 ### Working with invalid data
 
