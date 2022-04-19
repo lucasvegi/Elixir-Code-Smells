@@ -56,7 +56,7 @@ Please feel free to make pull requests and suggestions ([Issues][Issues] tab). W
 
 ## Design-related smells
 
-Design-related smells are more complex, affect a coarse-grained code element, and are therefore harder to detect. In this section, 10 different smells classified as design-related are explained and exemplified:
+Design-related smells are more complex, affect a coarse-grained code element, and are therefore harder to detect. In this section, 13 different smells classified as design-related are explained and exemplified:
 
 ### GenServer Envy
 
