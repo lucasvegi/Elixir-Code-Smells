@@ -62,7 +62,7 @@ Design-related smells are more complex, affect a coarse-grained code element, an
 
 * __Category:__ Design-related smell.
 
-* __Problem:__ In Elixir, processes can be primitively created by ``spawn/1`` and ``spawn_link/1`` functions. Although it is possible to create them this way, it is more common to use abstractions (e.g., [``Agent``][Agent], [``Task``][Task], and [``GenServer``][GenServer]) provided by Elixir to create processes. The use of each specific abstraction is not a code smell in itself; however, there can be trouble when either a ``Task`` or ``Agent`` is used beyond its suggested purposes, being treated like a ``GenServer``.
+* __Problem:__ In Elixir, processes can be primitively created by ``Kernel.spawn/1``, ``Kernel.spawn/3``, ``Kernel.spawn_link/1`` and ``Kernel.spawn_link/3`` functions. Although it is possible to create them this way, it is more common to use abstractions (e.g., [``Agent``][Agent], [``Task``][Task], and [``GenServer``][GenServer]) provided by Elixir to create processes. The use of each specific abstraction is not a code smell in itself; however, there can be trouble when either a ``Task`` or ``Agent`` is used beyond its suggested purposes, being treated like a ``GenServer``.
 
 * __Example:__ As shown next, ``Agent`` and ``Task`` are abstractions to create processes with specialized purposes. In contrast, ``GenServer`` is a more generic abstraction used to create processes for many different purposes:
 
