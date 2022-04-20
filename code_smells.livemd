@@ -708,3 +708,363 @@ Client.foo("lucas")
 ```
 
 This example is based on code written by Tim Austin <sup>[neenjaw](https://exercism.org/profiles/neenjaw)</sup> and Angelika Tyborska <sup>[angelikatyborska](https://exercism.org/profiles/angelikatyborska)</sup>. Source: [link](https://exercism.org/tracks/elixir/concepts/try-rescue)
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Untested polymorphic behavior
+
+* __Category:__ Design-related smell.
+
+* __Problem:__ This code smell refers to functions that have protocol-dependent parameters and are therefore polymorphic. A polymorphic function itself does not represent a code smell, but some developers implement these generic functions without accompanying guard clauses, allowing to pass parameters that do not implement the required protocol or that have no meaning.
+
+* __Example:__ An instance of this code smell happens when a function uses `to_string()` to convert data received by parameter. The function `to_string()` uses the protocol `String.Chars` for conversions. Many Elixir data types (e.g., `BitString`, `Integer`, `Float`, `URI`) implement this protocol. However, as shown below, other Elixir data types (e.g., `Map`) do not implement it and can cause an error in `dasherize/1` function. Depending on the situation, this behavior can be desired or not. Besides that, it may not make sense to dasherize a `URI` or a number as shown next.
+
+```elixir
+defmodule CodeSmells do
+  def dasherize(data) do
+    to_string(data)
+    |> String.replace("_", "-")
+  end
+end
+
+# ...Use examples...
+
+CodeSmells.dasherize("Lucas_Vegi")
+# "Lucas-Vegi"
+
+# <= Makes sense?
+CodeSmells.dasherize(10)
+# "10"
+
+# <= Makes sense?
+CodeSmells.dasherize(URI.parse("http://www.code_smells.com"))
+# "http://www.code-smells.com"
+
+CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
+# ** (Protocol.UndefinedError) protocol String.Chars not implemented 
+# for %{first_name: "lucas", last_name: "vegi"} of type Map
+```
+
+* __Refactoring:__ There are two main alternatives to improve code affected by this smell. __1)__ You can either remove the protocol use (i.e., `to_string/1`), by adding multi-clauses on `dasherize/1` or just remove it; or __2)__ You can document that `dasherize/1` uses the protocol `String.Chars` for conversions, showing its consequences. As shown next, we refactored using the first alternative, removing the protocol and restricting `dasherize/1` parameter only to desired data types (i.e., `BitString` and `Atom`). Besides that, we use `@doc` to validate `dasherize/1` for desired inputs and to document the behavior to some types that we think don't make sense for the function (e.g., `Integer` and `URI`).
+
+```elixir
+defmodule CodeSmells do
+  @doc """
+    Function that converts underscores to dashes.
+
+    ## Parameter
+      data: only BitString and Atom are supported.
+
+    ## Examples
+
+        iex> CodeSmells.dasherize(:lucas_vegi)
+        "lucas-vegi"
+
+        iex> CodeSmells.dasherize("Lucas_Vegi")
+        "Lucas-Vegi"
+
+        iex> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
+        ** (FunctionClauseError) no function clause matching in CodeSmells.dasherize/1
+
+        iex> CodeSmells.dasherize(URI.parse("http://www.code_smells.com"))
+        ** (FunctionClauseError) no function clause matching in CodeSmells.dasherize/1
+
+        iex> CodeSmells.dasherize(10)
+        ** (FunctionClauseError) no function clause matching in CodeSmells.dasherize/1
+  """
+  def dasherize(data) when is_atom(data) do
+    dasherize(Atom.to_string(data))
+  end
+
+  def dasherize(data) when is_binary(data) do
+    String.replace(data, "_", "-")
+  end
+end
+
+# ...Use examples...
+
+CodeSmells.dasherize(:lucas_vegi)
+# "lucas-vegi"
+
+CodeSmells.dasherize("Lucas_Vegi")
+# "Lucas-Vegi"
+
+CodeSmells.dasherize(10)
+# ** (FunctionClauseError) no function clause matching in CodeSmells.dasherize/1
+```
+
+This example is based on code written by José Valim ([@josevalim](https://github.com/josevalim)). Source: [link](http://blog.plataformatec.com.br/2014/09/writing-assertive-code-with-elixir/)
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Alternative return types
+
+* __Category:__ Design-related smell.
+
+* __Note:__ This smell was suggested by the community via issues ([#6](https://github.com/lucasvegi/Elixir-Code-Smells/issues/6)).
+
+* __Problem:__ This code smell refers to functions that receive options (e.g., `keyword list`) parameters that drastically change its return type. Because options are optional and sometimes set dynamically, if they change the return type it may be hard to understand what the function actually returns.
+
+* __Example:__ An example of this code smell, as shown below, is when a library (e.g. `AlternativeInteger`) has a multi-clause function `parse/2` with many alternative return types. Depending on the options received as a parameter, the function will have a different return type.
+
+```elixir
+defmodule AlternativeInteger do
+  def parse(string, opts) when is_list(opts) do
+    case opts[:discard_rest] do
+      true -> #only an integer value convert from string parameter
+      _   ->  #another return type (e.g., tuple)
+    end
+  end
+
+  def parse(string, opts \\ :default) do
+    #another return type (e.g., tuple)
+  end
+end
+
+#...Use examples...
+
+AlternativeInteger.parse("13")
+# {13, "..."}
+
+lternativeInteger.parse("13", discard_rest: true)
+# 13
+
+AlternativeInteger.parse("13", discard_rest: false)
+# {13, "..."}
+```
+
+* __Refactoring:__ To refactor this smell, as shown next, it's better to add in the library a specific function for each return type (e.g., `parse_no_rest/1`), no longer delegating this to an options parameter.
+
+```elixir
+defmodule AlternativeInteger do
+  def parse_no_rest(string) do
+    # only an integer value convert from string parameter
+  end
+
+  def parse(string) do
+    # another return type (e.g., tuple)
+  end
+end
+
+# ...Use examples...
+
+AlternativeInteger.parse("13")
+# {13, "..."}
+
+AlternativeInteger.parse_no_rest("13")
+# 13
+```
+
+This example and the refactoring are proposed by José Valim ([@josevalim](https://github.com/josevalim))
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Code organization by process
+
+* __Category:__ Design-related smell.
+
+* __Problem:__ This smell refers to code that is unnecessarily organized by processes. A process itself does not represent a code smell, but it should only be used to model runtime properties (e.g., concurrency, access to shared resources, event scheduling). When a process is used for code organization, it can create bottlenecks in the system.
+
+* __Example:__ An example of this code smell, as shown below, is a library that implements arithmetic operations (e.g., add, subtract) by means of a `GenSever` process<sup>[link](https://hexdocs.pm/elixir/master/GenServer.html)</sup>. If the number of calls to this single process grows, this code organization can compromise the system performance, therefore becoming a bottleneck.
+
+```elixir
+defmodule Calculator do
+  use GenServer
+
+  @moduledoc """
+    Calculator that performs two basic arithmetic operations.
+    This code is unnecessarily organized by a GenServer process.
+  """
+
+  @doc """
+    Function to perform the sum of two values.
+  """
+  def add(a, b, pid) do
+    GenServer.call(pid, {:add, a, b})
+  end
+
+  @doc """
+    Function to perform subtraction of two values.
+  """
+  def subtract(a, b, pid) do
+    GenServer.call(pid, {:subtract, a, b})
+  end
+
+  def init(init_arg) do
+    {:ok, init_arg}
+  end
+
+  def handle_call({:add, a, b}, _from, state) do
+    {:reply, a + b, state}
+  end
+
+  def handle_call({:subtract, a, b}, _from, state) do
+    {:reply, a - b, state}
+  end
+end
+
+# Start a generic server process
+{:ok, pid} = GenServer.start_link(Calculator, :init)
+# {:ok, #PID<0.132.0>}
+
+# ...Use examples...
+Calculator.add(1, 5, pid)
+# 6
+
+Calculator.subtract(2, 3, pid)
+# -1
+```
+
+* __Refactoring:__ In Elixir, as shown next, code organization must be done only by modules and functions. Whenever possible, a library should not impose specific behavior (such as parallelization) on its clients. It is better to delegate this behavioral decision to the developers of clients, thus increasing the potential for code reuse of a library.
+
+```elixir
+defmodule Calculator do
+  def add(a, b) do
+    a + b
+  end
+
+  def subtract(a, b) do
+    a - b
+  end
+end
+
+# ...Use examples...
+
+Calculator.add(1, 5)
+# 6
+
+Calculator.subtract(2, 3)
+# -1
+```
+
+This example is based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-using-processes-for-code-organization)
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Data manipulation by migration
+
+* __Category:__ Design-related smell.
+
+* __Problem:__ This code smell refers to modules that perform both data and structural changes in a database schema via `Ecto.Migration`<sup>[link](https://hexdocs.pm/ecto_sql/Ecto.Migration.html)</sup>. Migrations must be used exclusively to modify a database schema over time (e.g., by including or excluding columns and tables). When this responsibility is mixed with data manipulation code, the module becomes less cohesive, more difficult to test, and therefore more prone to bugs.
+
+* __Example:__ An example of this code smell is when an `Ecto.Migration` is used simultaneously to alter a table, adding a new column to it, and also to update all pre-existing data in that table, assigning a value to this new column. As shown below, in addition to adding the `is_custom_shop` column in the `guitars` table, this `Ecto.Migration` changes the value of this column for some specific guitar models.
+
+```elixir
+defmodule GuitarStore.Repo.Migrations.AddIsCustomShopToGuitars do
+  use Ecto.Migration
+
+  import Ecto.Query
+  alias GuitarStore.Inventory.Guitar
+  alias GuitarStore.Repo
+
+  @doc """
+    A function that modifies the structure of table "guitars", 
+    adding column "is_custom_shop" to it. By default, all data 
+    pre-stored in this table will have the value false stored 
+    in this new column.
+
+    Also, this function updates the "is_custom_shop" column value 
+    of some guitar models to true.
+  """
+  def change do
+    alter table("guitars") do
+      add(:is_custom_shop, :boolean, default: false)
+    end
+
+    create(index("guitars", ["is_custom_shop"]))
+
+    custom_shop_entries()
+    |> Enum.map(&update_guitars/1)
+  end
+
+  @doc """
+    A function that updates values of column "is_custom_shop" to true.
+  """
+  defp update_guitars({make, model, year}) do
+    from(g in Guitar,
+      where: g.make == ^make and g.model == ^model and g.year == ^year,
+      select: g
+    )
+    |> Repo.update_all(set: [is_custom_shop: true])
+  end
+
+  @doc """
+    Function that defines which guitar models that need to have the values 
+    of the "is_custom_shop" column updated to true.
+  """
+  defp custom_shop_entries() do
+    [
+      {"Gibson", "SG", 1999},
+      {"Fender", "Telecaster", 2020}
+    ]
+  end
+end
+```
+
+You can run this smelly migration above by going to the root of your project and typing the next command via console: `mix ecto.migrate`
+
+<!-- livebook:{"break_markdown":true} -->
+
+* __Refactoring:__ To remove this code smell, it is necessary to separate the data manipulation in a `mix task` <sup>[link](https://hexdocs.pm/mix/Mix.html#module-mix-task)</sup> different from the module that performs the structural changes in the database via `Ecto.Migration`. This separation of responsibilities is a best practice for increasing code testability. As shown below, the module `AddIsCustomShopToGuitars` now use `Ecto.Migration` only to perform structural changes in the database schema:
+
+```elixir
+defmodule GuitarStore.Repo.Migrations.AddIsCustomShopToGuitars do
+  use Ecto.Migration
+
+  @doc """
+    A function that modifies the structure of table "guitars", 
+    adding column "is_custom_shop" to it. By default, all data 
+    pre-stored in this table will have the value false stored 
+    in this new column.
+  """
+  def change do
+    alter table("guitars") do
+      add(:is_custom_shop, :boolean, default: false)
+    end
+
+    create(index("guitars", ["is_custom_shop"]))
+  end
+end
+```
+
+Furthermore, the new mix task `PopulateIsCustomShop`, shown next, has only the responsibility to perform data manipulation, thus improving testability:
+
+```elixir
+defmodule Mix.Tasks.PopulateIsCustomShop do
+  @shortdoc "Populates is_custom_shop column"
+
+  use Mix.Task
+
+  import Ecto.Query
+  alias GuitarStore.Inventory.Guitar
+  alias GuitarStore.Repo
+
+  @requirements ["app.start"]
+
+  def run(_) do
+    custom_shop_entries()
+    |> Enum.map(&update_guitars/1)
+  end
+
+  defp update_guitars({make, model, year}) do
+    from(g in Guitar,
+      where: g.make == ^make and g.model == ^model and g.year == ^year,
+      select: g
+    )
+    |> Repo.update_all(set: [is_custom_shop: true])
+  end
+
+  defp custom_shop_entries() do
+    [
+      {"Gibson", "SG", 1999},
+      {"Fender", "Telecaster", 2020}
+    ]
+  end
+end
+```
+
+You can run this `mix task` above by typing the next command via console: `mix populate_is_custom_shop`
+
+<!-- livebook:{"break_markdown":true} -->
+
+This example is based on code originally written by Carlos Souza. Source: [link](https://www.idopterlabs.com.br/post/criando-uma-mix-task-em-elixir)
