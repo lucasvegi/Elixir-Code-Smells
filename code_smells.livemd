@@ -1,0 +1,710 @@
+# Catalog of Elixir-specific code smells
+
+## Introduction
+
+[Elixir](https://elixir-lang.org/) is a new functional programming language whose popularity is rising in the industry <sup>[link](https://elixir-companies.com/)</sup>. However, there are few works in the scientific literature focused on studying the internal quality of systems implemented in this language.
+
+In order to better understand the types of sub-optimal code structures that can harm the internal quality of Elixir systems, we scoured websites, blogs, forums, and videos (grey literature review), looking for specific code smells for Elixir that are discussed by its developers.
+
+As a result of this investigation, we have initially proposed a catalog of 18 new smells that are specific to Elixir systems. Other smells are being suggested by the community, so this catalog is constantly being updated __(currently 22 smells)__. These code smells are categorized into two different groups ([design-related](#design-related-smells) and [low-level concerns](#low-level-concerns-smells)), according to the type of impact and code extent they affect. This catalog of Elixir-specific code smells is presented below. Each code smell is documented using the following structure:
+
+* __Name:__ Unique identifier of the code smell. This name is important to facilitate communication between developers;
+* __Category:__ The portion of code affected by smell and its severity;
+* __Problem:__ How the code smell can harm code quality and what impacts this can have for developers;
+* __Example:__ Code and textual descriptions to illustrate the occurrence of the code smell;
+* __Refactoring:__ Ways to change smelly code in order to improve its qualities. Examples of refactored code are presented to illustrate these changes.
+
+The objective of this catalog of code smells is to instigate the improvement of the quality of code developed in Elixir. For this reason, we are interested in knowing Elixir's community opinion about these code smells: *Do you agree that these code smells can be harmful? Have you seen any of them in production code? Do you have any suggestions about some Elixir-specific code smell not cataloged by us?...*
+
+Please feel free to make pull requests and suggestions ([Issues](https://github.com/lucasvegi/Elixir-Code-Smells/issues) tab). We want to hear from you!
+
+## Design-related smells
+
+Design-related smells are more complex, affect a coarse-grained code element, and are therefore harder to detect. In this section, 13 different smells classified as design-related are explained and exemplified:
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## GenServer Envy
+
+* __Category:__ Design-related smell.
+
+* __Problem:__ In Elixir, processes can be primitively created by `Kernel.spawn/1`, `Kernel.spawn/3`, `Kernel.spawn_link/1` and `Kernel.spawn_link/3` functions. Although it is possible to create them this way, it is more common to use abstractions (e.g., [`Agent`](https://hexdocs.pm/elixir/1.13/Agent.html), [`Task`](https://hexdocs.pm/elixir/1.13/Task.html), and [`GenServer`](https://hexdocs.pm/elixir/master/GenServer.html)) provided by Elixir to create processes. The use of each specific abstraction is not a code smell in itself; however, there can be trouble when either a `Task` or `Agent` is used beyond its suggested purposes, being treated like a `GenServer`.
+
+* __Example:__ As shown next, `Agent` and `Task` are abstractions to create processes with specialized purposes. In contrast, `GenServer` is a more generic abstraction used to create processes for many different purposes:
+
+  * `Agent`: As Elixir works on the principle of immutability, by default no value is shared between multiple places of code, enabling read and write as in a global variable. An `Agent` is a simple process abstraction focused on solving this limitation, enabling processes to share state.
+  * `Task`: This process abstraction is used when we only need to execute some specific action asynchronously, often in an isolated way, without communication with other processes.
+  * `GenServer`: This is the most generic process abstraction. The main benefit of this abstraction is explicitly segregating the server and the client roles, thus providing a better API for the organization of processes communication. Besides that, a `GenServer` can also encapsulate state (like an `Agent`), provide sync and async calls (like a `Task`), and more.
+
+  Examples of this code smell appear when `Agents` or `Tasks` are used for general purposes and not only for specialized ones such as their documentation suggests. To illustrate some smell occurrences, we will cite two specific situations. 1) When a `Task` is used not only to async execute an action, but also to frequently exchange messages with other processes; 2) When an `Agent`, beside sharing some global value between processes, is also frequently used to execute isolated tasks that are not of interest to other processes.
+
+* __Refactoring:__ When an `Agent` or `Task` goes beyond its suggested use cases and becomes painful, it is better to refactor it into a `GenServer`.
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Agent Obsession
+
+* __Category:__ Design-related smell.
+
+* __Problem:__ In Elixir, an `Agent` is a process abstraction focused on sharing information between processes by means of message passing. It is a simple wrapper around shared information, thus facilitating its read and update from any place in the code. The use of an `Agent` to share information is not a code smell in itself; however, when the responsibility for interacting directly with an `Agent` is spread across the entire system, this can be problematic. This bad practice can increase the difficulty of code maintenance and make the code more prone to bugs.
+
+* __Example:__ The following code seeks to illustrate this smell. The responsibility for interacting directly with the `Agent` is spread across four different modules (i.e, `A`, `B`, `C`, and `D`).
+
+```elixir
+defmodule A do
+  # ...
+  def update(pid) do
+    # ...
+    Agent.update(pid, fn _list -> 123 end)
+    # ...
+  end
+end
+```
+
+```elixir
+defmodule B do
+  # ...
+  def update(pid) do
+    # ...
+    Agent.update(pid, fn content -> %{a: content} end)
+    # ...
+  end
+end
+```
+
+```elixir
+defmodule C do
+  # ...
+  def update(pid) do
+    # ...
+    Agent.update(pid, fn content -> [:atom_value | [content]] end)
+    # ...
+  end
+end
+```
+
+```elixir
+defmodule D do
+  # ...
+  def get(pid) do
+    # ...
+    Agent.get(pid, fn content -> content end)
+    # ...
+  end
+end
+```
+
+This spreading of responsibility can generate duplicated code and make code maintenance more difficult. Also, due to the lack of control over the format of the shared data, complex composed data can be shared. This freedom to use any format of data is dangerous and can induce developers to introduce bugs.
+
+```elixir
+# start an agent with initial state of an empty list
+{:ok, agent} = Agent.start_link(fn -> [] end)
+# {:ok, #PID<0.135.0>}
+
+# many data format (i.e., List, Map, Integer, Atom) are
+# combined through direct access spread across the entire system
+A.update(agent)
+B.update(agent)
+C.update(agent)
+
+# state of shared information
+D.get(agent)
+# [:atom_value, %{a: 123}]
+```
+
+* __Refactoring:__ Instead of spreading direct access to an `Agent` over many places in the code, it is better to refactor this code by centralizing the responsibility for interacting with an `Agent` in a single module. This refactoring improves the maintainability by removing duplicated code; it also allows you to limit the accepted format for shared data, reducing bug-proneness. As shown below, the module `KV.Bucket` is centralizing the responsibility for interacting with the `Agent`. Any other place in the code that needs to access shared data must now delegate this action to `KV.Bucket`. Also, `KV.Bucket` now only allows data to be shared in `Map` format.
+
+```elixir
+defmodule KV.Bucket do
+  use Agent
+
+  @doc """
+  Starts a new bucket.
+  """
+  def start_link(_opts) do
+    Agent.start_link(fn -> %{} end)
+  end
+
+  @doc """
+  Gets a value from the `bucket` by `key`.
+  """
+  def get(bucket, key) do
+    Agent.get(bucket, &Map.get(&1, key))
+  end
+
+  @doc """
+  Puts the `value` for the given `key` in the `bucket`.
+  """
+  def put(bucket, key, value) do
+    Agent.update(bucket, &Map.put(&1, key, value))
+  end
+end
+```
+
+The following are examples of how to delegate access to shared data (provided by an `Agent`) to `KV.Bucket`.
+
+```elixir
+# start an agent through a `KV.Bucket`
+{:ok, bucket} = KV.Bucket.start_link(%{})
+# {:ok, #PID<0.114.0>}
+
+# add shared values to the keys `milk` and `beer`
+KV.Bucket.put(bucket, "milk", 3)
+KV.Bucket.put(bucket, "beer", 7)
+
+# accessing shared data of specific keys
+KV.Bucket.get(bucket, "beer")
+# 7
+KV.Bucket.get(bucket, "milk")
+# 3
+```
+
+These examples are based on code written in Elixir's official documentation. Source: [link](https://elixir-lang.org/getting-started/mix-otp/agent.html#agents)
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Unsupervised process
+
+* __Category:__ Design-related smell.
+
+* __Problem:__ In Elixir, creating a process outside a supervision tree is not a code smell in itself. However, when code creates a large number of long-running processes outside a supervision tree, this can make visibility and monitoring of these processes difficult, preventing developers from fully controlling their applications.
+
+* __Example:__ The following code example seeks to illustrate a library responsible for maintaining a numerical `Counter` through a `GenServer` process outside a supervision tree. Multiple counters can be created simultaneously by a client (one process for each counter), making these unsupervised processes difficult to manage. This can cause problems with the initialization, restart, and shutdown of a system.
+
+```elixir
+defmodule Counter do
+  use GenServer
+
+  @moduledoc """
+    Global counter implemented through a GenServer process
+    outside a supervision tree.
+  """
+
+  @doc """
+    Function to create a counter.
+      initial_value: any integer value.
+      pid_name: optional parameter to define the process name.
+                Default is Counter.
+  """
+  def start(initial_value, pid_name \\ __MODULE__)
+      when is_integer(initial_value) do
+    GenServer.start(__MODULE__, initial_value, name: pid_name)
+  end
+
+  @doc """
+    Function to get the counter's current value.
+      pid_name: optional parameter to inform the process name.
+                Default is Counter.
+  """
+  def get(pid_name \\ __MODULE__) do
+    GenServer.call(pid_name, :get)
+  end
+
+  @doc """
+    Function to changes the counter's current value.
+    Returns the updated value.
+      value: amount to be added to the counter.
+      pid_name: optional parameter to inform the process name.
+                Default is Counter.
+  """
+  def bump(value, pid_name \\ __MODULE__) do
+    GenServer.call(pid_name, {:bump, value})
+    get(pid_name)
+  end
+
+  ## Callbacks
+
+  @impl true
+  def init(counter) do
+    {:ok, counter}
+  end
+
+  @impl true
+  def handle_call(:get, _from, counter) do
+    {:reply, counter, counter}
+  end
+
+  def handle_call({:bump, value}, _from, counter) do
+    {:reply, counter, counter + value}
+  end
+end
+
+# ...Use examples...
+
+Counter.start(0)
+# {:ok, #PID<0.115.0>}
+
+Counter.get()
+# 0
+
+Counter.start(15, C2)
+# {:ok, #PID<0.120.0>}
+
+Counter.get(C2)
+# 15
+
+Counter.bump(-3, C2)
+# 12
+
+Counter.bump(7)
+# 7
+```
+
+* __Refactoring:__ To ensure that clients of a library have full control over their systems, regardless of the number of processes used and the lifetime of each one, all processes must be started inside a supervision tree. As shown below, this code uses a `Supervisor` <sup>[link](https://hexdocs.pm/elixir/master/Supervisor.html)</sup> as a supervision tree. When this Elixir application is started, two different counters (`Counter` and `C2`) are also started as child processes of the `Supervisor` named `App.Supervisor`. Both are initialized with zero. By means of this supervision tree, it is possible to manage the lifecycle of all child processes (e.g., stopping or restarting each one), improving the visibility of the entire app.
+
+```elixir
+defmodule SupervisedProcess.Application do
+  use Application
+
+  @impl true
+  def start(_type, _args) do
+    children = [
+      # The counters are Supervisor children started via Counter.start(0).
+      %{
+        id: Counter,
+        start: {Counter, :start, [0]}
+      },
+      %{
+        id: C2,
+        start: {Counter, :start, [0, C2]}
+      }
+    ]
+
+    opts = [strategy: :one_for_one, name: App.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+end
+
+# ...Use examples...
+
+Supervisor.count_children(App.Supervisor)
+# %{active: 2, specs: 2, supervisors: 0, workers: 2}
+
+Counter.get(Counter)
+# 0
+
+Counter.get(C2)
+# 0
+
+Counter.bump(7, Counter)
+# 7
+
+Supervisor.terminate_child(App.Supervisor, Counter)
+Supervisor.count_children(App.Supervisor)
+# %{active: 1, specs: 2, supervisors: 0, workers: 2}  #only one active
+
+# Error because it was previously terminated
+Counter.get(Counter)
+# ** (EXIT) no process: the process is not alive...
+
+Supervisor.restart_child(App.Supervisor, Counter)
+# after the restart, this process can be accessed again
+Counter.get(Counter)
+# 0
+```
+
+These examples are based on codes written in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-spawning-unsupervised-processes)
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Large messages between processes
+
+* __Category:__ Design-related smell.
+
+* __Problem:__ In Elixir, processes run in an isolated manner, often concurrently with other Elixir. Communication between different processes is performed via message passing. The exchange of messages between processes is not a code smell in itself; however, when processes exchange messages, their contents are copied between them. For this reason, if a huge structure is sent as a message from one process to another, the sender can become blocked, compromising performance. If these large message exchanges occur frequently, the prolonged and frequent blocking of processes can cause a system to behave anomalously.
+
+* __Example:__ The following code is composed of two modules which will each run in a different process. As the names suggest, the `Sender` module has a function responsible for sending messages from one process to another (i.e., `send_msg/3`). The `Receiver` module has a function to create a process to receive messages (i.e., `create/0`) and another one to handle the received messages (i.e., `run/0`). If a huge structure, such as a list with 1_000_000 different values, is sent frequently from `Sender` to `Receiver`, the impacts of this smell could be felt.
+
+```elixir
+defmodule Receiver do
+  @doc """
+    Function for receiving messages from processes.
+  """
+  def run do
+    receive do
+      {:msg, msg_received} -> msg_received
+      {_, _} -> "won't match"
+    end
+  end
+
+  @doc """
+    Create a process to receive a message.
+    Messages are received in the run() function of Receiver.
+  """
+  def create do
+    spawn(Receiver, :run, [])
+  end
+end
+```
+
+```elixir
+defmodule Sender do
+  @doc """
+    Function for sending messages between processes.
+      pid_receiver: message recipient.
+      msg: messages of any type and size can be sent.
+      id_msg: used by receiver to decide what to do
+              when a message arrives.
+              Default is the atom :msg
+  """
+  def send_msg(pid_receiver, msg, id_msg \\ :msg) do
+    send(pid_receiver, {id_msg, msg})
+  end
+end
+```
+
+Examples of large messages between processes:
+
+```elixir
+pid = Receiver.create()
+# PID<0.144.0>
+
+# Simulating a message with large content - List with length 1_000_000
+msg = %{from: inspect(self()), to: inspect(pid), content: Enum.to_list(1..1_000_000)}
+
+Sender.send_msg(pid, msg)
+# {:msg,
+#   %{
+#     content: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+#       20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38,
+#       39, 40, 41, 42, 43, 44, 45, 46, 47, ...],
+#     from: "#PID<0.105.0>",
+#     to: "#PID<0.144.0>"
+#   }}
+```
+
+This example is based on a original code by Samuel Mullen. Source: [link](https://samuelmullen.com/articles/elixir-processes-send-and-receive/)
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Complex multi-clause function
+
+* __Category:__ Design-related smell.
+
+* __Problem:__ Using multi-clause functions in Elixir, to group functions of the same name, is not a code smell in itself. However, due to the great flexibility provided by this programming feature, some developers may abuse the number of guard clauses and pattern matches when defining these grouped functions.
+
+* __Example:__ A recurrent example of abusive use of the multi-clause functions is when we're trying to mix too much business logic into the function definitions. This makes it difficult to read and understand the logic involved in the functions, which may impair code maintainability. Some developers use documentation mechanisms such as `@doc` annotations to compensate for poor code readability, but unfortunately, with a multi-clause function, we can only use these annotations once per function name, particularly on the first or header function. As shown next, all other variations of the function need to be documented only with comments, a mechanism that cannot automate tests, leaving the code prone to bugs.
+
+```elixir
+@doc """
+  Update sharp product with 0 or empty count
+  
+  ## Examples
+
+    iex> Namespace.Module.update(...)
+    expected result...   
+"""
+def update(%Product{count: nil, material: material})
+    when name in ["metal", "glass"] do
+  # ...
+end
+
+# update blunt product
+def update(%Product{count: count, material: material})
+    when count > 0 and material in ["metal", "glass"] do
+  # ...
+end
+
+# update animal...
+def update(%Animal{count: 1, skin: skin})
+    when skin in ["fur", "hairy"] do
+  # ...
+end
+```
+
+* __Refactoring:__ As shown below, a possible solution to this smell is to break the business rules that are mixed up in a single complex multi-clause function in several different simple functions. Each function can have a specific `@doc`, describing its behavior and parameters received. While this refactoring sounds simple, it can have a lot of impact on the function's current clients, so be careful!
+
+```elixir
+@doc """
+  Update sharp product
+
+  ## Parameter
+    struct: %Product{...}
+  
+  ## Examples
+
+    iex> Namespace.Module.update_sharp_product(%Product{...})
+    expected result...   
+"""
+def update_sharp_product(struct) do
+  # ...
+end
+
+@doc """
+  Update blunt product
+
+  ## Parameter
+    struct: %Product{...}
+  
+  ## Examples
+
+    iex> Namespace.Module.update_blunt_product(%Product{...})
+    expected result...   
+"""
+def update_blunt_product(struct) do
+  # ...
+end
+
+@doc """
+  Update animal
+
+  ## Parameter
+    struct: %Animal{...}
+  
+  ## Examples
+
+    iex> Namespace.Module.update_animal(%Animal{...})
+    expected result...   
+"""
+def update_animal(struct) do
+  # ...
+end
+```
+
+This example is based on a original code by Syamil MJ ([@syamilmj](https://github.com/syamilmj)). Source: [link](https://syamilmj.com/2021-09-01-elixir-multi-clause-anti-pattern/)
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Complex extraction in clauses
+
+* __Category:__ Design-related smell.
+
+* __Note:__ This smell was suggested by the community via issues ([#9](https://github.com/lucasvegi/Elixir-Code-Smells/issues/9)).
+
+* __Problem:__ When we use multi-clause functions, it is possible to extract values in the clauses for further usage and for pattern matching/guard checking. This extraction itself does not represent a code smell, but when you have too many clauses or too many arguments, it becomes hard to know which extracted parts are used for pattern/guards and what is used only inside the function body. This smell is related to [Complex multi-clause function](#complex-multi-clause-function), but with implications of its own. It impairs the code readability in a different way.
+
+* __Example:__ The following code, although simple, tries to illustrate the occurrence of this code smell. The multi-clause function `drive/1` is extracting fields of an `%User{}` struct in its clauses for further usage (`name`) and for pattern/guard checking (`age`).
+
+```elixir
+def drive(%User{name: name, age: age}) when age >= 18 do
+  "#{name} can drive"
+end
+
+def drive(%User{name: name, age: age}) when age < 18 do
+  "#{name} cannot drive"
+end
+```
+
+While the example is small and looks like a clear code, try to imagine a situation where `drive/1` was more complex, having many more clauses, arguments, and extractions. This is the really smelly code!
+
+* __Refactoring:__ As shown below, a possible solution to this smell is to extract only pattern/guard related variables in the signature once you have many arguments or multiple clauses:
+
+```elixir
+def drive(%User{age: age} = user) when age >= 18 do
+  %User{name: name} = user
+  "#{name} can drive"
+end
+
+def drive(%User{age: age} = user) when age < 18 do
+  %User{name: name} = user
+  "#{name} cannot drive"
+end
+```
+
+This example and the refactoring are proposed by José Valim ([@josevalim](https://github.com/josevalim))
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Complex branching
+
+* __Category:__ Design-related smell.
+
+* __Note:__ Formerly known as "Complex API error handling".
+
+* __Problem:__ When a function assumes the responsibility of handling multiple errors alone, it can increase its cyclomatic complexity (metric of control-flow) and become incomprehensible. This situation can configure a specific instance of "Long function", a traditional code smell, but has implications of its own. Under these circumstances, this function could get very confusing, difficult to maintain and test, and therefore bug-proneness.
+
+* __Example:__ An example of this code smell is when a function uses the `case` control-flow structure or other similar constructs (e.g., `cond`, or `receive`) to handle multiple variations of response types returned by the same API endpoint. This practice can make the function more complex, long, and difficult to understand, as shown next.
+
+```elixir
+def get_customer(customer_id) do
+  case get("/customers/#{customer_id}") do
+    {:ok, %Tesla.Env{status: 200, body: body}} -> {:ok, body}
+    {:ok, %Tesla.Env{body: body}} -> {:error, body}
+    {:error, _} = other -> other
+  end
+end
+```
+
+Although `get_customer/1` is not really long in this example, it could be. Thinking about this more complex scenario, where a large number of different responses can be provided to the same endpoint, is not a good idea to concentrate all on a single function. This is a risky scenario, where a little typo, or any problem introduced by the programmer in handling a response type, could eventually compromise the handling of all responses from the endpoint (if the function raises an exception, for example).
+
+* __Refactoring:__ As shown below, in this situation, instead of concentrating all handlings within the same function,  creating a complex branching, it is better to delegate each branch (handling of a response type) to a different private function. In this way, the code will be cleaner, more concise, and readable.
+
+```elixir
+def get_customer(customer_id) when is_integer(customer_id) do
+  case get("/customers/#{customer_id}") do
+    {:ok, %Tesla.Env{status: 200, body: body}} -> success_api_response(body)
+    {:ok, %Tesla.Env{body: body}} -> x_error_api_response(body)
+    {:error, _} = other -> y_error_api_response(other)
+  end
+end
+
+defp success_api_response(body) do
+  {:ok, body}
+end
+
+defp x_error_api_response(body) do
+  {:error, body}
+end
+
+defp y_error_api_response(other) do
+  other
+end
+```
+
+While this example of refactoring `get_customer/1` might seem quite more verbose than the original code, remember to imagine a scenario where `get_customer/1` is responsible for handling a number much larger than three different types of possible responses. This is the smelly scenario!
+
+This example is based on code written by Zack <sup>[MrDoops](https://elixirforum.com/u/MrDoops)</sup> and Dimitar Panayotov <sup>[dimitarvp](https://elixirforum.com/u/dimitarvp)</sup>. Source: [link](https://elixirforum.com/t/what-are-sort-of-smells-do-you-tend-to-find-in-elixir-code/14971). We got suggestions from José Valim ([@josevalim](https://github.com/josevalim)) on the refactoring.
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Complex else clauses in with
+
+* __Category:__ Design-related smell.
+
+* __Note:__ This smell was suggested by the community via issues ([#7](https://github.com/lucasvegi/Elixir-Code-Smells/issues/7)).
+
+* __Problem:__ This code smell refers to `with` statements that flatten all its error clauses into a single complex `else` block. This situation is harmful to the code readability and maintainability because difficult to know from which clause the error value came.
+
+* __Example:__ An example of this code smell, as shown below, is a function `open_decoded_file/1` that read a base 64 encoded string content from a file and returns a decoded binary string. This function uses a `with` statement that needs to handle two possible errors, all of which are concentrated in a single complex `else` block.
+
+```elixir
+def open_decoded_file(path) do
+  with {:ok, encoded} <- File.read(path),
+       {:ok, value} <- Base.decode64(encoded) do
+    value
+  else
+    {:error, _} -> :badfile
+    :error -> :badencoding
+  end
+end
+```
+
+* __Refactoring:__ As shown below, in this situation, instead of concentrating all error handlings within a single complex `else` block, it is better to normalize the return types in specific private functions. In this way, due to its organization, the code will be cleaner and more readable.
+
+```elixir
+def open_decoded_file(path) do
+  with {:ok, encoded} <- file_read(path),
+       {:ok, value} <- base_decode64(encoded) do
+    value
+end
+
+defp file_read(path) do
+  case File.read(path) do
+    {:ok, contents} -> {:ok, contents}
+    {:error, _} -> :badfile
+  end
+end
+
+defp base_decode64(contents) do
+  case Base.decode64(contents) do
+    {:ok, contents} -> {:ok, contents}
+    :error -> :badencoding
+  end
+end
+```
+
+This example and the refactoring are proposed by José Valim ([@josevalim](https://github.com/josevalim))
+
+<!-- livebook:{"branch_parent_index":1} -->
+
+## Exceptions for control-flow
+
+* __Category:__ Design-related smell.
+
+* __Problem:__ This smell refers to code that forces developers to handle exceptions for control-flow. Exception handling itself does not represent a code smell, but this should not be the only alternative available to developers to handle an error in client code. When developers have no freedom to decide if an error is exceptional or not, this is considered a code smell.
+
+* __Example:__ An example of this code smell, as shown below, is when a library (e.g. `MyModule`) forces its clients to use `try .. rescue` statements to capture and evaluate errors. This library does not allow developers to decide if an error is exceptional or not in their applications.
+
+```elixir
+defmodule MyModule do
+  def janky_function(value) do
+    if is_integer(value) do
+      # ...
+      "Result..."
+    else
+      raise RuntimeError, message: "invalid argument. Is not integer!"
+    end
+  end
+end
+```
+
+```elixir
+defmodule Client do
+  # Client forced to use exceptions for control-flow.
+  def foo(arg) do
+    try do
+      value = MyModule.janky_function(arg)
+      "All good! #{value}."
+    rescue
+      e in RuntimeError ->
+        reason = e.message
+        "Uh oh! #{reason}."
+    end
+  end
+end
+
+# ...Use examples...
+
+Client.foo(1)
+# "All good! Result...."
+
+Client.foo("lucas")
+# "Uh oh! invalid argument. Is not integer!."
+```
+
+* __Refactoring:__ Library authors should guarantee that clients are not required to use exceptions for control-flow in their applications. As shown below, this can be done by refactoring the library `MyModule`, providing two versions of the function that forces clients to use exceptions for control-flow (e.g., `janky_function`). 1) a version with the raised exceptions should have the same name as the smelly one, but with a trailing `!` (i.e., `janky_function!`); 2) Another version, without raised exceptions, should have a name identical to the original version (i.e., `janky_function`), and should return the result wrapped in a tuple.
+
+```elixir
+defmodule MyModule do
+  @moduledoc """
+    Refactored library
+  """
+
+  @doc """
+    Refactored version without exceptions for control-flow.
+  """
+  def janky_function(value) do
+    if is_integer(value) do
+      # ...
+      {:ok, "Result..."}
+    else
+      {:error, "invalid argument. Is not integer!"}
+    end
+  end
+
+  def janky_function!(value) do
+    case janky_function(value) do
+      {:ok, result} ->
+        result
+
+      {:error, message} ->
+        raise RuntimeError, message: message
+    end
+  end
+end
+```
+
+This refactoring gives clients more freedom to decide how to proceed in the event of errors, defining what is exceptional or not in different situations. As shown next, when an error is not exceptional, clients can use specific control-flow structures, such as the `case` statement along with pattern matching.
+
+```elixir
+defmodule Client do
+  # Clients now can also choose to use control-flow structures
+  # for control-flow when an error is not exceptional.
+  def foo(arg) do
+    case MyModule.janky_function(arg) do
+      {:ok, value} -> "All good! #{value}."
+      {:error, reason} -> "Uh oh! #{reason}."
+    end
+  end
+end
+
+# ...Use examples...
+
+Client.foo(1)
+# "All good! Result...."
+
+Client.foo("lucas")
+# "Uh oh! invalid argument. Is not integer!."
+```
+
+This example is based on code written by Tim Austin <sup>[neenjaw](https://exercism.org/profiles/neenjaw)</sup> and Angelika Tyborska <sup>[angelikatyborska](https://exercism.org/profiles/angelikatyborska)</sup>. Source: [link](https://exercism.org/tracks/elixir/concepts/try-rescue)
