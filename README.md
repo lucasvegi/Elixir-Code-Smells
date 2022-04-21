@@ -431,7 +431,7 @@ ___
       expected result...   
   """
   def update(%Product{count: nil, material: material})
-    when name in ["metal", "glass"] do
+    when material in ["metal", "glass"] do
     # ...
   end
 
@@ -625,6 +625,7 @@ ___
     with {:ok, encoded} <- file_read(path),
          {:ok, value} <- base_decode64(encoded) do
       value
+    end
   end
 
   defp file_read(path) do
