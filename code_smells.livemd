@@ -594,13 +594,15 @@ This example is based on code written by Zack <sup>[MrDoops](https://elixirforum
 * __Example:__ An example of this code smell, as shown below, is a function `open_decoded_file/1` that read a base 64 encoded string content from a file and returns a decoded binary string. This function uses a `with` statement that needs to handle two possible errors, all of which are concentrated in a single complex `else` block.
 
 ```elixir
-def open_decoded_file(path) do
-  with {:ok, encoded} <- File.read(path),
-       {:ok, value} <- Base.decode64(encoded) do
-    value
-  else
-    {:error, _} -> :badfile
-    :error -> :badencoding
+defmodule ElseClauses do
+  def open_decoded_file(path) do
+    with {:ok, encoded} <- File.read(path),
+         {:ok, value} <- Base.decode64(encoded) do
+      value
+    else
+      {:error, _} -> :badfile
+      :error -> :badencoding
+    end
   end
 end
 ```
@@ -608,23 +610,26 @@ end
 * __Refactoring:__ As shown below, in this situation, instead of concentrating all error handlings within a single complex `else` block, it is better to normalize the return types in specific private functions. In this way, due to its organization, the code will be cleaner and more readable.
 
 ```elixir
-def open_decoded_file(path) do
-  with {:ok, encoded} <- file_read(path),
-       {:ok, value} <- base_decode64(encoded) do
-    value
-end
-
-defp file_read(path) do
-  case File.read(path) do
-    {:ok, contents} -> {:ok, contents}
-    {:error, _} -> :badfile
+defmodule ElseClausesRefactoring do
+  def open_decoded_file(path) do
+    with {:ok, encoded} <- file_read(path),
+         {:ok, value} <- base_decode64(encoded) do
+      value
+    end
   end
-end
 
-defp base_decode64(contents) do
-  case Base.decode64(contents) do
-    {:ok, contents} -> {:ok, contents}
-    :error -> :badencoding
+  defp file_read(path) do
+    case File.read(path) do
+      {:ok, contents} -> {:ok, contents}
+      {:error, _} -> :badfile
+    end
+  end
+
+  defp base_decode64(contents) do
+    case Base.decode64(contents) do
+      {:ok, contents} -> {:ok, contents}
+      :error -> :badencoding
+    end
   end
 end
 ```
@@ -837,22 +842,24 @@ This example is based on code written by José Valim ([@josevalim](https://githu
 defmodule AlternativeInteger do
   def parse(string, opts) when is_list(opts) do
     case opts[:discard_rest] do
-      true -> #only an integer value convert from string parameter
-      _   ->  #another return type (e.g., tuple)
+      # only an integer value convert from string parameter
+      true -> String.to_integer(string)
+      # another return type (e.g., tuple)
+      _ -> {String.to_integer(string)}
     end
   end
 
   def parse(string, opts \\ :default) do
-    #another return type (e.g., tuple)
+    # another return type (e.g., tuple)
   end
 end
 
-#...Use examples...
+# ...Use examples...
 
 AlternativeInteger.parse("13")
 # {13, "..."}
 
-lternativeInteger.parse("13", discard_rest: true)
+AlternativeInteger.parse("13", discard_rest: true)
 # 13
 
 AlternativeInteger.parse("13", discard_rest: false)
@@ -865,10 +872,12 @@ AlternativeInteger.parse("13", discard_rest: false)
 defmodule AlternativeInteger do
   def parse_no_rest(string) do
     # only an integer value convert from string parameter
+    String.to_integer(string)
   end
 
   def parse(string) do
     # another return type (e.g., tuple)
+    {String.to_integer(string)}
   end
 end
 
