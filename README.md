@@ -1562,8 +1562,6 @@ ___
     end
 
     def __define__(module, route, handler) do
-      route = unquote(route)
-      handler = unquote(handler)
 
       if not is_binary(route) do
         raise ArgumentError, "route must be a binary"
