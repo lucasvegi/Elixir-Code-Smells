@@ -69,7 +69,7 @@ Design-related smells are more complex, affect a coarse-grained code element, an
   * ``Agent``: As Elixir works on the principle of immutability, by default no value is shared between multiple places of code, enabling read and write as in a global variable. An ``Agent`` is a simple process abstraction focused on solving this limitation, enabling processes to share state.
   * ``Task``: This process abstraction is used when we only need to execute some specific action asynchronously, often in an isolated way, without communication with other processes.
   * ``GenServer``: This is the most generic process abstraction. The main benefit of this abstraction is explicitly segregating the server and the client roles, thus providing a better API for the organization of processes communication. Besides that, a ``GenServer`` can also encapsulate state (like an ``Agent``), provide sync and async calls (like a ``Task``), and more.
-  
+
   Examples of this code smell appear when ``Agents`` or ``Tasks`` are used for general purposes and not only for specialized ones such as their documentation suggests. To illustrate some smell occurrences, we will cite two specific situations. 1) When a ``Task`` is used not only to async execute an action, but also to frequently exchange messages with other processes; 2) When an ``Agent``, beside sharing some global value between processes, is also frequently used to execute isolated tasks that are not of interest to other processes.
 
 * __Refactoring:__ When an ``Agent`` or ``Task`` goes beyond its suggested use cases and becomes painful, it is better to refactor it into a ``GenServer``.
@@ -128,12 +128,12 @@ ___
     end
   end
   ```
-  
+
   This spreading of responsibility can generate duplicated code and make code maintenance more difficult. Also, due to the lack of control over the format of the shared data, complex composed data can be shared. This freedom to use any format of data is dangerous and can induce developers to introduce bugs.
 
   ```elixir
   # start an agent with initial state of an empty list
-  iex(1)> {:ok, agent} = Agent.start_link fn -> [] end        
+  iex(1)> {:ok, agent} = Agent.start_link fn -> [] end
   {:ok, #PID<0.135.0>}
 
   # many data format (i.e., List, Map, Integer, Atom) are
@@ -141,7 +141,7 @@ ___
   iex(2)> A.update(agent)
   iex(3)> B.update(agent)
   iex(4)> C.update(agent)
-    
+
   # state of shared information
   iex(5)> D.get(agent)
   [:atom_value, %{a: 123}]
@@ -188,7 +188,7 @@ ___
   iex(3)> KV.Bucket.put(bucket, "beer", 7)
 
   # accessing shared data of specific keys
-  iex(4)> KV.Bucket.get(bucket, "beer")   
+  iex(4)> KV.Bucket.get(bucket, "beer")
   7
   iex(5)> KV.Bucket.get(bucket, "milk")
   3
@@ -270,10 +270,10 @@ ___
   iex(1)> Counter.start(0)
   {:ok, #PID<0.115.0>}
 
-  iex(2)> Counter.get()   
+  iex(2)> Counter.get()
   0
 
-  iex(3)> Counter.start(15, C2)  
+  iex(3)> Counter.start(15, C2)
   {:ok, #PID<0.120.0>}
 
   iex(4)> Counter.get(C2)
@@ -299,7 +299,7 @@ ___
         %{
           id: Counter,
           start: {Counter, :start, [0]}
-        }, 
+        },
         %{
           id: C2,
           start: {Counter, :start, [0, C2]}
@@ -313,10 +313,10 @@ ___
 
   #...Use examples...
 
-  iex(1)> Supervisor.count_children(App.Supervisor)   
+  iex(1)> Supervisor.count_children(App.Supervisor)
   %{active: 2, specs: 2, supervisors: 0, workers: 2}
 
-  iex(2)> Counter.get(Counter)   
+  iex(2)> Counter.get(Counter)
   0
 
   iex(3)> Counter.get(C2)
@@ -326,13 +326,13 @@ ___
   7
 
   iex(5)> Supervisor.terminate_child(App.Supervisor, Counter)
-  iex(6)> Supervisor.count_children(App.Supervisor)     
+  iex(6)> Supervisor.count_children(App.Supervisor)
   %{active: 1, specs: 2, supervisors: 0, workers: 2}  #only one active
 
   iex(7)> Counter.get(Counter)   #Error because it was previously terminated
   ** (EXIT) no process: the process is not alive...
 
-  iex(8)> Supervisor.restart_child(App.Supervisor, Counter)  
+  iex(8)> Supervisor.restart_child(App.Supervisor, Counter)
   iex(9)> Counter.get(Counter)   #after the restart, this process can be accessed again
   0
   ```
@@ -349,7 +349,7 @@ ___
 * __Problem:__ In Elixir, processes run in an isolated manner, often concurrently with other Elixir. Communication between different processes is performed via message passing. The exchange of messages between processes is not a code smell in itself; however, when processes exchange messages, their contents are copied between them. For this reason, if a huge structure is sent as a message from one process to another, the sender can become blocked, compromising performance. If these large message exchanges occur frequently, the prolonged and frequent blocking of processes can cause a system to behave anomalously.
 
 * __Example:__ The following code is composed of two modules which will each run in a different process. As the names suggest, the ``Sender`` module has a function responsible for sending messages from one process to another (i.e., ``send_msg/3``). The ``Receiver`` module has a function to create a process to receive messages (i.e., ``create/0``) and another one to handle the received messages (i.e., ``run/0``). If a huge structure, such as a list with 1_000_000 different values, is sent frequently from ``Sender`` to ``Receiver``, the impacts of this smell could be felt.
-  
+
   ```elixir
   defmodule Receiver do
     @doc """
@@ -387,7 +387,7 @@ ___
     end
   end
   ```
-  
+
   Examples of large messages between processes:
 
   ```elixir
@@ -424,14 +424,14 @@ ___
   ```elixir
   @doc """
     Update sharp product with 0 or empty count
-    
+
     ## Examples
 
       iex> Namespace.Module.update(...)
-      expected result...   
+      expected result...
   """
   def update(%Product{count: nil, material: material})
-    when name in ["metal", "glass"] do
+    when material in ["metal", "glass"] do
     # ...
   end
 
@@ -456,11 +456,11 @@ ___
 
     ## Parameter
       struct: %Product{...}
-    
+
     ## Examples
 
       iex> Namespace.Module.update_sharp_product(%Product{...})
-      expected result...   
+      expected result...
   """
   def update_sharp_product(struct) do
     # ...
@@ -471,11 +471,11 @@ ___
 
     ## Parameter
       struct: %Product{...}
-    
+
     ## Examples
 
       iex> Namespace.Module.update_blunt_product(%Product{...})
-      expected result...   
+      expected result...
   """
   def update_blunt_product(struct) do
     # ...
@@ -486,11 +486,11 @@ ___
 
     ## Parameter
       struct: %Animal{...}
-    
+
     ## Examples
 
       iex> Namespace.Module.update_animal(%Animal{...})
-      expected result...   
+      expected result...
   """
   def update_animal(struct) do
     # ...
@@ -510,7 +510,7 @@ ___
 
 * __Problem:__ When we use multi-clause functions, it is possible to extract values in the clauses for further usage and for pattern matching/guard checking. This extraction itself does not represent a code smell, but when you have too many clauses or too many arguments, it becomes hard to know which extracted parts are used for pattern/guards and what is used only inside the function body. This smell is related to [Complex multi-clause function](#complex-multi-clause-function), but with implications of its own. It impairs the code readability in a different way.
 
-* __Example:__ The following code, although simple, tries to illustrate the occurrence of this code smell. The multi-clause function ``drive/1`` is extracting fields of an ``%User{}`` struct in its clauses for further usage (``name``) and for pattern/guard checking (``age``). 
+* __Example:__ The following code, although simple, tries to illustrate the occurrence of this code smell. The multi-clause function ``drive/1`` is extracting fields of an ``%User{}`` struct in its clauses for further usage (``name``) and for pattern/guard checking (``age``).
 
   ```elixir
   def drive(%User{name: name, age: age}) when age >= 18 do
@@ -521,7 +521,7 @@ ___
     "#{name} cannot drive"
   end
   ```
-  
+
   While the example is small and looks like a clear code, try to imagine a situation where ``drive/1`` was more complex, having many more clauses, arguments, and extractions. This is the really smelly code!
 
 * __Refactoring:__ As shown below, a possible solution to this smell is to extract only pattern/guard related variables in the signature once you have many arguments or multiple clauses:
@@ -625,6 +625,7 @@ ___
     with {:ok, encoded} <- file_read(path),
          {:ok, value} <- base_decode64(encoded) do
       value
+    end
   end
 
   defp file_read(path) do
@@ -670,7 +671,7 @@ ___
 
   ```elixir
   defmodule Client do
-   
+
     # Client forced to use exceptions for control-flow.
     def foo(arg) do
       try do
@@ -687,21 +688,21 @@ ___
 
   #...Use examples...
 
-  iex(1)> Client.foo(1)                   
+  iex(1)> Client.foo(1)
   "All good! Result...."
 
   iex(2)> Client.foo("lucas")
   "Uh oh! invalid argument. Is not integer!."
   ```
 
-* __Refactoring:__ Library authors should guarantee that clients are not required to use exceptions for control-flow in their applications. As shown below, this can be done by refactoring the library ``MyModule``, providing two versions of the function that forces clients to use exceptions for control-flow (e.g., ``janky_function``). 1) a version with the raised exceptions should have the same name as the smelly one, but with a trailing ! (i.e., ``janky_function!``); 2) Another version, without raised exceptions, should have a name identical to the original version (i.e., ``janky_function``), and should return the result wrapped in a tuple.
+* __Refactoring:__ Library authors should guarantee that clients are not required to use exceptions for control-flow in their applications. As shown below, this can be done by refactoring the library ``MyModule``, providing two versions of the function that forces clients to use exceptions for control-flow (e.g., ``janky_function``). 1) a version with the raised exceptions should have the same name as the smelly one, but with a trailing ``!`` (i.e., ``janky_function!``); 2) Another version, without raised exceptions, should have a name identical to the original version (i.e., ``janky_function``), and should return the result wrapped in a tuple.
 
   ```elixir
   defmodule MyModule do
     @moduledoc """
       Refactored library
     """
-    
+
     @doc """
       Refactored version without exceptions for control-flow.
     """
@@ -716,9 +717,9 @@ ___
 
     def janky_function!(value) do
       case janky_function(value) do
-        {:ok, result} -> 
+        {:ok, result} ->
           result
-        {:error, message} -> 
+        {:error, message} ->
           raise RuntimeError, message: message
       end
     end
@@ -729,7 +730,7 @@ ___
 
   ```elixir
   defmodule Client do
-   
+
     # Clients now can also choose to use control-flow structures
     # for control-flow when an error is not exceptional.
     def foo(arg) do
@@ -743,7 +744,7 @@ ___
 
   #...Use examples...
 
-  iex(1)> Client.foo(1)                   
+  iex(1)> Client.foo(1)
   "All good! Result...."
 
   iex(2)> Client.foo("lucas")
@@ -783,7 +784,7 @@ ___
   "http://www.code-smells.com"
 
   iex(4)> CodeSmells.dasherize(%{last_name: "vegi", first_name: "lucas"})
-  ** (Protocol.UndefinedError) protocol String.Chars not implemented 
+  ** (Protocol.UndefinedError) protocol String.Chars not implemented
   for %{first_name: "lucas", last_name: "vegi"} of type Map
   ```
 
@@ -948,7 +949,7 @@ ___
   end
 
   # Start a generic server process
-  iex(1)> {:ok, pid} = GenServer.start_link(Calculator, :init) 
+  iex(1)> {:ok, pid} = GenServer.start_link(Calculator, :init)
   {:ok, #PID<0.132.0>}
 
   #...Use examples...
@@ -980,7 +981,7 @@ ___
   iex(2)> Calculator.subtract(2, 3)
   -1
   ```
-  
+
   This example is based on code provided in Elixir's official documentation. Source: [link][CodeOrganizationByProcessExample]
 
 [▲ back to Index](#table-of-contents)
@@ -1003,12 +1004,12 @@ ___
     alias GuitarStore.Repo
 
     @doc """
-      A function that modifies the structure of table "guitars", 
-      adding column "is_custom_shop" to it. By default, all data 
-      pre-stored in this table will have the value false stored 
+      A function that modifies the structure of table "guitars",
+      adding column "is_custom_shop" to it. By default, all data
+      pre-stored in this table will have the value false stored
       in this new column.
 
-      Also, this function updates the "is_custom_shop" column value 
+      Also, this function updates the "is_custom_shop" column value
       of some guitar models to true.
     """
     def change do
@@ -1016,7 +1017,7 @@ ___
         add :is_custom_shop, :boolean, default: false
       end
       create index("guitars", ["is_custom_shop"])
-      
+
       custom_shop_entries()
       |> Enum.map(&update_guitars/1)
     end
@@ -1033,7 +1034,7 @@ ___
     end
 
     @doc """
-      Function that defines which guitar models that need to have the values 
+      Function that defines which guitar models that need to have the values
       of the "is_custom_shop" column updated to true.
     """
     defp custom_shop_entries() do
@@ -1046,11 +1047,11 @@ ___
   ```
 
   You can run this smelly migration above by going to the root of your project and typing the next command via console:
-  
+
   ```elixir
     mix ecto.migrate
   ```
-  
+
 * __Refactoring:__ To remove this code smell, it is necessary to separate the data manipulation in a ``mix task`` <sup>[link][MixTask]</sup> different from the module that performs the structural changes in the database via ``Ecto.Migration``. This separation of responsibilities is a best practice for increasing code testability. As shown below, the module ``AddIsCustomShopToGuitars`` now use ``Ecto.Migration`` only to perform structural changes in the database schema:
 
   ```elixir
@@ -1058,9 +1059,9 @@ ___
     use Ecto.Migration
 
     @doc """
-      A function that modifies the structure of table "guitars", 
-      adding column "is_custom_shop" to it. By default, all data 
-      pre-stored in this table will have the value false stored 
+      A function that modifies the structure of table "guitars",
+      adding column "is_custom_shop" to it. By default, all data
+      pre-stored in this table will have the value false stored
       in this new column.
     """
     def change do
@@ -1107,14 +1108,14 @@ ___
       ]
     end
   end
-  ```  
+  ```
 
   You can run this ``mix task`` above by typing the next command via console:
-  
+
   ```elixir
     mix populate_is_custom_shop
   ```
-  
+
   This example is based on code originally written by Carlos Souza. Source: [link][DataManipulationByMigrationExamples]
 
 [▲ back to Index](#table-of-contents)
@@ -1176,13 +1177,13 @@ Low-level concerns smells are more simple than design-related smells and affect 
 
   # with invalid data errors are easy to locate and fix
   iex(2)> MyApp.foo("Lucas")
-  ** (FunctionClauseError) no function clause matching in MyApp.foo/1    
-    
+  ** (FunctionClauseError) no function clause matching in MyApp.foo/1
+
     The following arguments were given to MyApp.foo/1:
-    
+
         # 1
         "Lucas"
-    
+
     my_app.ex:6: MyApp.foo/1
   ```
 
@@ -1215,16 +1216,16 @@ ___
   iex(1)> point_2d = %{x: 2, y: 3}
   %{x: 2, y: 3}
 
-  iex(2)> point_3d = %{x: 5, y: 6, z: nil} 
+  iex(2)> point_3d = %{x: 5, y: 6, z: nil}
   %{x: 5, y: 6, z: nil}
 
-  iex(3)> Graphics.plot(point_2d) 
+  iex(3)> Graphics.plot(point_2d)
   {2, 3, nil}   # <= ambiguous return
 
-  iex(4)> Graphics.plot(point_3d)         
+  iex(4)> Graphics.plot(point_3d)
   {5, 6, nil}
   ```
-  
+
   As can be seen in the example above, even when the key ``:z`` does not exist in the ``Map`` (``point_2d``), dynamic access returns the value ``nil``. This return can be dangerous because of its ambiguity. It is not possible to conclude from it whether the ``Map`` has the key ``:z`` or not. If the function relies on the return value to make decisions about how to plot a point, this can be problematic and even cause errors when testing the code.
 
 * __Refactoring:__ To remove this code smell, whenever a ``Map`` has keys of ``Atom`` type, replace the dynamic access to its values per strict access. When a non-existent key is strictly accessed, Elixir raises an error immediately, allowing developers to find bugs faster. The next code illustrates the refactoring of ``plot/1``, removing this smell:
@@ -1245,14 +1246,14 @@ ___
   iex(1)> point_2d = %{x: 2, y: 3}
   %{x: 2, y: 3}
 
-  iex(2)> point_3d = %{x: 5, y: 6, z: nil} 
+  iex(2)> point_3d = %{x: 5, y: 6, z: nil}
   %{x: 5, y: 6, z: nil}
 
-  iex(3)> Graphics.plot(point_2d) 
+  iex(3)> Graphics.plot(point_2d)
   ** (KeyError) key :z not found in: %{x: 2, y: 3} # <= explicitly warns that
     graphic.ex:6: Graphics.plot/1                  # <= the z key does not exist!
 
-  iex(4)> Graphics.plot(point_3d)         
+  iex(4)> Graphics.plot(point_3d)
   {5, 6, nil}
   ```
 
@@ -1265,7 +1266,7 @@ ___
   end
 
   #...Use examples...
-  iex(1)> point = %Point{x: 2, y: 3}   
+  iex(1)> point = %Point{x: 2, y: 3}
   %Point{x: 2, y: 3}
 
   iex(2)> point.x   # <= strict access to use point values
@@ -1274,7 +1275,7 @@ ___
   iex(3)> point.z   # <= trying to access a non-existent key
   ** (KeyError) key :z not found in: %Point{x: 2, y: 3}
 
-  iex(4)> point[:x] # <= by default, struct does not support dynamic access 
+  iex(4)> point[:x] # <= by default, struct does not support dynamic access
   ** (UndefinedFunctionError) ... (Point does not implement the Access behaviour)
   ```
 
@@ -1293,7 +1294,7 @@ ___
 
   ```elixir
   defmodule Extract do
-  
+
     @doc """
       Extract value from a key in a URL query string.
     """
@@ -1304,13 +1305,13 @@ ___
         Enum.at(key_value, 0) == desired_key && Enum.at(key_value, 1)
       end)
     end
-    
+
   end
 
   #...Use examples...
 
   # URL query string according to with the planned format - OK!
-  iex(1)> Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "lab")  
+  iex(1)> Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "lab")
   "ASERG"
 
   iex(2)> Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "university")
@@ -1343,19 +1344,19 @@ ___
   #...Use examples...
 
   # URL query string according to with the planned format - OK!
-  iex(1)> Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "name")      
+  iex(1)> Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "name")
   "Lucas"
 
   # Unplanned URL query string format - Crash explaining the problem to the client!
   iex(2)> Extract.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
-  ** (MatchError) no match of right hand side value: ["university", "institution", "UFMG"] 
+  ** (MatchError) no match of right hand side value: ["university", "institution", "UFMG"]
     extract.ex:7: anonymous fn/2 in Extract.get_value/2 # <= left hand: [key, value] pair
-  
-  iex(3)> Extract.get_value("name=Lucas&university&lab=ASERG", "university")                  
-  ** (MatchError) no match of right hand side value: ["university"] 
+
+  iex(3)> Extract.get_value("name=Lucas&university&lab=ASERG", "university")
+  ** (MatchError) no match of right hand side value: ["university"]
     extract.ex:7: anonymous fn/2 in Extract.get_value/2 # <= left hand: [key, value] pair
   ```
-  
+
   These examples are based on code written by José Valim ([@josevalim][jose-valim]). Source: [link][JoseValimExamples]
 
 [▲ back to Index](#table-of-contents)
@@ -1438,10 +1439,10 @@ ___
   When BEAM tries to load them simultaneously, both will stay loaded successfully:
 
   ```elixir
-  iex(1)> c("module_one.ex")   
+  iex(1)> c("module_one.ex")
   [MyLibrary.Foo]
 
-  iex(2)> c("module_two.ex")   
+  iex(2)> c("module_two.ex")
   [MyLibrary.Utils.Foo]
 
   iex(3)> MyLibrary.Foo.from_module_one()
@@ -1466,7 +1467,7 @@ ___
 
   ```elixir
   defmodule MyMacro do
-    
+
     defmacro sum(v1, v2) do
       quote do
         unquote(v1) + unquote(v2)
@@ -1491,7 +1492,7 @@ ___
 
   ```elixir
   defmodule MyMacro do
-    
+
     def sum(v1, v2) do   # <= macro became a named function!
       v1 + v2
     end
@@ -1636,9 +1637,9 @@ ___
   ["Lucas", "Francisco", "da", "Matta", "Vegi"]
 
   iex(2)> DashSplitter.split("Lucas-Francisco-da-Matta-Vegi") #<= default config is used!
-  ["Lucas", "Francisco-da-Matta-Vegi"]  
+  ["Lucas", "Francisco-da-Matta-Vegi"]
   ```
-  
+
   These examples are based on code provided in Elixir's official documentation. Source: [link][AppConfigurationForCodeLibsExample]
 
 [▲ back to Index](#table-of-contents)
@@ -1654,7 +1655,7 @@ ___
 
   ```elixir
   defmodule DashSplitter do
-    @parts Application.fetch_env!(:app_config, :parts) # <= define module attribute 
+    @parts Application.fetch_env!(:app_config, :parts) # <= define module attribute
                                                           # at compile-time
     def split(string) when is_binary(string) do
       String.split(string, "-", parts: @parts) #<= reading from a module attribute
@@ -1678,15 +1679,15 @@ ___
 
   ```elixir
   defmodule DashSplitter do
-    @parts Application.compile_env(:app_config, :parts, 3) # <= default value 3 prevents an error! 
-                                                      
+    @parts Application.compile_env(:app_config, :parts, 3) # <= default value 3 prevents an error!
+
     def split(string) when is_binary(string) do
       String.split(string, "-", parts: @parts) #<= reading from a module attribute
     end
 
   end
   ```
-  
+
   These examples are based on code provided in Elixir's official documentation. Source: [link][AppConfigurationForCodeLibsExample]
 
 * __Remark:__ This code smell can be detected by [Credo][Credo], a static code analysis tool. During its checks, Credo raises this [warning][CredoWarningApplicationConfigInModuleAttribute] when this smell is found.
@@ -1746,7 +1747,7 @@ ___
   When we try to compile ``ClientApp``, Elixir will detect the conflict and throw the following error:
 
   ```elixir
-  iex(1)> c("client_app.ex") 
+  iex(1)> c("client_app.ex")
 
   ** (CompileError) client_app.ex:4: imported ModuleA.foo/0 conflicts with local function
   ```
