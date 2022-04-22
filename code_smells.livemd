@@ -1104,3 +1104,484 @@ This example is based on code provided in Elixir's official documentation. Sourc
   ```
 
   This example is based on code originally written by Carlos Souza. Source: [link](https://www.idopterlabs.com.br/post/criando-uma-mix-task-em-elixir)
+
+## Low-level concerns smells
+
+Low-level concerns smells are more simple than design-related smells and affect a small part of the code. Next, all 9 different smells classified as low-level concerns are explained and exemplified:
+
+<!-- livebook:{"branch_parent_index":15} -->
+
+## Working with invalid data
+
+* __Category:__ Low-level concerns smells.
+
+* __Problem:__ This code smell refers to a function that does not validate its parameters' types and therefore can produce internal non-predicted behavior. When an error is raised inside a function due to an invalid parameter value, this can confuse the developers and make it harder to locate and fix the error.
+
+* __Example:__ An example of this code smell is when a function receives an invalid parameter and then passes it to a function from a third-party library. This will cause an error (raised deep inside the library function), which may be confusing for the developer who is working with invalid data. As shown next, the function `foo/1` is a client of a third-party library and doesn't validate its parameters at the boundary. In this way, it is possible that invalid data will be passed from `foo/1` to the library, causing a mysterious error.
+
+  ```elixir
+  defmodule MyApp do
+    alias ThirdPartyLibrary, as: Library
+
+    def foo(invalid_data) do
+      #...some code...
+      Library.sum(1, invalid_data)
+      #...some code...
+    end
+  end
+
+  #...Use examples...
+
+  # with valid data is ok
+  iex(1)> MyApp.foo(2)
+  3
+
+  #with invalid data cause a confusing error deep inside
+  iex(2)> MyApp.foo("Lucas")
+  ** (ArithmeticError) bad argument in arithmetic expression: 1 + "Lucas"
+    :erlang.+(1, "Lucas")
+    library.ex:3: ThirdPartyLibrary.sum/2
+  ```
+
+* __Refactoring:__ To remove this code smell, client code must validate input parameters at the boundary with the user, via guard clauses or pattern matching. This will prevent errors from occurring deeply, making them easier to understand. This refactoring will also allow libraries to be implemented without worrying about creating internal protection mechanisms. The next code illustrates the refactoring of `foo/1`, removing this smell:
+
+  ```elixir
+  defmodule MyApp do
+    alias ThirdPartyLibrary, as: Library
+
+    def foo(data) when is_integer(data) do
+      #...some code...
+      Library.sum(1, data)
+      #...some code...
+    end
+  end
+
+  #...Use examples...
+
+  #with valid data is ok
+  iex(1)> MyApp.foo(2)
+  3
+
+  # with invalid data errors are easy to locate and fix
+  iex(2)> MyApp.foo("Lucas")
+  ** (FunctionClauseError) no function clause matching in MyApp.foo/1
+
+    The following arguments were given to MyApp.foo/1:
+
+        # 1
+        "Lucas"
+
+    my_app.ex:6: MyApp.foo/1
+  ```
+
+  This example is based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-working-with-invalid-data)
+
+<!-- livebook:{"branch_parent_index":15} -->
+
+## Map/struct dynamic access
+
+* __Category:__ Low-level concerns smells.
+
+* __Problem:__ In Elixir, it is possible to access values from `Maps`, which are key-value data structures, either strictly or dynamically. When trying to dynamically access the value of a key from a `Map`, if the informed key does not exist, a null value (`nil`) will be returned. This return can be confusing and does not allow developers to conclude whether the key is non-existent in the `Map` or just has no bound value. In this way, this code smell may cause bugs in the code.
+
+* __Example:__ The code shown below is an example of this smell. The function `plot/1` tries to draw a graphic to represent the position of a point in a cartesian plane. This function receives a parameter of `Map` type with the point attributes, which can be a point of a 2D or 3D cartesian coordinate system. To decide if a point is 2D or 3D, this function uses dynamic access to retrieve values of the `Map` keys:
+
+```elixir
+defmodule Graphics do
+  def plot(point) do
+    # ...some code...
+
+    # Dynamic access to use point values
+    {point[:x], point[:y], point[:z]}
+
+    # ...some code...
+  end
+end
+
+# ...Use examples...
+point_2d = %{x: 2, y: 3}
+# %{x: 2, y: 3}
+
+point_3d = %{x: 5, y: 6, z: nil}
+# %{x: 5, y: 6, z: nil}
+
+Graphics.plot(point_2d)
+# {2, 3, nil}   # <= ambiguous return
+
+Graphics.plot(point_3d)
+# {5, 6, nil}
+```
+
+As can be seen in the example above, even when the key `:z` does not exist in the `Map` (`point_2d`), dynamic access returns the value `nil`. This return can be dangerous because of its ambiguity. It is not possible to conclude from it whether the `Map` has the key `:z` or not. If the function relies on the return value to make decisions about how to plot a point, this can be problematic and even cause errors when testing the code.
+
+* __Refactoring:__ To remove this code smell, whenever a `Map` has keys of `Atom` type, replace the dynamic access to its values per strict access. When a non-existent key is strictly accessed, Elixir raises an error immediately, allowing developers to find bugs faster. The next code illustrates the refactoring of `plot/1`, removing this smell:
+
+```elixir
+defmodule Graphics do
+  def plot(point) do
+    # ...some code...
+
+    # Strict access to use point values
+    {point.x, point.y, point.z}
+
+    # ...some code...
+  end
+end
+
+# ...Use examples...
+point_2d = %{x: 2, y: 3}
+# %{x: 2, y: 3}
+
+point_3d = %{x: 5, y: 6, z: nil}
+# %{x: 5, y: 6, z: nil}
+
+Graphics.plot(point_2d)
+# ** (KeyError) key :z not found in: %{x: 2, y: 3} # <= explicitly warns that
+#   graphic.ex:6: Graphics.plot/1                  # <= the z key does not exist!
+
+Graphics.plot(point_3d)
+# {5, 6, nil}
+```
+
+As shown below, another alternative to refactor this smell is to replace a `Map` with a `struct` (named map). By default, structs only support strict access to values. In this way, accesses will always return clear and objective results:
+
+```elixir
+defmodule Point do
+  @enforce_keys [:x, :y]
+  defstruct x: nil, y: nil
+end
+```
+
+```elixir
+# ...Use examples...
+point = %Point{x: 2, y: 3}
+IO.inspect(point)
+# %Point{x: 2, y: 3}
+
+# <= strict access to use point values
+point.x
+# 2
+
+# <= trying to access a non-existent key
+point.z
+# ** (KeyError) key :z not found in: %Point{x: 2, y: 3}
+
+# <= by default, struct does not support dynamic access
+point[:x]
+# ** (UndefinedFunctionError) ... (Point does not implement the Access behaviour)
+```
+
+These examples are based on code written by José Valim ([@josevalim](https://github.com/josevalim)). Source: [link](http://blog.plataformatec.com.br/2014/09/writing-assertive-code-with-elixir/)
+
+<!-- livebook:{"branch_parent_index":15} -->
+
+## Unplanned value extraction
+
+* __Category:__ Low-level concerns smells.
+
+* __Problem:__ In Elixir, there are many ways to extract key-related values from a URL query string. However, when pattern matching is not used for this purpose, depending on the format of the URL query string, the code may have undesired behavior, such as being able to extract unplanned values instead of forcing a crash. This unplanned value extraction can give a false impression that the code is working correctly, causing bugs.
+
+* __Example:__ The code shown below is an example of this smell. The function `get_value/2` tries to extract a value from a specific key of a URL query string. As it is not implemented using pattern matching, `get_value/2` always returns a value, regardless of the format of the URL query string passed as a parameter in the call. Sometimes the returned value will be valid; however, if a URL query string with an unexpected format is used in the call, `get_value/2` will extract incorrect values from it:
+
+```elixir
+defmodule Extract do
+  @doc """
+    Extract value from a key in a URL query string.
+  """
+  def get_value(string, desired_key) do
+    parts = String.split(string, "&")
+
+    Enum.find_value(parts, fn pair ->
+      key_value = String.split(pair, "=")
+      Enum.at(key_value, 0) == desired_key && Enum.at(key_value, 1)
+    end)
+  end
+end
+
+# ...Use examples...
+
+# URL query string according to with the planned format - OK!
+Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "lab")
+# "ASERG"
+
+Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "university")
+# "UFMG"
+
+# Unplanned URL query string format - Unplanned value extraction!
+Extract.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
+# "institution"   # <= why not "institution=UFMG"? or only "UFMG"?
+```
+
+* __Refactoring:__ To remove this code smell, `get_value/2` can be refactored through the use of pattern matching. So, if an unexpected URL query string format is used, the function will be crash instead of returning an invalid value. This behavior, shown below, will allow clients to decide how to handle these errors and will not give a false impression that the code is working correctly when unexpected values are extracted:
+
+```elixir
+defmodule Extract do
+  @doc """
+    Extract value from a key in a URL query string.
+    Refactored by using pattern matching.
+  """
+  def get_value(string, desired_key) do
+    parts = String.split(string, "&")
+
+    Enum.find_value(parts, fn pair ->
+      # <= pattern matching
+      [key, value] = String.split(pair, "=")
+      key == desired_key && value
+    end)
+  end
+end
+
+# ...Use examples...
+
+# URL query string according to with the planned format - OK!
+Extract.get_value("name=Lucas&university=UFMG&lab=ASERG", "name")
+# "Lucas"
+
+# Unplanned URL query string format - Crash explaining the problem to the client!
+Extract.get_value("name=Lucas&university=institution=UFMG&lab=ASERG", "university")
+# ** (MatchError) no match of right hand side value: ["university", "institution", "UFMG"]
+#   extract.ex:7: anonymous fn/2 in Extract.get_value/2 # <= left hand: [key, value] pair
+
+Extract.get_value("name=Lucas&university&lab=ASERG", "university")
+# ** (MatchError) no match of right hand side value: ["university"]
+#   extract.ex:7: anonymous fn/2 in Extract.get_value/2 # <= left hand: [key, value] pair
+```
+
+These examples are based on code written by José Valim ([@josevalim](https://github.com/josevalim)). Source: [link](http://blog.plataformatec.com.br/2014/09/writing-assertive-code-with-elixir/)
+
+<!-- livebook:{"branch_parent_index":15} -->
+
+## Modules with identical names
+
+* __Category:__ Low-level concerns smells.
+
+* __Problem:__ This code smell is related to possible module name conflicts that can occur when a library is implemented. Due to a limitation of the Erlang VM (BEAM), also used by Elixir, only one instance of a module can be loaded at a time. If there are name conflicts between more than one module, they will be considered the same by BEAM and only one of them will be loaded. This can cause unwanted code behavior.
+
+* __Example:__ The code shown below is an example of this smell. Two different modules were defined with identical names (`Foo`). When BEAM tries to load both simultaneously, only the module defined in the file (`module_two.ex`) stay loaded, redefining the current version of `Foo` (`module_one.ex`) in memory. That makes it impossible to call `from_module_one/0`, for example:
+
+```elixir
+defmodule Foo do
+  @moduledoc """
+    Defined in `module_one.ex` file.
+  """
+  def from_module_one do
+    "Function from module one!"
+  end
+end
+```
+
+```elixir
+defmodule Foo do
+  @moduledoc """
+    Defined in `module_two.ex` file.
+  """
+  def from_module_two do
+    "Function from module two!"
+  end
+end
+```
+
+When BEAM tries to load both simultaneously, the name conflict causes only one of them to stay loaded:
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+  iex(1)> c("module_one.ex")
+  [Foo]
+
+  iex(2)> c("module_two.ex")
+  warning: redefining module Foo (current version defined in memory)
+  module_two.ex:1
+  [Foo]
+
+  iex(3)> Foo.from_module_two()
+  "Function from module two!"
+
+  iex(4)> Foo.from_module_one()  # <= impossible to call due to name conflict
+  ** (UndefinedFunctionError) function Foo.from_module_one/0 is undefined...
+```
+
+```elixir
+Foo.from_module_two()
+# "Function from module two!"
+```
+
+```elixir
+# <= impossible to call due to name conflict
+Foo.from_module_one()
+# ** (UndefinedFunctionError) function Foo.from_module_one/0 is undefined...
+```
+
+* __Refactoring:__ To remove this code smell, a library must standardize the naming of its modules, always using its own name as a prefix (namespace) for all its module's names (e.g., `LibraryName.ModuleName`). When a module file is within subdirectories of a library, the names of the subdirectories must also be used in the module naming (e.g., `LibraryName.SubdirectoryName.ModuleName`). In the refactored code shown below, this module naming pattern was used. For this, the `Foo` module, defined in the file `module_two.ex`, was also moved to the `utils` subdirectory. This refactoring, in addition to eliminating the internal conflict of names within the library, will prevent the occurrence of name conflicts with client code:
+
+```elixir
+defmodule MyLibrary.Foo do
+  @moduledoc """
+    Defined in `module_one.ex` file.
+    Name refactored!
+  """
+  def from_module_one do
+    "Function from module one!"
+  end
+end
+```
+
+```elixir
+defmodule MyLibrary.Utils.Foo do
+  @moduledoc """
+    Defined in `module_two.ex` file.
+    Name refactored!
+  """
+  def from_module_two do
+    "Function from module two!"
+  end
+end
+```
+
+When BEAM tries to load them simultaneously, both will stay loaded successfully:
+
+<!-- livebook:{"force_markdown":true} -->
+
+```elixir
+  iex(1)> c("module_one.ex")
+  [MyLibrary.Foo]
+
+  iex(2)> c("module_two.ex")
+  [MyLibrary.Utils.Foo]
+
+  iex(3)> MyLibrary.Foo.from_module_one()
+  "Function from module one!"
+
+  iex(4)> MyLibrary.Utils.Foo.from_module_two()
+  "Function from module two!"
+```
+
+```elixir
+MyLibrary.Foo.from_module_one()
+# "Function from module one!"
+```
+
+```elixir
+MyLibrary.Utils.Foo.from_module_two()
+# "Function from module two!"
+```
+
+This example is based on the description provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-defining-modules-that-are-not-in-your-namespace)
+
+<!-- livebook:{"branch_parent_index":15} -->
+
+## Unnecessary macro
+
+* __Category:__ Low-level concerns smells.
+
+* __Problem:__ `Macros` are powerful meta-programming mechanisms that can be used in Elixir to extend the language. While implementing `macros` is not a code smell in itself, this meta-programming mechanism should only be used when absolutely necessary. Whenever a macro is implemented, and it was possible to solve the same problem using functions or other pre-existing Elixir structures, the code becomes unnecessarily more complex and less readable. Because `macros` are more difficult to implement and understand, their indiscriminate use can compromise the evolution of a system, reducing its maintainability.
+
+* __Example:__ The code shown below is an example of this smell. The `MyMacro` module implements the `sum/2` macro to perform the sum of two numbers received as parameters. While this code has no syntax errors and can be executed correctly to get the desired result, it is unnecessarily more complex. By implementing this functionality as a macro rather than a conventional function, the code became less clear and less objective:
+
+```elixir
+defmodule MyMacro do
+  defmacro sum(v1, v2) do
+    quote do
+      unquote(v1) + unquote(v2)
+    end
+  end
+end
+```
+
+```elixir
+# ...Use examples...
+
+require MyMacro
+# MyMacro
+
+MyMacro.sum(3, 5)
+# 8
+
+MyMacro.sum(3 + 1, 5 + 6)
+# 15
+```
+
+* __Refactoring:__ To remove this code smell, the developer must replace the unnecessary macro with structures that are simpler to write and understand, such as named functions. The code shown below is the result of the refactoring of the previous example. Basically, the `sum/2` macro has been transformed into a conventional named function:
+
+```elixir
+defmodule MyMacro do
+  # <= macro became a named function!
+  def sum(v1, v2) do
+    v1 + v2
+  end
+end
+```
+
+```elixir
+# ...Use examples...
+
+require MyMacro
+# MyMacro
+
+MyMacro.sum(3, 5)
+# 8
+
+MyMacro.sum(3 + 1, 5 + 6)
+# 15
+```
+
+This example is based on the description provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-macros)
+
+<!-- livebook:{"branch_parent_index":15} -->
+
+## Large code generation
+
+* __Category:__ Low-level concerns smells.
+
+* __Note:__ This smell was suggested by the community via issues ([#13](https://github.com/lucasvegi/Elixir-Code-Smells/issues/13)).
+
+* __Problem:__ This code smell is related to `macros` that generate too much code. When a `macro` provides a large code generation, it impacts how the compiler or the runtime works. The reason for this is that Elixir may have to expand, compile, and execute a code multiple times, which will make compilation slower.
+
+* __Example:__ The code shown below is an example of this smell. Imagine you are defining a router for a web application, where you could have macros like `get/2`. On every invocation of the macro, which can be hundreds, the code inside `get/2` will be expanded and compiled, which can generate a large volume of code in total.
+
+```elixir
+defmodule Routes do
+  defmacro get(route, handler) do
+    quote do
+      route = unquote(route)
+      handler = unquote(handler)
+
+      if not is_binary(route) do
+        raise ArgumentError, "route must be a binary"
+      end
+
+      if not is_atom(handler) do
+        raise ArgumentError, "route must be a module"
+      end
+
+      @store_route_for_compilation {route, handler}
+    end
+  end
+end
+```
+
+* __Refactoring:__ To remove this code smell, the developer must simplify the `macro`, delegating to other functions part of its work. As shown below, by encapsulating in the function `__define__/3` the functionality pre-existing inside the `quote`, we reduce the code that is expanded and compiled on every invocation of the `macro`, and instead we dispatch to a function to do the bulk of the work.
+
+```elixir
+defmodule Routes do
+  defmacro get(route, handler) do
+    quote do
+      Routes.__define__(__MODULE__, unquote(route), unquote(handler))
+    end
+  end
+
+  def __define__(module, route, handler) do
+    if not is_binary(route) do
+      raise ArgumentError, "route must be a binary"
+    end
+
+    if not is_atom(handler) do
+      raise ArgumentError, "route must be a module"
+    end
+
+    Module.put_attribute(module, :store_route_for_compilation, {route, handler})
+  end
+end
+```
+
+This example and the refactoring are proposed by José Valim ([@josevalim](https://github.com/josevalim))
