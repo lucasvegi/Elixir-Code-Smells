@@ -252,58 +252,56 @@ Counter.bump(7)
 
 * __Refactoring:__ To ensure that clients of a library have full control over their systems, regardless of the number of processes used and the lifetime of each one, all processes must be started inside a supervision tree. As shown below, this code uses a `Supervisor` <sup>[link](https://hexdocs.pm/elixir/master/Supervisor.html)</sup> as a supervision tree. When this Elixir application is started, two different counters (`Counter` and `C2`) are also started as child processes of the `Supervisor` named `App.Supervisor`. Both are initialized with zero. By means of this supervision tree, it is possible to manage the lifecycle of all child processes (e.g., stopping or restarting each one), improving the visibility of the entire app.
 
-```elixir
-defmodule SupervisedProcess.Application do
-  use Application
+  ```elixir
+  defmodule SupervisedProcess.Application do
+    use Application
 
-  @impl true
-  def start(_type, _args) do
-    children = [
-      # The counters are Supervisor children started via Counter.start(0).
-      %{
-        id: Counter,
-        start: {Counter, :start, [0]}
-      },
-      %{
-        id: C2,
-        start: {Counter, :start, [0, C2]}
-      }
-    ]
+    @impl true
+    def start(_type, _args) do
+      children = [
+        # The counters are Supervisor children started via Counter.start(0).
+        %{
+          id: Counter,
+          start: {Counter, :start, [0]}
+        },
+        %{
+          id: C2,
+          start: {Counter, :start, [0, C2]}
+        }
+      ]
 
-    opts = [strategy: :one_for_one, name: App.Supervisor]
-    Supervisor.start_link(children, opts)
+      opts = [strategy: :one_for_one, name: App.Supervisor]
+      Supervisor.start_link(children, opts)
+    end
   end
-end
 
-# ...Use examples...
+  #...Use examples...
 
-Supervisor.count_children(App.Supervisor)
-# %{active: 2, specs: 2, supervisors: 0, workers: 2}
+  iex(1)> Supervisor.count_children(App.Supervisor)
+  %{active: 2, specs: 2, supervisors: 0, workers: 2}
 
-Counter.get(Counter)
-# 0
+  iex(2)> Counter.get(Counter)
+  0
 
-Counter.get(C2)
-# 0
+  iex(3)> Counter.get(C2)
+  0
 
-Counter.bump(7, Counter)
-# 7
+  iex(4)> Counter.bump(7, Counter)
+  7
 
-Supervisor.terminate_child(App.Supervisor, Counter)
-Supervisor.count_children(App.Supervisor)
-# %{active: 1, specs: 2, supervisors: 0, workers: 2}  #only one active
+  iex(5)> Supervisor.terminate_child(App.Supervisor, Counter)
+  iex(6)> Supervisor.count_children(App.Supervisor)
+  %{active: 1, specs: 2, supervisors: 0, workers: 2}  #only one active
 
-# Error because it was previously terminated
-Counter.get(Counter)
-# ** (EXIT) no process: the process is not alive...
+  iex(7)> Counter.get(Counter)   #Error because it was previously terminated
+  ** (EXIT) no process: the process is not alive...
 
-Supervisor.restart_child(App.Supervisor, Counter)
-# after the restart, this process can be accessed again
-Counter.get(Counter)
-# 0
-```
+  iex(8)> Supervisor.restart_child(App.Supervisor, Counter)
+  iex(9)> Counter.get(Counter)   #after the restart, this process can be accessed again
+  0
+  ```
 
-These examples are based on codes written in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-spawning-unsupervised-processes)
+  These examples are based on codes written in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-spawning-unsupervised-processes)
 
 <!-- livebook:{"branch_parent_index":1} -->
 
