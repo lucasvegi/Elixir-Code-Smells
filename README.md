@@ -1,5 +1,7 @@
 # [Catalog of Elixir-specific code smells][Elixir Smells]
 
+[![Run in Livebook](https://livebook.dev/badge/v1/black.svg)](https://livebook.dev/run?url=https%3A%2F%2Fgithub.com%2Flucasvegi%2FElixir-Code-Smells%2Fblob%2Fmain%2Fcode_smells.livemd)
+
 [![GitHub last commit](https://img.shields.io/github/last-commit/lucasvegi/Elixir-Code-Smells)](https://github.com/lucasvegi/Elixir-Code-Smells/commits/main)
 [![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Fgithub.com%2Flucasvegi%2FElixir-Code-Smells)](https://twitter.com/intent/tweet?url=https%3A%2F%2Fgithub.com%2Flucasvegi%2FElixir-Code-Smells&via=lucasvegi&text=Catalog%20of%20Elixir-specific%20code%20smells%3A&hashtags=MyElixirStatus%2CElixirLang)
 
