@@ -13,7 +13,7 @@
   * [Agent Obsession](#agent-obsession)
   * [Unsupervised process](#unsupervised-process)
   * [Large messages between processes](#large-messages-between-processes)
-  * [Complex multi-clause function](#complex-multi-clause-function)
+  * [Unrelated multi-clause function](#unrelated-multi-clause-function)
   * [Complex extraction in clauses](#complex-extraction-in-clauses) [^**]
   * [Complex branching](#complex-branching)
   * [Complex else clauses in with](#complex-else-clauses-in-with) [^**]
@@ -415,13 +415,15 @@ ___
 [▲ back to Index](#table-of-contents)
 ___
 
-### Complex multi-clause function
+### Unrelated multi-clause function
 
 * __Category:__ Design-related smell.
 
+* __Note:__ Formerly known as "Complex multi-clause function".
+
 * __Problem:__ Using multi-clause functions in Elixir, to group functions of the same name, is not a code smell in itself. However, due to the great flexibility provided by this programming feature, some developers may abuse the number of guard clauses and pattern matches to group _unrelated_ functionality.
 
-* __Example:__ A recurrent example of abusive use of the multi-clause functions is when we’re trying to mix too much business logic into the function definitions. This makes it difficult to read and understand the logic involved in the functions, which may impair code maintainability. Some developers use documentation mechanisms such as ``@doc`` annotations to compensate for poor code readability, but unfortunately, with a multi-clause function, we can only use these annotations once per function name, particularly on the first or header function. As shown next, all other variations of the function need to be documented only with comments, a mechanism that cannot automate tests, leaving the code prone to bugs.
+* __Example:__ A recurrent example of abusive use of the multi-clause functions is when we’re trying to mix too much-unrelated business logic into the function definitions. This makes it difficult to read and understand the logic involved in the functions, which may impair code maintainability. Some developers use documentation mechanisms such as ``@doc`` annotations to compensate for poor code readability, but unfortunately, with a multi-clause function, we can only use these annotations once per function name, particularly on the first or header function. As shown next, all other variations of the function need to be documented only with comments, a mechanism that cannot automate tests, leaving the code prone to bugs.
 
   ```elixir
   @doc """
@@ -450,7 +452,7 @@ ___
   end
   ```
 
-* __Refactoring:__ As shown below, a possible solution to this smell is to break the business rules that are mixed up in a single complex multi-clause function in several different simple functions. Each function can have a specific ``@doc``, describing its behavior and parameters received. While this refactoring sounds simple, it can have a lot of impact on the function's current clients, so be careful!
+* __Refactoring:__ As shown below, a possible solution to this smell is to break the business rules that are mixed up in a single unrelated multi-clause function in several different simple functions. Each function can have a specific ``@doc``, describing its behavior and parameters received. While this refactoring sounds simple, it can have a lot of impact on the function's current clients, so be careful!
 
   ```elixir
   @doc """
@@ -510,7 +512,7 @@ ___
 
 * __Note:__ This smell was suggested by the community via issues ([#9][Complex-extraction-in-clauses-issue]).
 
-* __Problem:__ When we use multi-clause functions, it is possible to extract values in the clauses for further usage and for pattern matching/guard checking. This extraction itself does not represent a code smell, but when you have too many clauses or too many arguments, it becomes hard to know which extracted parts are used for pattern/guards and what is used only inside the function body. This smell is related to [Complex multi-clause function](#complex-multi-clause-function), but with implications of its own. It impairs the code readability in a different way.
+* __Problem:__ When we use multi-clause functions, it is possible to extract values in the clauses for further usage and for pattern matching/guard checking. This extraction itself does not represent a code smell, but when you have too many clauses or too many arguments, it becomes hard to know which extracted parts are used for pattern/guards and what is used only inside the function body. This smell is related to [Unrelated multi-clause function](#unrelated-multi-clause-function), but with implications of its own. It impairs the code readability in a different way.
 
 * __Example:__ The following code, although simple, tries to illustrate the occurrence of this code smell. The multi-clause function ``drive/1`` is extracting fields of an ``%User{}`` struct in its clauses for further usage (``name``) and for pattern/guard checking (``age``).
 
