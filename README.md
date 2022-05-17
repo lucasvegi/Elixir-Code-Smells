@@ -1786,7 +1786,7 @@ This catalog was proposed by Lucas Vegi and Marco Tulio Valente, from [ASERG/DCC
 
 For more info see the following paper:
 
-* [Code Smells in Elixir: Early Results from a Grey Literature Review][preprint-copy], International Conference on Program Comprehension (ICPC), 2022.
+* [Code Smells in Elixir: Early Results from a Grey Literature Review][preprint-copy], International Conference on Program Comprehension (ICPC), 2022.  [[slides]][ICPC22-PDF] [[video]][ICPC22-YouTube]
 
 Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 
@@ -1835,3 +1835,5 @@ Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 [Alternative-return-type-issue]: https://github.com/lucasvegi/Elixir-Code-Smells/issues/6
 [Complex-else-clauses-in-with-issue]: https://github.com/lucasvegi/Elixir-Code-Smells/issues/7
 [Large-code-generation-issue]: https://github.com/lucasvegi/Elixir-Code-Smells/issues/13
+[ICPC22-PDF]: https://github.com/lucasvegi/Elixir-Code-Smells/blob/main/etc/Code-Smells-in-Elixir-ICPC22-Lucas-Vegi.pdf
+[ICPC22-YouTube]: https://youtu.be/3X2gxg13tXo
