@@ -14,12 +14,12 @@
   * [Unsupervised process](#unsupervised-process)
   * [Large messages between processes](#large-messages-between-processes)
   * [Unrelated multi-clause function](#unrelated-multi-clause-function)
-  * [Complex extraction in clauses](#complex-extraction-in-clauses) [^**]
+  * [Complex extraction in clauses](#complex-extraction-in-clauses) [^*]
   * [Complex branching](#complex-branching)
-  * [Complex else clauses in with](#complex-else-clauses-in-with) [^**]
+  * [Complex else clauses in with](#complex-else-clauses-in-with) [^*]
   * [Exceptions for control-flow](#exceptions-for-control-flow)
   * [Untested polymorphic behavior](#untested-polymorphic-behavior)
-  * [Alternative return types](#alternative-return-types) [^**]
+  * [Alternative return types](#alternative-return-types) [^*]
   * [Code organization by process](#code-organization-by-process)
   * [Data manipulation by migration](#data-manipulation-by-migration)
 * __[Low-level concerns smells](#low-level-concerns-smells)__
@@ -28,13 +28,15 @@
   * [Unplanned value extraction](#unplanned-value-extraction)
   * [Modules with identical names](#modules-with-identical-names)
   * [Unnecessary macro](#unnecessary-macro)
-  * [Large code generation](#large-code-generation) [^**]
+  * [Large code generation](#large-code-generation) [^*]
   * [App configuration for code libs](#app-configuration-for-code-libs)
   * [Compile-time app configuration](#compile-time-app-configuration)
   * [Dependency with "use" when an "import" is enough](#dependency-with-use-when-an-import-is-enough)
+  * [Dynamic atom creation](#dynamic-atom-creation) [^**]
 * __[About](#about)__
 
-[^**]: These code smells were suggested by the Elixir community.
+[^*]: These code smells were suggested by the Elixir community.
+[^**]: This code smell emerged from a study with mining software repositories (MSR).
 
 ## Introduction
 
@@ -42,7 +44,7 @@
 
 In order to better understand the types of sub-optimal code structures that can harm the internal quality of Elixir systems, we scoured websites, blogs, forums, and videos (grey literature review), looking for specific code smells for Elixir that are discussed by its developers.
 
-As a result of this investigation, we have initially proposed a catalog of 18 new smells that are specific to Elixir systems. Other smells are being suggested by the community, so this catalog is constantly being updated __(currently 22 smells)__. These code smells are categorized into two different groups ([design-related](#design-related-smells) and [low-level concerns](#low-level-concerns-smells)), according to the type of impact and code extent they affect. This catalog of Elixir-specific code smells is presented below. Each code smell is documented using the following structure:
+As a result of this investigation, we have initially proposed a catalog of 18 new smells that are specific to Elixir systems. After that, 1 new smell emerged from a study with mining software repositories (MSR) performed by us, and other smells are being suggested by the community, so this catalog is constantly being updated __(currently 23 smells)__. These code smells are categorized into two different groups ([design-related](#design-related-smells) and [low-level concerns](#low-level-concerns-smells)), according to the type of impact and code extent they affect. This catalog of Elixir-specific code smells is presented below. Each code smell is documented using the following structure:
 
 * __Name:__ Unique identifier of the code smell. This name is important to facilitate communication between developers;
 * __Category:__ The portion of code affected by smell and its severity;
@@ -1126,7 +1128,7 @@ ___
 
 ## Low-level concerns smells
 
-Low-level concerns smells are more simple than design-related smells and affect a small part of the code. Next, all 9 different smells classified as low-level concerns are explained and exemplified:
+Low-level concerns smells are more simple than design-related smells and affect a small part of the code. Next, all 10 different smells classified as low-level concerns are explained and exemplified:
 
 ### Working with invalid data
 
@@ -1779,6 +1781,83 @@ ___
   These examples are based on code provided in Elixir's official documentation. Source: [link][DependencyWithUseExample]
 
 [▲ back to Index](#table-of-contents)
+___
+
+### Dynamic atom creation
+
+* __Category:__ Low-level concerns smells.
+
+* __Note:__ This smell emerged from a study with mining software repositories (MSR).
+
+* __Problem:__ An ``atom`` is a basic data type of Elixir whose value is its own name. They are often useful to identify resources or to express the state of an operation. The creation of an ``atom`` do not characterize a smell by itself; however, ``atoms`` are not collected by Elixir's Garbage Collector, so values of this type live in memory while an application is executing, during its entire lifetime. Also, BEAM limit the number of ``atoms`` that can exist in an application (``1_048_576``) and each ``atom`` has a maximum size limited to 255 Unicode code points. For these reasons, the dynamic atom creation is considered a code smell, since in this way the developer has no control over how many ``atoms`` will be created during the execution of the application. This unpredictable scenario can expose an app to unexpected behavior caused by excessive memory usage, or even by reaching the maximum number of ``atoms`` possible.
+
+* __Example:__ The code shown below is an example of this smell. Imagine that you are implementing a code that performs the conversion of ``string`` values into ``atoms`` to identify resources. These ``strings`` can come from user input or even have been received as response from requests to an API. As this is a dynamic and unpredictable scenario, it is possible for identical ``strings`` to be converted into new ``atoms`` that are repeated unnecessarily. This kind of conversion, in addition to wasting memory, can be problematic for an application if it happens too often.
+
+  ```elixir
+  defmodule Identifier do
+    ...
+
+    def generate(id) when is_bitstring(id) do
+      String.to_atom(id)  #<= dynamic atom creation!!
+    end
+  end
+
+  #...Use examples...
+
+  iex(1)> string_from_user_input = "my_id"
+  "my_id"
+
+  iex(2)> string_from_API_response = "my_id"
+  "my_id"
+
+  iex(3)> Identifier.generate(string_from_user_input)
+  :my_id
+
+  iex(4)> Identifier.generate(string_from_API_response)
+  :my_id   #<= atom repeated was created!
+  ```
+  
+  When we use the ``String.to_atom/1`` function to dynamically create an ``atom``, it is created regardless of whether there is already another one with the same value in memory, so when this happens automatically, we will not have control over meeting the limits established by BEAM.
+
+* __Refactoring:__ To remove this smell, as shown below, first you must ensure that all the identifier ``atoms`` are created statically, only once, at the beginning of an application's execution:
+
+  ```elixir
+  # statically created atoms...
+  _ = :my_id
+  _ = :my_id2
+  _ = :my_id3
+  _ = :my_id4
+  ```
+
+  Next, you should replace the use of the ``String.to_atom/1`` function with the ``String.to_existing_atom/1`` function. This will allow string-to-atom conversions to just map the strings to atoms already in memory (statically created at the beginning of the execution), thus preventing repeated ``atoms`` from being created dynamically. This second part of the refactoring is presented below.
+
+  ```elixir
+  defmodule Identifier do
+    ...
+
+    def generate(id) when is_bitstring(id) do
+      String.to_existing_atom(id)  #<= just maps a string to an existing atom!
+    end
+  end
+
+  #...Use examples...
+
+  iex(1)> Identifier.generate("my_id")   
+  :my_id
+
+  iex(2)> Identifier.generate("my_id2")
+  :my_id2
+
+  iex(3)> Identifier.generate("non_existent_id")  
+    ** (ArgumentError) errors were found at the given arguments:
+    * 1st argument: not an already existing atom
+  ```
+
+  Note that in the third use example, when a ``string`` different from an already existing ``atom`` is given, Elixir shows an error instead of performing the conversion. This demonstrates that this refactoring creates a more controlled and predictable scenario for the application in terms of memory usage.
+
+  This example and the refactoring are based on the Elixir's official documentation. Sources: [1][to_atom], [2][to_existing_atom]
+  
+[▲ back to Index](#table-of-contents)
 
 ## About
 
@@ -1838,3 +1917,5 @@ Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 [ICPC22-PDF]: https://github.com/lucasvegi/Elixir-Code-Smells/blob/main/etc/Code-Smells-in-Elixir-ICPC22-Lucas-Vegi.pdf
 [ICPC22-YouTube]: https://youtu.be/3X2gxg13tXo
 [Podcast-Spotify]: http://elixiremfoco.com/episode?id=lucas-vegi-e-marco-tulio
+[to_atom]: https://hexdocs.pm/elixir/String.html#to_atom/1
+[to_existing_atom]: https://hexdocs.pm/elixir/String.html#to_existing_atom/1
