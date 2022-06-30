@@ -34,6 +34,7 @@
   * [Dependency with "use" when an "import" is enough](#dependency-with-use-when-an-import-is-enough)
   * [Dynamic atom creation](#dynamic-atom-creation) [^**]
 * __[About](#about)__
+* __[Funder](#funder)__
 
 [^*]: These code smells were suggested by the Elixir community.
 [^**]: This code smell emerged from a study with mining software repositories (MSR).
@@ -1871,6 +1872,16 @@ Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 
 [▲ back to Index](#table-of-contents)
 
+## Funder
+
+This research is part of the initiative called __"Research with Elixir"__ http://pesquisecomelixir.com.br (in portuguese). More specifically, we are funded by __Finbits__<sup>TM</sup>, a Brazilian, Elixir-specialized fintech:
+
+<div align="center">
+  <a href="https://www.finbits.com.br/" alt="Click to learn more about Finbits!" title="Click to learn more about Finbits!"><img width="40%" src="https://github.com/lucasvegi/Elixir-Code-Smells/blob/main/etc/finbits.png?raw=true"></a>
+</div>
+
+[▲ back to Index](#table-of-contents)
+
 <!-- Links -->
 [Elixir Smells]: https://github.com/lucasvegi/Elixir-Code-Smells
 [Elixir]: http://elixir-lang.org
@@ -1919,3 +1930,4 @@ Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 [Podcast-Spotify]: http://elixiremfoco.com/episode?id=lucas-vegi-e-marco-tulio
 [to_atom]: https://hexdocs.pm/elixir/String.html#to_atom/1
 [to_existing_atom]: https://hexdocs.pm/elixir/String.html#to_existing_atom/1
+[Finbits]: https://www.finbits.com.br/
