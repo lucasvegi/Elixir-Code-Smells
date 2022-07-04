@@ -1874,7 +1874,7 @@ Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 
 ## Acknowledgments
 
-<p>We are supported by Finbits, a Brazilian Elixir-based fintech:</p>
+<p>We are supported by Finbits (https://www.finbits.com.br), a Brazilian Elixir-based fintech:</p>
 
 <div align="center">
   <a href="https://www.finbits.com.br/" alt="Click to learn more about Finbits!" title="Click to learn more about Finbits!"><img width="20%" src="https://github.com/lucasvegi/Elixir-Code-Smells/blob/main/etc/finbits.png?raw=true"></a>
