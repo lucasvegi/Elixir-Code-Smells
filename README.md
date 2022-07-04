@@ -1874,14 +1874,14 @@ Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 
 ## Acknowledgments
 
-<p>We are supported by [Finbits](https://www.finbits.com.br), a Brazilian, Elixir-specialized fintech:</p>
+<p>We are supported by [Finbits][Finbits], a Brazilian, Elixir-specialized fintech:</p>
 
 <div align="center">
   <a href="https://www.finbits.com.br/" alt="Click to learn more about Finbits!" title="Click to learn more about Finbits!"><img width="20%" src="https://github.com/lucasvegi/Elixir-Code-Smells/blob/main/etc/finbits.png?raw=true"></a>
 </div>
 
 <p></p>
-<p>Our research is also part of the initiative called [Research with Elixir"](http://pesquisecomelixir.com.br) (in portuguese).</p>
+<p>Our research is also part of the initiative called [Research with Elixir][ResearchWithElixir] (in portuguese).</p>
 
 [▲ back to Index](#table-of-contents)
 
@@ -1934,3 +1934,4 @@ Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 [to_atom]: https://hexdocs.pm/elixir/String.html#to_atom/1
 [to_existing_atom]: https://hexdocs.pm/elixir/String.html#to_existing_atom/1
 [Finbits]: https://www.finbits.com.br/
+[ResearchWithElixir]: http://pesquisecomelixir.com.br/
