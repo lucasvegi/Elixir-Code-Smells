@@ -1874,14 +1874,14 @@ Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 
 ## Acknowledgments
 
-<p>We are supported by Finbits (https://www.finbits.com.br), a Brazilian Elixir-based fintech:</p>
+We are supported by __[Finbits][Finbits]__<sup>TM</sup>, a Brazilian Elixir-based fintech:
 
 <div align="center">
   <a href="https://www.finbits.com.br/" alt="Click to learn more about Finbits!" title="Click to learn more about Finbits!"><img width="20%" src="https://github.com/lucasvegi/Elixir-Code-Smells/blob/main/etc/finbits.png?raw=true"></a>
+  <br><br>
 </div>
 
-<p></p>
-<p>Our research is also part of the initiative called Research with Elixir (http://pesquisecomelixir.com.br), in portuguese.</p>
+Our research is also part of the initiative called __[Research with Elixir][ResearchWithElixir]__ (in portuguese).
 
 [▲ back to Index](#table-of-contents)
 
