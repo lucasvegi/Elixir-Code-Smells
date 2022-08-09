@@ -21,17 +21,17 @@
   * [Untested polymorphic behavior](#untested-polymorphic-behavior)
   * [Alternative return types](#alternative-return-types) [^*]
   * [Code organization by process](#code-organization-by-process)
+  * [Large code generation by macros](#large-code-generation-by-macros) [^*]
   * [Data manipulation by migration](#data-manipulation-by-migration)
 * __[Low-level concerns smells](#low-level-concerns-smells)__
   * [Working with invalid data](#working-with-invalid-data)
-  * [Map/struct dynamic access](#mapstruct-dynamic-access)
-  * [Unplanned value extraction](#unplanned-value-extraction)
+  * [Accessing non-existent map/struct fields](#accessing-non-existent-mapstruct-fields)
+  * [Speculative Assumptions](#speculative-assumptions)
   * [Modules with identical names](#modules-with-identical-names)
   * [Unnecessary macro](#unnecessary-macro)
-  * [Large code generation](#large-code-generation) [^*]
-  * [App configuration for code libs](#app-configuration-for-code-libs)
-  * [Compile-time app configuration](#compile-time-app-configuration)
-  * [Dependency with "use" when an "import" is enough](#dependency-with-use-when-an-import-is-enough)
+  * [Global configuration for libraries](#global-configuration-for-libraries)
+  * [Compile-time global configuration](#compile-time-global-configuration)
+  * ["Use" instead of "import"](#use-instead-of-import)
   * [Dynamic atom creation](#dynamic-atom-creation) [^**]
 * __[About](#about)__
 * __[Acknowledgments](#acknowledgments)__
@@ -61,7 +61,7 @@ Please feel free to make pull requests and suggestions ([Issues][Issues] tab). W
 
 ## Design-related smells
 
-Design-related smells are more complex, affect a coarse-grained code element, and are therefore harder to detect. In this section, 13 different smells classified as design-related are explained and exemplified:
+Design-related smells are more complex, affect a coarse-grained code element, and are therefore harder to detect. In this section, 14 different smells classified as design-related are explained and exemplified:
 
 ### GenServer Envy
 
@@ -517,7 +517,8 @@ ___
 
 * __Problem:__ When we use multi-clause functions, it is possible to extract values in the clauses for further usage and for pattern matching/guard checking. This extraction itself does not represent a code smell, but when you have too many clauses or too many arguments, it becomes hard to know which extracted parts are used for pattern/guards and what is used only inside the function body. This smell is related to [Unrelated multi-clause function](#unrelated-multi-clause-function), but with implications of its own. It impairs the code readability in a different way.
 
-* __Example:__ The following code, although simple, tries to illustrate the occurrence of this code smell. The multi-clause function ``drive/1`` is extracting fields of an ``%User{}`` struct in its clauses for further usage (``name``) and for pattern/guard checking (``age``).
+* __Example:__ The following code, although simple, tries to illustrate the occurrence of this code smell. The multi-clause function ``drive/1`` is extracting fields of an ``%User{}`` struct for usage in the clause expression (e.g. ``age``) and for usage in the function body (e.g., ``name``). Ideally, a function should not mix pattern matching extractions for usage in its clauses expressions and also in the function boby.
+
 
   ```elixir
   def drive(%User{name: name, age: age}) when age >= 18 do
@@ -994,6 +995,71 @@ ___
 [▲ back to Index](#table-of-contents)
 ___
 
+### Large code generation by macros
+
+* __Category:__ Design-related smell.
+
+* __Note:__ This smell was suggested by the community via issues ([#13][Large-code-generation-issue]).
+
+* __Problem:__ This code smell is related to ``macros`` that generate too much code. When a ``macro`` provides a large code generation, it impacts how the compiler or the runtime works. The reason for this is that Elixir may have to expand, compile, and execute a code multiple times, which will make compilation slower.
+
+* __Example:__ The code shown below is an example of this smell. Imagine you are defining a router for a web application, where you could have macros like ``get/2``. On every invocation of the macro, which can be hundreds, the code inside ``get/2`` will be expanded and compiled, which can generate a large volume of code in total.
+
+  ```elixir
+  defmodule Routes do
+    ...
+
+    defmacro get(route, handler) do
+      quote do
+        route = unquote(route)
+        handler = unquote(handler)
+
+        if not is_binary(route) do
+          raise ArgumentError, "route must be a binary"
+        end
+
+        if not is_atom(handler) do
+          raise ArgumentError, "route must be a module"
+        end
+
+        @store_route_for_compilation {route, handler}
+      end
+    end
+  end
+  ```
+
+* __Refactoring:__ To remove this code smell, the developer must simplify the ``macro``, delegating to other functions part of its work. As shown below, by encapsulating in the function ``__define__/3`` the functionality pre-existing inside the ``quote``, we reduce the code that is expanded and compiled on every invocation of the ``macro``, and instead we dispatch to a function to do the bulk of the work.
+
+  ```elixir
+  defmodule Routes do
+    ...
+
+    defmacro get(route, handler) do
+      quote do
+        Routes.__define__(__MODULE__, unquote(route), unquote(handler))
+      end
+    end
+
+    def __define__(module, route, handler) do
+
+      if not is_binary(route) do
+        raise ArgumentError, "route must be a binary"
+      end
+
+      if not is_atom(handler) do
+        raise ArgumentError, "route must be a module"
+      end
+
+      Module.put_attribute(module, :store_route_for_compilation, {route, handler})
+    end
+  end
+  ```
+
+  This example and the refactoring are proposed by José Valim ([@josevalim][jose-valim])
+
+[▲ back to Index](#table-of-contents)
+___
+
 ### Data manipulation by migration
 
 * __Category:__ Design-related smell.
@@ -1129,7 +1195,7 @@ ___
 
 ## Low-level concerns smells
 
-Low-level concerns smells are more simple than design-related smells and affect a small part of the code. Next, all 10 different smells classified as low-level concerns are explained and exemplified:
+Low-level concerns smells are more simple than design-related smells and affect a small part of the code. Next, all 9 different smells classified as low-level concerns are explained and exemplified:
 
 ### Working with invalid data
 
@@ -1199,9 +1265,11 @@ Low-level concerns smells are more simple than design-related smells and affect 
 [▲ back to Index](#table-of-contents)
 ___
 
-### Map/struct dynamic access
+### Accessing non-existent Map/Struct fields
 
 * __Category:__ Low-level concerns smells.
+
+* __Note:__ Formerly known as "Map/struct dynamic access".
 
 * __Problem:__ In Elixir, it is possible to access values from ``Maps``, which are key-value data structures, either strictly or dynamically. When trying to dynamically access the value of a key from a ``Map``, if the informed key does not exist, a null value (``nil``) will be returned. This return can be confusing and does not allow developers to conclude whether the key is non-existent in the ``Map`` or just has no bound value. In this way, this code smell may cause bugs in the code.
 
@@ -1291,11 +1359,13 @@ ___
 [▲ back to Index](#table-of-contents)
 ___
 
-### Unplanned value extraction
+### Speculative Assumptions
 
 * __Category:__ Low-level concerns smells.
 
-* __Problem:__ In Elixir, there are many ways to extract key-related values from a URL query string. However, when pattern matching is not used for this purpose, depending on the format of the URL query string, the code may have undesired behavior, such as being able to extract unplanned values instead of forcing a crash. This unplanned value extraction can give a false impression that the code is working correctly, causing bugs.
+* __Note:__ Formerly known as "Unplanned value extraction".
+
+* __Problem:__ Overall, Elixir application’s are composed of many supervised processes, so the effects of an error will be localized in a single process, not propagating to the entire application. A supervisor will detect the failing process, and restart it at that level. For this type of design to behave well, it's important that problematic code crashes when it fails to fulfill its purpose. However, some code may have undesired behavior making many assumptions we have not really planned for, such as being able to return incorrect values instead of forcing a crash. These speculative assumptions can give a false impression that the code is working correctly.
 
 * __Example:__ The code shown below is an example of this smell. The function ``get_value/2`` tries to extract a value from a specific key of a URL query string. As it is not implemented using pattern matching, ``get_value/2`` always returns a value, regardless of the format of the URL query string passed as a parameter in the call. Sometimes the returned value will be valid; however, if a URL query string with an unexpected format is used in the call, ``get_value/2`` will extract incorrect values from it:
 
@@ -1523,74 +1593,11 @@ ___
 [▲ back to Index](#table-of-contents)
 ___
 
-### Large code generation
+### Global configuration for libraries
 
 * __Category:__ Low-level concerns smells.
 
-* __Note:__ This smell was suggested by the community via issues ([#13][Large-code-generation-issue]).
-
-* __Problem:__ This code smell is related to ``macros`` that generate too much code. When a ``macro`` provides a large code generation, it impacts how the compiler or the runtime works. The reason for this is that Elixir may have to expand, compile, and execute a code multiple times, which will make compilation slower.
-
-* __Example:__ The code shown below is an example of this smell. Imagine you are defining a router for a web application, where you could have macros like ``get/2``. On every invocation of the macro, which can be hundreds, the code inside ``get/2`` will be expanded and compiled, which can generate a large volume of code in total.
-
-  ```elixir
-  defmodule Routes do
-    ...
-
-    defmacro get(route, handler) do
-      quote do
-        route = unquote(route)
-        handler = unquote(handler)
-
-        if not is_binary(route) do
-          raise ArgumentError, "route must be a binary"
-        end
-
-        if not is_atom(handler) do
-          raise ArgumentError, "route must be a module"
-        end
-
-        @store_route_for_compilation {route, handler}
-      end
-    end
-  end
-  ```
-
-* __Refactoring:__ To remove this code smell, the developer must simplify the ``macro``, delegating to other functions part of its work. As shown below, by encapsulating in the function ``__define__/3`` the functionality pre-existing inside the ``quote``, we reduce the code that is expanded and compiled on every invocation of the ``macro``, and instead we dispatch to a function to do the bulk of the work.
-
-  ```elixir
-  defmodule Routes do
-    ...
-
-    defmacro get(route, handler) do
-      quote do
-        Routes.__define__(__MODULE__, unquote(route), unquote(handler))
-      end
-    end
-
-    def __define__(module, route, handler) do
-
-      if not is_binary(route) do
-        raise ArgumentError, "route must be a binary"
-      end
-
-      if not is_atom(handler) do
-        raise ArgumentError, "route must be a module"
-      end
-
-      Module.put_attribute(module, :store_route_for_compilation, {route, handler})
-    end
-  end
-  ```
-
-  This example and the refactoring are proposed by José Valim ([@josevalim][jose-valim])
-
-[▲ back to Index](#table-of-contents)
-___
-
-### App configuration for code libs
-
-* __Category:__ Low-level concerns smells.
+* __Note:__ Formerly known as "App configuration for code libs".
 
 * __Problem:__ The ``Application Environment`` <sup>[link][ApplicationEnvironment]</sup> is a global configuration mechanism and therefore can be used to parameterize values that will be used in several different places in a system implemented in Elixir. This parameterization mechanism can be very useful and therefore is not considered a code smell by itself. However, when ``Application Environments`` are used as a mechanism for configuring a library's functions, this can make these functions less flexible, making it impossible for a library-dependent application to reuse its functions with different behaviors in different places in the code. Libraries are created to foster code reuse, so this kind of limitation imposed by global configurations can be problematic in this scenario.
 
@@ -1650,9 +1657,11 @@ ___
 [▲ back to Index](#table-of-contents)
 ___
 
-### Compile-time app configuration
+### Compile-time global configuration
 
 * __Category:__ Low-level concerns smells.
+
+* __Note:__ Formerly known as "Compile-time app configuration".
 
 * __Problem:__ As explained in the description of [App configuration for code libs](#app-configuration-for-code-libs), the ``Application Environment`` can be used to parameterize values in an Elixir system. Although it is not a good practice to use this mechanism in the implementation of libraries, sometimes this can be unavoidable. If these parameterized values are assigned to ``module attributes``, it can be especially problematic. As ``module attribute`` values are defined at compile-time, when trying to assign ``Application Environment`` values to these attributes, warnings or errors can be triggered by Elixir. This happens because, when defining module attributes at compile time, the ``Application Environment`` is not yet available in memory.
 
@@ -1700,9 +1709,11 @@ ___
 [▲ back to Index](#table-of-contents)
 ___
 
-### Dependency with "use" when an "import" is enough
+### "Use" instead of "import"
 
 * __Category:__ Low-level concerns smells.
+
+* __Note:__ Formerly known as "Dependency with "use" when an "import" is enough".
 
 * __Problem:__ Elixir has mechanisms such as ``import``, ``alias``, and ``use`` to establish dependencies between modules. Establishing dependencies allows a module to call functions from other modules, facilitating code reuse. A code implemented with these mechanisms does not characterize a smell by itself; however, while the ``import`` and ``alias`` directives have lexical scope and only facilitate that a module to use functions of another, the ``use`` directive has a broader scope, something that can be problematic. The ``use`` directive allows a module to inject any type of code into another, including propagating dependencies. In this way, using the ``use`` directive makes code readability worse, because to understand exactly what will happen when it references a module, it is necessary to have knowledge of the internal details of the referenced module.
 
