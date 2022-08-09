@@ -1819,7 +1819,7 @@ These examples are based on code provided in Elixir's official documentation. So
 
 * __Example:__ The code shown below is an example of this smell. Imagine that you are implementing a code that performs the conversion of `string` values into `atoms` to identify resources. These `strings` can come from user input or even have been received as response from requests to an API. As this is a dynamic and unpredictable scenario, it is possible for identical `strings` to be converted into new `atoms` that are repeated unnecessarily. This kind of conversion, in addition to wasting memory, can be problematic for an application if it happens too often.
 
-  ```elixir
+```elixir
   defmodule Identifier do
     # ...
 
@@ -1842,23 +1842,23 @@ These examples are based on code provided in Elixir's official documentation. So
   # <= atom repeated was created!
   Identifier.generate(string_from_API_response)
   # :my_id
-  ```
+```
   
-  When we use the `String.to_atom/1` function to dynamically create an `atom`, it is created regardless of whether there is already another one with the same value in memory, so when this happens automatically, we will not have control over meeting the limits established by BEAM.
+When we use the `String.to_atom/1` function to dynamically create an `atom`, it is created regardless of whether there is already another one with the same value in memory, so when this happens automatically, we will not have control over meeting the limits established by BEAM.
 
 * __Refactoring:__ To remove this smell, as shown below, first you must ensure that all the identifier `atoms` are created statically, only once, at the beginning of an application's execution:
 
-  ```elixir
+```elixir
   # statically created atoms...
   _ = :my_id
   _ = :my_id2
   _ = :my_id3
   _ = :my_id4
-  ```
+```
 
-  Next, you should replace the use of the `String.to_atom/1` function with the `String.to_existing_atom/1` function. This will allow string-to-atom conversions to just map the strings to atoms already in memory (statically created at the beginning of the execution), thus preventing repeated `atoms` from being created dynamically. This second part of the refactoring is presented below.
+Next, you should replace the use of the `String.to_atom/1` function with the `String.to_existing_atom/1` function. This will allow string-to-atom conversions to just map the strings to atoms already in memory (statically created at the beginning of the execution), thus preventing repeated `atoms` from being created dynamically. This second part of the refactoring is presented below.
 
-  ```elixir
+```elixir
   defmodule Identifier do
     # ...
 
@@ -1878,11 +1878,11 @@ These examples are based on code provided in Elixir's official documentation. So
   Identifier.generate("non_existent_id")  
   # ** (ArgumentError) errors were found at the given arguments:
   # * 1st argument: not an already existing atom
-  ```
+```
 
-  Note that in the third use example, when a `string` different from an already existing `atom` is given, Elixir shows an error instead of performing the conversion. This demonstrates that this refactoring creates a more controlled and predictable scenario for the application in terms of memory usage.
+Note that in the third use example, when a `string` different from an already existing `atom` is given, Elixir shows an error instead of performing the conversion. This demonstrates that this refactoring creates a more controlled and predictable scenario for the application in terms of memory usage.
 
-  This example and the refactoring are based on the Elixir's official documentation. Sources: [1](https://hexdocs.pm/elixir/String.html#to_atom/1), [2](https://hexdocs.pm/elixir/String.html#to_existing_atom/1)
+This example and the refactoring are based on the Elixir's official documentation. Sources: [1](https://hexdocs.pm/elixir/String.html#to_atom/1), [2](https://hexdocs.pm/elixir/String.html#to_existing_atom/1)
 
 ## About
 
