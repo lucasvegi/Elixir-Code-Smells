@@ -1170,7 +1170,7 @@ This example and the refactoring are proposed by José Valim ([@josevalim](https
 
 Low-level concerns smells are more simple than design-related smells and affect a small part of the code. Next, all 9 different smells classified as low-level concerns are explained and exemplified:
 
-<!-- livebook:{"branch_parent_index":15} -->
+<!-- livebook:{"branch_parent_index":16} -->
 
 ## Working with invalid data
 
@@ -1237,7 +1237,7 @@ Low-level concerns smells are more simple than design-related smells and affect 
 
   This example is based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-working-with-invalid-data)
 
-<!-- livebook:{"branch_parent_index":15} -->
+<!-- livebook:{"branch_parent_index":16} -->
 
 ## Accessing non-existent Map/Struct fields
 
@@ -1336,7 +1336,7 @@ point[:x]
 
 These examples are based on code written by José Valim ([@josevalim](https://github.com/josevalim)). Source: [link](http://blog.plataformatec.com.br/2014/09/writing-assertive-code-with-elixir/)
 
-<!-- livebook:{"branch_parent_index":15} -->
+<!-- livebook:{"branch_parent_index":16} -->
 
 ## Speculative Assumptions
 
@@ -1414,7 +1414,7 @@ Extract.get_value("name=Lucas&university&lab=ASERG", "university")
 
 These examples are based on code written by José Valim ([@josevalim](https://github.com/josevalim)). Source: [link](http://blog.plataformatec.com.br/2014/09/writing-assertive-code-with-elixir/)
 
-<!-- livebook:{"branch_parent_index":15} -->
+<!-- livebook:{"branch_parent_index":16} -->
 
 ## Modules with identical names
 
@@ -1533,7 +1533,7 @@ MyLibrary.Utils.Foo.from_module_two()
 
 This example is based on the description provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-defining-modules-that-are-not-in-your-namespace)
 
-<!-- livebook:{"branch_parent_index":15} -->
+<!-- livebook:{"branch_parent_index":16} -->
 
 ## Unnecessary macro
 
@@ -1592,7 +1592,7 @@ MyMacro.sum(3 + 1, 5 + 6)
 
 This example is based on the description provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-macros)
 
-<!-- livebook:{"branch_parent_index":15} -->
+<!-- livebook:{"branch_parent_index":16} -->
 
 ## Global configuration for libraries
 
@@ -1657,7 +1657,7 @@ DashSplitter.split("Lucas-Francisco-da-Matta-Vegi")
 
 These examples are based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-application-configuration)
 
-<!-- livebook:{"branch_parent_index":15} -->
+<!-- livebook:{"branch_parent_index":16} -->
 
 ## Compile-time global configuration
 
@@ -1721,7 +1721,7 @@ These examples are based on code provided in Elixir's official documentation. So
 
 * __Remark:__ This code smell can be detected by [Credo](https://hexdocs.pm/credo/overview.html), a static code analysis tool. During its checks, Credo raises this [warning](https://hexdocs.pm/credo/Credo.Check.Warning.ApplicationConfigInModuleAttribute.html) when this smell is found.
 
-<!-- livebook:{"branch_parent_index":15} -->
+<!-- livebook:{"branch_parent_index":16} -->
 
 ## "Use" instead of "import"
 
@@ -1807,7 +1807,7 @@ ClientApp.from_client_app()
 
 These examples are based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-use-when-an-import-is-enough)
 
-<!-- livebook:{"branch_parent_index":15} -->
+<!-- livebook:{"branch_parent_index":16} -->
 
 ## Dynamic atom creation
 
