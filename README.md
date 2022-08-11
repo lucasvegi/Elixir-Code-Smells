@@ -12,26 +12,26 @@
   * [GenServer Envy](#genserver-envy)
   * [Agent Obsession](#agent-obsession)
   * [Unsupervised process](#unsupervised-process)
-  * [Large messages between processes](#large-messages-between-processes)
+  * [Large messages](#large-messages)
   * [Unrelated multi-clause function](#unrelated-multi-clause-function)
-  * [Complex extraction in clauses](#complex-extraction-in-clauses) [^*]
-  * [Complex branching](#complex-branching)
-  * [Complex else clauses in with](#complex-else-clauses-in-with) [^*]
-  * [Exceptions for control-flow](#exceptions-for-control-flow)
-  * [Untested polymorphic behavior](#untested-polymorphic-behavior)
-  * [Alternative return types](#alternative-return-types) [^*]
+  * [Complex extractions in clauses](#complex-extractions-in-clauses) [^*]
+  * [Using exceptions for control-flow](#using-exceptions-for-control-flow)
+  * [Untested polymorphic behaviors](#untested-polymorphic-behaviors)
   * [Code organization by process](#code-organization-by-process)
   * [Large code generation by macros](#large-code-generation-by-macros) [^*]
   * [Data manipulation by migration](#data-manipulation-by-migration)
+  * [Global configuration for functions](#global-configuration-for-functions)
+  * [Compile-time global configuration](#compile-time-global-configuration)
+  * ["Use" instead of "import"](#use-instead-of-import)
 * __[Low-level concerns smells](#low-level-concerns-smells)__
   * [Working with invalid data](#working-with-invalid-data)
+  * [Complex branching](#complex-branching)
+  * [Complex else clauses in with](#complex-else-clauses-in-with) [^*]
+  * [Alternative return types](#alternative-return-types) [^*]
   * [Accessing non-existent map/struct fields](#accessing-non-existent-mapstruct-fields)
   * [Speculative Assumptions](#speculative-assumptions)
   * [Modules with identical names](#modules-with-identical-names)
-  * [Unnecessary macro](#unnecessary-macro)
-  * [Global configuration for libraries](#global-configuration-for-libraries)
-  * [Compile-time global configuration](#compile-time-global-configuration)
-  * ["Use" instead of "import"](#use-instead-of-import)
+  * [Unnecessary macros](#unnecessary-macros)
   * [Dynamic atom creation](#dynamic-atom-creation) [^**]
 * __[About](#about)__
 * __[Acknowledgments](#acknowledgments)__
@@ -347,9 +347,11 @@ ___
 [▲ back to Index](#table-of-contents)
 ___
 
-### Large messages between processes
+### Large messages
 
 * __Category:__ Design-related smell.
+
+* __Note:__ Formerly known as "Large messages between processes".
 
 * __Problem:__ In Elixir, processes run in an isolated manner, often concurrently with other Elixir. Communication between different processes is performed via message passing. The exchange of messages between processes is not a code smell in itself; however, when processes exchange messages, their contents are copied between them. For this reason, if a huge structure is sent as a message from one process to another, the sender can become blocked, compromising performance. If these large message exchanges occur frequently, the prolonged and frequent blocking of processes can cause a system to behave anomalously.
 
@@ -509,7 +511,7 @@ ___
 [▲ back to Index](#table-of-contents)
 ___
 
-### Complex extraction in clauses
+### Complex extractions in clauses
 
 * __Category:__ Design-related smell.
 
@@ -551,114 +553,11 @@ ___
 [▲ back to Index](#table-of-contents)
 ___
 
-### Complex branching
+### Using exceptions for control-flow
 
 * __Category:__ Design-related smell.
 
-* __Note:__ Formerly known as "Complex API error handling".
-
-* __Problem:__ When a function assumes the responsibility of handling multiple errors alone, it can increase its cyclomatic complexity (metric of control-flow) and become incomprehensible. This situation can configure a specific instance of "Long function", a traditional code smell, but has implications of its own. Under these circumstances, this function could get very confusing, difficult to maintain and test, and therefore bug-proneness.
-
-* __Example:__ An example of this code smell is when a function uses the ``case`` control-flow structure or other similar constructs (e.g., ``cond``, or ``receive``) to handle multiple variations of response types returned by the same API endpoint. This practice can make the function more complex, long, and difficult to understand, as shown next.
-
-  ```elixir
-  def get_customer(customer_id) do
-    case get("/customers/#{customer_id}") do
-      {:ok, %Tesla.Env{status: 200, body: body}} -> {:ok, body}
-      {:ok, %Tesla.Env{body: body}} -> {:error, body}
-      {:error, _} = other -> other
-    end
-  end
-  ```
-
-  Although ``get_customer/1`` is not really long in this example, it could be. Thinking about this more complex scenario, where a large number of different responses can be provided to the same endpoint, is not a good idea to concentrate all on a single function. This is a risky scenario, where a little typo, or any problem introduced by the programmer in handling a response type, could eventually compromise the handling of all responses from the endpoint (if the function raises an exception, for example).
-
-* __Refactoring:__ As shown below, in this situation, instead of concentrating all handlings within the same function,  creating a complex branching, it is better to delegate each branch (handling of a response type) to a different private function. In this way, the code will be cleaner, more concise, and readable.
-
-  ```elixir
-  def get_customer(customer_id) when is_integer(customer_id) do
-    case get("/customers/#{customer_id}") do
-      {:ok, %Tesla.Env{status: 200, body: body}} -> success_api_response(body)
-      {:ok, %Tesla.Env{body: body}} -> x_error_api_response(body)
-      {:error, _} = other -> y_error_api_response(other)
-    end
-  end
-
-  defp success_api_response(body) do
-    {:ok, body}
-  end
-
-  defp x_error_api_response(body) do
-    {:error, body}
-  end
-
-  defp y_error_api_response(other) do
-    other
-  end
-  ```
-
-  While this example of refactoring ``get_customer/1`` might seem quite more verbose than the original code, remember to imagine a scenario where ``get_customer/1`` is responsible for handling a number much larger than three different types of possible responses. This is the smelly scenario!
-
-  This example is based on code written by Zack <sup>[MrDoops][MrDoops]</sup> and Dimitar Panayotov <sup>[dimitarvp][dimitarvp]</sup>. Source: [link][ComplexErrorHandleExample]. We got suggestions from José Valim ([@josevalim][jose-valim]) on the refactoring.
-
-[▲ back to Index](#table-of-contents)
-___
-
-### Complex else clauses in with
-
-* __Category:__ Design-related smell.
-
-* __Note:__ This smell was suggested by the community via issues ([#7][Complex-else-clauses-in-with-issue]).
-
-* __Problem:__ This code smell refers to ``with`` statements that flatten all its error clauses into a single complex ``else`` block. This situation is harmful to the code readability and maintainability because difficult to know from which clause the error value came.
-
-* __Example:__ An example of this code smell, as shown below, is a function ``open_decoded_file/1`` that read a base 64 encoded string content from a file and returns a decoded binary string. This function uses a ``with`` statement that needs to handle two possible errors, all of which are concentrated in a single complex ``else`` block.
-
-  ```elixir
-  def open_decoded_file(path) do
-    with {:ok, encoded} <- File.read(path),
-         {:ok, value} <- Base.decode64(encoded) do
-      value
-    else
-        {:error, _} -> :badfile
-        :error -> :badencoding
-    end
-  end
-  ```
-
-* __Refactoring:__ As shown below, in this situation, instead of concentrating all error handlings within a single complex ``else`` block, it is better to normalize the return types in specific private functions. In this way, due to its organization, the code will be cleaner and more readable.
-
-  ```elixir
-  def open_decoded_file(path) do
-    with {:ok, encoded} <- file_read(path),
-         {:ok, value} <- base_decode64(encoded) do
-      value
-    end
-  end
-
-  defp file_read(path) do
-    case File.read(path) do
-      {:ok, contents} -> {:ok, contents}
-      {:error, _} -> :badfile
-    end
-  end
-
-  defp base_decode64(contents) do
-    case Base.decode64(contents) do
-      {:ok, contents} -> {:ok, contents}
-      :error -> :badencoding
-    end
-  end
-  ```
-
-  This example and the refactoring are proposed by José Valim ([@josevalim][jose-valim])
-
-[▲ back to Index](#table-of-contents)
-___
-
-### Exceptions for control-flow
-
-* __Category:__ Design-related smell.
+* __Note:__ Formerly known as "Exceptions for control-flow".
 
 * __Problem:__ This smell refers to code that forces developers to handle exceptions for control-flow. Exception handling itself does not represent a code smell, but this should not be the only alternative available to developers to handle an error in client code. When developers have no freedom to decide if an error is exceptional or not, this is considered a code smell.
 
@@ -764,7 +663,7 @@ ___
 [▲ back to Index](#table-of-contents)
 ___
 
-### Untested polymorphic behavior
+### Untested polymorphic behaviors
 
 * __Category:__ Design-related smell.
 
@@ -847,69 +746,7 @@ ___
   This example is based on code written by José Valim ([@josevalim][jose-valim]). Source: [link][JoseValimExamples]
 
 [▲ back to Index](#table-of-contents)
-___
 
-### Alternative return types
-
-* __Category:__ Design-related smell.
-
-* __Note:__ This smell was suggested by the community via issues ([#6][Alternative-return-type-issue]).
-
-* __Problem:__ This code smell refers to functions that receive options (e.g., ``keyword list``) parameters that drastically change its return type. Because options are optional and sometimes set dynamically, if they change the return type it may be hard to understand what the function actually returns.
-
-* __Example:__ An example of this code smell, as shown below, is when a library (e.g. ``AlternativeInteger``) has a multi-clause function ``parse/2`` with many alternative return types. Depending on the options received as a parameter, the function will have a different return type.
-
-  ```elixir
-  defmodule AlternativeInteger do
-    def parse(string, opts) when is_list(opts) do
-      case opts[:discard_rest] do
-        true -> #only an integer value convert from string parameter
-        _   ->  #another return type (e.g., tuple)
-      end
-    end
-
-    def parse(string, opts \\ :default) do
-      #another return type (e.g., tuple)
-    end
-  end
-
-  #...Use examples...
-
-  iex(1)> AlternativeInteger.parse("13")
-  {13, "..."}
-
-  iex(2)> AlternativeInteger.parse("13", discard_rest: true)
-  13
-
-  iex(3)> AlternativeInteger.parse("13", discard_rest: false)
-  {13, "..."}
-  ```
-
-* __Refactoring:__ To refactor this smell, as shown next, it's better to add in the library a specific function for each return type (e.g., ``parse_no_rest/1``), no longer delegating this to an options parameter.
-
-  ```elixir
-  defmodule AlternativeInteger do
-    def parse_no_rest(string) do
-      #only an integer value convert from string parameter
-    end
-
-    def parse(string) do
-      #another return type (e.g., tuple)
-    end
-  end
-
-  #...Use examples...
-
-  iex(1)> AlternativeInteger.parse("13")
-  {13, "..."}
-
-  iex(2)> AlternativeInteger.parse_no_rest("13")
-  13
-  ```
-
-  This example and the refactoring are proposed by José Valim ([@josevalim][jose-valim])
-
-[▲ back to Index](#table-of-contents)
 ___
 
 ### Code organization by process
@@ -1192,6 +1029,209 @@ ___
   This example is based on code originally written by Carlos Souza. Source: [link][DataManipulationByMigrationExamples]
 
 [▲ back to Index](#table-of-contents)
+___
+
+### Global configuration for functions
+
+* __Category:__ Design-related smells.
+
+* __Note:__ Formerly known as "App configuration for code libs".
+
+* __Problem:__ The ``Application Environment`` <sup>[link][ApplicationEnvironment]</sup> is a global configuration mechanism and therefore can be used to parameterize values that will be used in several different places in a system implemented in Elixir. This parameterization mechanism can be very useful and therefore is not considered a code smell by itself. However, when ``Application Environments`` are used as a mechanism for configuring a library's functions, this can make these functions less flexible, making it impossible for a library-dependent application to reuse its functions with different behaviors in different places in the code. Libraries are created to foster code reuse, so this kind of limitation imposed by global configurations can be problematic in this scenario.
+
+* __Example:__ The ``DashSplitter`` module represents a library that configures the behavior of its functions through the global ``Application Environment`` mechanism. These configurations are concentrated in the ``config/config.exs`` file, shown below:
+
+  ```elixir
+  import Config
+
+  config :app_config,
+    parts: 3
+
+  import_config "#{config_env()}.exs"
+  ```
+
+  One of the functions implemented by the ``DashSplitter`` library is ``split/1``. This function has the purpose of separating a string received via parameter into a certain number of parts. The character used as a separator in ``split/1`` is always ``"-"`` and the number of parts the string is split into is defined globally by the ``Application Environment``. This value is retrieved by the ``split/1`` function by calling ``Application.fetch_env!/2``, as shown next:
+
+  ```elixir
+  defmodule DashSplitter do
+    def split(string) when is_binary(string) do
+      parts = Application.fetch_env!(:app_config, :parts) # <= retrieve global config
+      String.split(string, "-", parts: parts)             # <= parts: 3
+    end
+  end
+  ```
+
+  Due to this type of global configuration used by the ``DashSplitter`` library, all applications dependent on it can only use the ``split/1`` function with identical behavior in relation to the number of parts generated by string separation. Currently, this value is equal to 3, as we can see in the use examples shown below:
+
+  ```elixir
+  iex(1)> DashSplitter.split("Lucas-Francisco-Vegi")
+  ["Lucas", "Francisco", "Vegi"]
+
+  iex(2)> DashSplitter.split("Lucas-Francisco-da-Matta-Vegi")
+  ["Lucas", "Francisco", "da-Matta-Vegi"]
+  ```
+
+* __Refactoring:__ To remove this code smell and make the library more adaptable and flexible, this type of configuration must be performed via parameters in function calls. The code shown below performs the refactoring of the ``split/1`` function by adding a new optional parameter of type ``Keyword list``. With this new parameter it is possible to modify the default behavior of the function at the time of its call, allowing multiple different ways of using ``split/2`` within the same application:
+
+  ```elixir
+  defmodule DashSplitter do
+    def split(string, opts \\ []) when is_binary(string) and is_list(opts) do
+      parts = Keyword.get(opts, :parts, 2) # <= default config of parts == 2
+      String.split(string, "-", parts: parts)
+    end
+  end
+
+  #...Use examples...
+
+  iex(1)> DashSplitter.split("Lucas-Francisco-da-Matta-Vegi", [parts: 5])
+  ["Lucas", "Francisco", "da", "Matta", "Vegi"]
+
+  iex(2)> DashSplitter.split("Lucas-Francisco-da-Matta-Vegi") #<= default config is used!
+  ["Lucas", "Francisco-da-Matta-Vegi"]
+  ```
+
+  These examples are based on code provided in Elixir's official documentation. Source: [link][AppConfigurationForCodeLibsExample]
+
+[▲ back to Index](#table-of-contents)
+___
+
+### Compile-time global configuration
+
+* __Category:__ Design-related smells.
+
+* __Note:__ Formerly known as "Compile-time app configuration".
+
+* __Problem:__ As explained in the description of [Global configuration for functions](#global-configuration-for-functions), the ``Application Environment`` can be used to parameterize values in an Elixir system. Although it is not a good practice to use this mechanism in the implementation of libraries, sometimes this can be unavoidable. If these parameterized values are assigned to ``module attributes``, it can be especially problematic. As ``module attribute`` values are defined at compile-time, when trying to assign ``Application Environment`` values to these attributes, warnings or errors can be triggered by Elixir. This happens because, when defining module attributes at compile time, the ``Application Environment`` is not yet available in memory.
+
+* __Example:__ The ``DashSplitter`` module represents a library. This module has an attribute ``@parts`` that has its constant value defined at compile-time by calling ``Application.fetch_env!/2``. The ``split/1`` function, implemented by this library, has the purpose of separating a string received via parameter into a certain number of parts. The character used as a separator in ``split/1`` is always ``"-"`` and the number of parts the string is split into is defined by the module attribute ``@parts``, as shown next:
+
+  ```elixir
+  defmodule DashSplitter do
+    @parts Application.fetch_env!(:app_config, :parts) # <= define module attribute
+                                                          # at compile-time
+    def split(string) when is_binary(string) do
+      String.split(string, "-", parts: @parts) #<= reading from a module attribute
+    end
+
+  end
+  ```
+
+  Due to this compile-time configuration based on the ``Application Environment`` mechanism, Elixir can raise warnings or errors, as shown next, during compilation:
+
+  ```elixir
+  warning: Application.fetch_env!/2 is discouraged in the module body,
+  use Application.compile_env/3 instead...
+
+  ** (ArgumentError) could not fetch application environment :parts
+  for application :app_config because the application was not loaded nor
+  configured
+  ```
+
+* __Refactoring:__ To remove this code smell, when it is really unavoidable to use the ``Application Environment`` mechanism to configure library functions, this should be done at runtime and not during compilation. That is, instead of calling ``Application.fetch_env!(:app_config, :parts)`` at compile-time to set ``@parts``, this function must be called at runtime within ``split/1``. This will mitigate the risk that ``Application Environment`` is not yet available in memory when it is necessary to use it. Another possible refactoring, as shown below, is to replace the use of the ``Application.fetch_env!/2`` function to define ``@parts``, with the ``Application.compile_env/3``. The third parameter of ``Application.compile_env/3`` defines a default value that is returned whenever that ``Application Environment`` is not available in memory during the definition of ``@parts``. This prevents Elixir from raising an error at compile-time:
+
+  ```elixir
+  defmodule DashSplitter do
+    @parts Application.compile_env(:app_config, :parts, 3) # <= default value 3 prevents an error!
+
+    def split(string) when is_binary(string) do
+      String.split(string, "-", parts: @parts) #<= reading from a module attribute
+    end
+
+  end
+  ```
+
+  These examples are based on code provided in Elixir's official documentation. Source: [link][AppConfigurationForCodeLibsExample]
+
+* __Remark:__ This code smell can be detected by [Credo][Credo], a static code analysis tool. During its checks, Credo raises this [warning][CredoWarningApplicationConfigInModuleAttribute] when this smell is found.
+
+[▲ back to Index](#table-of-contents)
+___
+
+### "Use" instead of "import"
+
+* __Category:__ Design-related smells.
+
+* __Note:__ Formerly known as "Dependency with "use" when an "import" is enough".
+
+* __Problem:__ Elixir has mechanisms such as ``import``, ``alias``, and ``use`` to establish dependencies between modules. Establishing dependencies allows a module to call functions from other modules, facilitating code reuse. A code implemented with these mechanisms does not characterize a smell by itself; however, while the ``import`` and ``alias`` directives have lexical scope and only facilitate that a module to use functions of another, the ``use`` directive has a broader scope, something that can be problematic. The ``use`` directive allows a module to inject any type of code into another, including propagating dependencies. In this way, using the ``use`` directive makes code readability worse, because to understand exactly what will happen when it references a module, it is necessary to have knowledge of the internal details of the referenced module.
+
+* __Example:__ The code shown below is an example of this smell. Three different modules were defined -- ``ModuleA``, ``Library``, and ``ClientApp``. ``ClientApp`` is reusing code from the ``Library`` via the ``use`` directive, but is unaware of its internal details. Therefore, when ``Library`` is referenced by ``ClientApp``, it injects into ``ClientApp`` all the content present in its ``__using__/1`` macro. Due to the decreased readability of the code and the lack of knowledge of the internal details of the ``Library``, ``ClientApp`` defines a local function ``foo/0``. This will generate a conflict as ``ModuleA`` also has a function ``foo/0``; when ``ClientApp`` referenced ``Library`` via the ``use`` directive, it has a dependency for ``ModuleA`` propagated to itself:
+
+  ```elixir
+  defmodule ModuleA do
+    def foo do
+      "From Module A"
+    end
+  end
+  ```
+
+  ```elixir
+  defmodule Library do
+    defmacro __using__(_opts) do
+      quote do
+        import ModuleA  # <= propagating dependencies!
+
+        def from_lib do
+          "From Library"
+        end
+      end
+    end
+
+    def from_lib do
+      "From Library"
+    end
+  end
+  ```
+
+  ```elixir
+  defmodule ClientApp do
+    use Library
+
+    def foo do
+      "Local function from client app"
+    end
+
+    def from_client_app do
+      from_lib() <> " - " <> foo()
+    end
+
+  end
+  ```
+
+  When we try to compile ``ClientApp``, Elixir will detect the conflict and throw the following error:
+
+  ```elixir
+  iex(1)> c("client_app.ex")
+
+  ** (CompileError) client_app.ex:4: imported ModuleA.foo/0 conflicts with local function
+  ```
+
+* __Refactoring:__ To remove this code smell, it may be possible to replace ``use`` with ``alias`` or ``import`` when creating a dependency between an application and a library. This will make code behavior clearer, due to improved readability. In the following code, ``ClientApp`` was refactored in this way, and with that, the conflict as previously shown no longer exists:
+
+  ```elixir
+  defmodule ClientApp do
+    import Library
+
+    def foo do
+      "Local function from client app"
+    end
+
+    def from_client_app do
+      from_lib() <> " - " <> foo()
+    end
+
+  end
+
+  #...Uses example...
+
+  iex(1)> ClientApp.from_client_app()
+  "From Library - Local function from client app"
+  ```
+
+  These examples are based on code provided in Elixir's official documentation. Source: [link][DependencyWithUseExample]
+
+[▲ back to Index](#table-of-contents)
+
 
 ## Low-level concerns smells
 
@@ -1261,6 +1301,174 @@ Low-level concerns smells are more simple than design-related smells and affect 
   ```
 
   This example is based on code provided in Elixir's official documentation. Source: [link][WorkingWithInvalidDataExample]
+
+[▲ back to Index](#table-of-contents)
+___
+
+### Complex branching
+
+* __Category:__ Low-level concerns smell.
+
+* __Note:__ Formerly known as "Complex API error handling".
+
+* __Problem:__ When a function assumes the responsibility of handling multiple errors alone, it can increase its cyclomatic complexity (metric of control-flow) and become incomprehensible. This situation can configure a specific instance of "Long function", a traditional code smell, but has implications of its own. Under these circumstances, this function could get very confusing, difficult to maintain and test, and therefore bug-proneness.
+
+* __Example:__ An example of this code smell is when a function uses the ``case`` control-flow structure or other similar constructs (e.g., ``cond``, or ``receive``) to handle multiple variations of response types returned by the same API endpoint. This practice can make the function more complex, long, and difficult to understand, as shown next.
+
+  ```elixir
+  def get_customer(customer_id) do
+    case get("/customers/#{customer_id}") do
+      {:ok, %Tesla.Env{status: 200, body: body}} -> {:ok, body}
+      {:ok, %Tesla.Env{body: body}} -> {:error, body}
+      {:error, _} = other -> other
+    end
+  end
+  ```
+
+  Although ``get_customer/1`` is not really long in this example, it could be. Thinking about this more complex scenario, where a large number of different responses can be provided to the same endpoint, is not a good idea to concentrate all on a single function. This is a risky scenario, where a little typo, or any problem introduced by the programmer in handling a response type, could eventually compromise the handling of all responses from the endpoint (if the function raises an exception, for example).
+
+* __Refactoring:__ As shown below, in this situation, instead of concentrating all handlings within the same function,  creating a complex branching, it is better to delegate each branch (handling of a response type) to a different private function. In this way, the code will be cleaner, more concise, and readable.
+
+  ```elixir
+  def get_customer(customer_id) when is_integer(customer_id) do
+    case get("/customers/#{customer_id}") do
+      {:ok, %Tesla.Env{status: 200, body: body}} -> success_api_response(body)
+      {:ok, %Tesla.Env{body: body}} -> x_error_api_response(body)
+      {:error, _} = other -> y_error_api_response(other)
+    end
+  end
+
+  defp success_api_response(body) do
+    {:ok, body}
+  end
+
+  defp x_error_api_response(body) do
+    {:error, body}
+  end
+
+  defp y_error_api_response(other) do
+    other
+  end
+  ```
+
+  While this example of refactoring ``get_customer/1`` might seem quite more verbose than the original code, remember to imagine a scenario where ``get_customer/1`` is responsible for handling a number much larger than three different types of possible responses. This is the smelly scenario!
+
+  This example is based on code written by Zack <sup>[MrDoops][MrDoops]</sup> and Dimitar Panayotov <sup>[dimitarvp][dimitarvp]</sup>. Source: [link][ComplexErrorHandleExample]. We got suggestions from José Valim ([@josevalim][jose-valim]) on the refactoring.
+
+[▲ back to Index](#table-of-contents)
+___
+
+### Complex else clauses in with
+
+* __Category:__ Low-level concerns smell.
+
+* __Note:__ This smell was suggested by the community via issues ([#7][Complex-else-clauses-in-with-issue]).
+
+* __Problem:__ This code smell refers to ``with`` statements that flatten all its error clauses into a single complex ``else`` block. This situation is harmful to the code readability and maintainability because difficult to know from which clause the error value came.
+
+* __Example:__ An example of this code smell, as shown below, is a function ``open_decoded_file/1`` that read a base 64 encoded string content from a file and returns a decoded binary string. This function uses a ``with`` statement that needs to handle two possible errors, all of which are concentrated in a single complex ``else`` block.
+
+  ```elixir
+  def open_decoded_file(path) do
+    with {:ok, encoded} <- File.read(path),
+         {:ok, value} <- Base.decode64(encoded) do
+      value
+    else
+        {:error, _} -> :badfile
+        :error -> :badencoding
+    end
+  end
+  ```
+
+* __Refactoring:__ As shown below, in this situation, instead of concentrating all error handlings within a single complex ``else`` block, it is better to normalize the return types in specific private functions. In this way, due to its organization, the code will be cleaner and more readable.
+
+  ```elixir
+  def open_decoded_file(path) do
+    with {:ok, encoded} <- file_read(path),
+         {:ok, value} <- base_decode64(encoded) do
+      value
+    end
+  end
+
+  defp file_read(path) do
+    case File.read(path) do
+      {:ok, contents} -> {:ok, contents}
+      {:error, _} -> :badfile
+    end
+  end
+
+  defp base_decode64(contents) do
+    case Base.decode64(contents) do
+      {:ok, contents} -> {:ok, contents}
+      :error -> :badencoding
+    end
+  end
+  ```
+
+  This example and the refactoring are proposed by José Valim ([@josevalim][jose-valim])
+
+[▲ back to Index](#table-of-contents)
+___
+
+### Alternative return types
+
+* __Category:__ Low-level concerns smell.
+
+* __Note:__ This smell was suggested by the community via issues ([#6][Alternative-return-type-issue]).
+
+* __Problem:__ This code smell refers to functions that receive options (e.g., ``keyword list``) parameters that drastically change its return type. Because options are optional and sometimes set dynamically, if they change the return type it may be hard to understand what the function actually returns.
+
+* __Example:__ An example of this code smell, as shown below, is when a library (e.g. ``AlternativeInteger``) has a multi-clause function ``parse/2`` with many alternative return types. Depending on the options received as a parameter, the function will have a different return type.
+
+  ```elixir
+  defmodule AlternativeInteger do
+    def parse(string, opts) when is_list(opts) do
+      case opts[:discard_rest] do
+        true -> #only an integer value convert from string parameter
+        _   ->  #another return type (e.g., tuple)
+      end
+    end
+
+    def parse(string, opts \\ :default) do
+      #another return type (e.g., tuple)
+    end
+  end
+
+  #...Use examples...
+
+  iex(1)> AlternativeInteger.parse("13")
+  {13, "..."}
+
+  iex(2)> AlternativeInteger.parse("13", discard_rest: true)
+  13
+
+  iex(3)> AlternativeInteger.parse("13", discard_rest: false)
+  {13, "..."}
+  ```
+
+* __Refactoring:__ To refactor this smell, as shown next, it's better to add in the library a specific function for each return type (e.g., ``parse_no_rest/1``), no longer delegating this to an options parameter.
+
+  ```elixir
+  defmodule AlternativeInteger do
+    def parse_no_rest(string) do
+      #only an integer value convert from string parameter
+    end
+
+    def parse(string) do
+      #another return type (e.g., tuple)
+    end
+  end
+
+  #...Use examples...
+
+  iex(1)> AlternativeInteger.parse("13")
+  {13, "..."}
+
+  iex(2)> AlternativeInteger.parse_no_rest("13")
+  13
+  ```
+
+  This example and the refactoring are proposed by José Valim ([@josevalim][jose-valim])
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -1534,7 +1742,7 @@ ___
 [▲ back to Index](#table-of-contents)
 ___
 
-### Unnecessary macro
+### Unnecessary macros
 
 * __Category:__ Low-level concerns smells.
 
@@ -1589,208 +1797,6 @@ ___
   ```
 
   This example is based on the description provided in Elixir's official documentation. Source: [link][UnnecessaryMacroExample]
-
-[▲ back to Index](#table-of-contents)
-___
-
-### Global configuration for libraries
-
-* __Category:__ Low-level concerns smells.
-
-* __Note:__ Formerly known as "App configuration for code libs".
-
-* __Problem:__ The ``Application Environment`` <sup>[link][ApplicationEnvironment]</sup> is a global configuration mechanism and therefore can be used to parameterize values that will be used in several different places in a system implemented in Elixir. This parameterization mechanism can be very useful and therefore is not considered a code smell by itself. However, when ``Application Environments`` are used as a mechanism for configuring a library's functions, this can make these functions less flexible, making it impossible for a library-dependent application to reuse its functions with different behaviors in different places in the code. Libraries are created to foster code reuse, so this kind of limitation imposed by global configurations can be problematic in this scenario.
-
-* __Example:__ The ``DashSplitter`` module represents a library that configures the behavior of its functions through the global ``Application Environment`` mechanism. These configurations are concentrated in the ``config/config.exs`` file, shown below:
-
-  ```elixir
-  import Config
-
-  config :app_config,
-    parts: 3
-
-  import_config "#{config_env()}.exs"
-  ```
-
-  One of the functions implemented by the ``DashSplitter`` library is ``split/1``. This function has the purpose of separating a string received via parameter into a certain number of parts. The character used as a separator in ``split/1`` is always ``"-"`` and the number of parts the string is split into is defined globally by the ``Application Environment``. This value is retrieved by the ``split/1`` function by calling ``Application.fetch_env!/2``, as shown next:
-
-  ```elixir
-  defmodule DashSplitter do
-    def split(string) when is_binary(string) do
-      parts = Application.fetch_env!(:app_config, :parts) # <= retrieve global config
-      String.split(string, "-", parts: parts)             # <= parts: 3
-    end
-  end
-  ```
-
-  Due to this type of global configuration used by the ``DashSplitter`` library, all applications dependent on it can only use the ``split/1`` function with identical behavior in relation to the number of parts generated by string separation. Currently, this value is equal to 3, as we can see in the use examples shown below:
-
-  ```elixir
-  iex(1)> DashSplitter.split("Lucas-Francisco-Vegi")
-  ["Lucas", "Francisco", "Vegi"]
-
-  iex(2)> DashSplitter.split("Lucas-Francisco-da-Matta-Vegi")
-  ["Lucas", "Francisco", "da-Matta-Vegi"]
-  ```
-
-* __Refactoring:__ To remove this code smell and make the library more adaptable and flexible, this type of configuration must be performed via parameters in function calls. The code shown below performs the refactoring of the ``split/1`` function by adding a new optional parameter of type ``Keyword list``. With this new parameter it is possible to modify the default behavior of the function at the time of its call, allowing multiple different ways of using ``split/2`` within the same application:
-
-  ```elixir
-  defmodule DashSplitter do
-    def split(string, opts \\ []) when is_binary(string) and is_list(opts) do
-      parts = Keyword.get(opts, :parts, 2) # <= default config of parts == 2
-      String.split(string, "-", parts: parts)
-    end
-  end
-
-  #...Use examples...
-
-  iex(1)> DashSplitter.split("Lucas-Francisco-da-Matta-Vegi", [parts: 5])
-  ["Lucas", "Francisco", "da", "Matta", "Vegi"]
-
-  iex(2)> DashSplitter.split("Lucas-Francisco-da-Matta-Vegi") #<= default config is used!
-  ["Lucas", "Francisco-da-Matta-Vegi"]
-  ```
-
-  These examples are based on code provided in Elixir's official documentation. Source: [link][AppConfigurationForCodeLibsExample]
-
-[▲ back to Index](#table-of-contents)
-___
-
-### Compile-time global configuration
-
-* __Category:__ Low-level concerns smells.
-
-* __Note:__ Formerly known as "Compile-time app configuration".
-
-* __Problem:__ As explained in the description of [App configuration for code libs](#app-configuration-for-code-libs), the ``Application Environment`` can be used to parameterize values in an Elixir system. Although it is not a good practice to use this mechanism in the implementation of libraries, sometimes this can be unavoidable. If these parameterized values are assigned to ``module attributes``, it can be especially problematic. As ``module attribute`` values are defined at compile-time, when trying to assign ``Application Environment`` values to these attributes, warnings or errors can be triggered by Elixir. This happens because, when defining module attributes at compile time, the ``Application Environment`` is not yet available in memory.
-
-* __Example:__ The ``DashSplitter`` module represents a library. This module has an attribute ``@parts`` that has its constant value defined at compile-time by calling ``Application.fetch_env!/2``. The ``split/1`` function, implemented by this library, has the purpose of separating a string received via parameter into a certain number of parts. The character used as a separator in ``split/1`` is always ``"-"`` and the number of parts the string is split into is defined by the module attribute ``@parts``, as shown next:
-
-  ```elixir
-  defmodule DashSplitter do
-    @parts Application.fetch_env!(:app_config, :parts) # <= define module attribute
-                                                          # at compile-time
-    def split(string) when is_binary(string) do
-      String.split(string, "-", parts: @parts) #<= reading from a module attribute
-    end
-
-  end
-  ```
-
-  Due to this compile-time configuration based on the ``Application Environment`` mechanism, Elixir can raise warnings or errors, as shown next, during compilation:
-
-  ```elixir
-  warning: Application.fetch_env!/2 is discouraged in the module body,
-  use Application.compile_env/3 instead...
-
-  ** (ArgumentError) could not fetch application environment :parts
-  for application :app_config because the application was not loaded nor
-  configured
-  ```
-
-* __Refactoring:__ To remove this code smell, when it is really unavoidable to use the ``Application Environment`` mechanism to configure library functions, this should be done at runtime and not during compilation. That is, instead of calling ``Application.fetch_env!(:app_config, :parts)`` at compile-time to set ``@parts``, this function must be called at runtime within ``split/1``. This will mitigate the risk that ``Application Environment`` is not yet available in memory when it is necessary to use it. Another possible refactoring, as shown below, is to replace the use of the ``Application.fetch_env!/2`` function to define ``@parts``, with the ``Application.compile_env/3``. The third parameter of ``Application.compile_env/3`` defines a default value that is returned whenever that ``Application Environment`` is not available in memory during the definition of ``@parts``. This prevents Elixir from raising an error at compile-time:
-
-  ```elixir
-  defmodule DashSplitter do
-    @parts Application.compile_env(:app_config, :parts, 3) # <= default value 3 prevents an error!
-
-    def split(string) when is_binary(string) do
-      String.split(string, "-", parts: @parts) #<= reading from a module attribute
-    end
-
-  end
-  ```
-
-  These examples are based on code provided in Elixir's official documentation. Source: [link][AppConfigurationForCodeLibsExample]
-
-* __Remark:__ This code smell can be detected by [Credo][Credo], a static code analysis tool. During its checks, Credo raises this [warning][CredoWarningApplicationConfigInModuleAttribute] when this smell is found.
-
-[▲ back to Index](#table-of-contents)
-___
-
-### "Use" instead of "import"
-
-* __Category:__ Low-level concerns smells.
-
-* __Note:__ Formerly known as "Dependency with "use" when an "import" is enough".
-
-* __Problem:__ Elixir has mechanisms such as ``import``, ``alias``, and ``use`` to establish dependencies between modules. Establishing dependencies allows a module to call functions from other modules, facilitating code reuse. A code implemented with these mechanisms does not characterize a smell by itself; however, while the ``import`` and ``alias`` directives have lexical scope and only facilitate that a module to use functions of another, the ``use`` directive has a broader scope, something that can be problematic. The ``use`` directive allows a module to inject any type of code into another, including propagating dependencies. In this way, using the ``use`` directive makes code readability worse, because to understand exactly what will happen when it references a module, it is necessary to have knowledge of the internal details of the referenced module.
-
-* __Example:__ The code shown below is an example of this smell. Three different modules were defined -- ``ModuleA``, ``Library``, and ``ClientApp``. ``ClientApp`` is reusing code from the ``Library`` via the ``use`` directive, but is unaware of its internal details. Therefore, when ``Library`` is referenced by ``ClientApp``, it injects into ``ClientApp`` all the content present in its ``__using__/1`` macro. Due to the decreased readability of the code and the lack of knowledge of the internal details of the ``Library``, ``ClientApp`` defines a local function ``foo/0``. This will generate a conflict as ``ModuleA`` also has a function ``foo/0``; when ``ClientApp`` referenced ``Library`` via the ``use`` directive, it has a dependency for ``ModuleA`` propagated to itself:
-
-  ```elixir
-  defmodule ModuleA do
-    def foo do
-      "From Module A"
-    end
-  end
-  ```
-
-  ```elixir
-  defmodule Library do
-    defmacro __using__(_opts) do
-      quote do
-        import ModuleA  # <= propagating dependencies!
-
-        def from_lib do
-          "From Library"
-        end
-      end
-    end
-
-    def from_lib do
-      "From Library"
-    end
-  end
-  ```
-
-  ```elixir
-  defmodule ClientApp do
-    use Library
-
-    def foo do
-      "Local function from client app"
-    end
-
-    def from_client_app do
-      from_lib() <> " - " <> foo()
-    end
-
-  end
-  ```
-
-  When we try to compile ``ClientApp``, Elixir will detect the conflict and throw the following error:
-
-  ```elixir
-  iex(1)> c("client_app.ex")
-
-  ** (CompileError) client_app.ex:4: imported ModuleA.foo/0 conflicts with local function
-  ```
-
-* __Refactoring:__ To remove this code smell, it may be possible to replace ``use`` with ``alias`` or ``import`` when creating a dependency between an application and a library. This will make code behavior clearer, due to improved readability. In the following code, ``ClientApp`` was refactored in this way, and with that, the conflict as previously shown no longer exists:
-
-  ```elixir
-  defmodule ClientApp do
-    import Library
-
-    def foo do
-      "Local function from client app"
-    end
-
-    def from_client_app do
-      from_lib() <> " - " <> foo()
-    end
-
-  end
-
-  #...Uses example...
-
-  iex(1)> ClientApp.from_client_app()
-  "From Library - Local function from client app"
-  ```
-
-  These examples are based on code provided in Elixir's official documentation. Source: [link][DependencyWithUseExample]
 
 [▲ back to Index](#table-of-contents)
 ___
