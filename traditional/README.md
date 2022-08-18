@@ -348,7 +348,7 @@ ___
 [▲ back to Index](#table-of-contents)
 
 <!-- Links -->
-[Traditional Smells]: https://github.com/lucasvegi/Elixir-Code-Smells
+[Traditional Smells]: https://github.com/lucasvegi/Elixir-Code-Smells/tree/main/traditional
 [Elixir Smells]: https://github.com/lucasvegi/Elixir-Code-Smells
 [Elixir]: http://elixir-lang.org
 [ASERG]: http://aserg.labsoft.dcc.ufmg.br/
