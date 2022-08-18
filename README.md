@@ -33,6 +33,7 @@
   * [Modules with identical names](#modules-with-identical-names)
   * [Unnecessary macros](#unnecessary-macros)
   * [Dynamic atom creation](#dynamic-atom-creation) [^**]
+* __[Traditional code smells][TraditionalSmells]__
 * __[About](#about)__
 * __[Acknowledgments](#acknowledgments)__
 
@@ -52,6 +53,8 @@ As a result of this investigation, we have initially proposed a catalog of 18 ne
 * __Problem:__ How the code smell can harm code quality and what impacts this can have for developers;
 * __Example:__ Code and textual descriptions to illustrate the occurrence of the code smell;
 * __Refactoring:__ Ways to change smelly code in order to improve its qualities. Examples of refactored code are presented to illustrate these changes.
+
+In addition to the Elixir-specific code smells, our catalog also documents 12 [traditional code smells][TraditionalSmells] discussed in the context of Elixir systems.
 
 The objective of this catalog of code smells is to instigate the improvement of the quality of code developed in Elixir. For this reason, we are interested in knowing Elixir's community opinion about these code smells: *Do you agree that these code smells can be harmful? Have you seen any of them in production code? Do you have any suggestions about some Elixir-specific code smell not cataloged by us?...*
 
@@ -1952,3 +1955,4 @@ Our research is also part of the initiative called __[Research with Elixir][Rese
 [to_existing_atom]: https://hexdocs.pm/elixir/String.html#to_existing_atom/1
 [Finbits]: https://www.finbits.com.br/
 [ResearchWithElixir]: http://pesquisecomelixir.com.br/
+[TraditionalSmells]: https://github.com/lucasvegi/Elixir-Code-Smells/tree/main/traditional
