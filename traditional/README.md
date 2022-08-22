@@ -21,7 +21,7 @@
 
 ## Traditional code smells
 
-[Fowler and Beck][FowlerAndBeckCatalog] coined the term *__code smell__* to name suboptimal code structures that can harm software maintenance and evolution. In addition to coining the term, they cataloged 22 traditional code smell. Although traditional code smells were proposed in the nineties for the object-orientedare programming paradigm, some of them are also discussed in the Elixir context nowadays. In this section, 12 different traditional smells are explained and exemplified in this context. We present these smells using the following structure for each one:
+[Fowler and Beck][FowlerAndBeckCatalog] coined the term *__code smell__* to name suboptimal code structures that can harm software maintenance and evolution. In addition to coining the term, they cataloged 22 traditional code smell. Although traditional code smells were proposed in the nineties for the object-oriented programming paradigm, some of them are also discussed in the Elixir context nowadays. In this section, 12 different traditional smells are explained and exemplified in this context. We present these smells using the following structure for each one:
 
 * __Name:__ Unique identifier of the code smell. This name is important to facilitate communication between developers;
 * __Problem:__ How the code smell can harm code quality and the impacts it can have on software maintenance, comprehension, and evolution;
