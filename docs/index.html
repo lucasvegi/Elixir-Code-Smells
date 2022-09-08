@@ -1,0 +1,41 @@
+<html>
+<head>
+  <script>
+    function openSurvey() {
+      redirect(getRandomIntInclusive(0,3));
+    }
+
+    function getRandomIntInclusive(min, max) {
+       min = Math.ceil(min);
+       max = Math.floor(max);
+       return Math.floor(Math.random() * (max - min + 1)) + min; 
+    }
+
+    function redirect(survey){
+      switch(survey){
+           case 0:
+              window.location.href="https://bit.ly/3qlP7eC";
+              break;
+              
+           case 1:
+              window.location.href="https://bit.ly/3B4jSK0";
+              break;
+              
+           case 2:
+              window.location.href="https://bit.ly/3KZ9nvU";
+              break;
+              
+           case 3:
+              window.location.href="https://bit.ly/3Qu7RmL";
+              break;
+       }
+    }
+
+  </script>
+  <title>Survey version selection</title>
+</head>
+<body onload="openSurvey();">
+   <p align="center">You are being directed to the survey. If the survey does not open automatically, click the button below:</p>
+   <center><input type="button" value="Go to Survey!" onclick="openSurvey();"></center>
+</body>
+</html>
