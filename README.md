@@ -522,7 +522,7 @@ ___
 
 * __Problem:__ When we use multi-clause functions, it is possible to extract values in the clauses for further usage and for pattern matching/guard checking. This extraction itself does not represent a code smell, but when you have too many clauses or too many arguments, it becomes hard to know which extracted parts are used for pattern/guards and what is used only inside the function body. This smell is related to [Unrelated multi-clause function](#unrelated-multi-clause-function), but with implications of its own. It impairs the code readability in a different way.
 
-* __Example:__ The following code, although simple, tries to illustrate the occurrence of this code smell. The multi-clause function ``drive/1`` is extracting fields of an ``%User{}`` struct for usage in the clause expression (e.g. ``age``) and for usage in the function body (e.g., ``name``). Ideally, a function should not mix pattern matching extractions for usage in its clauses expressions and also in the function boby.
+* __Example:__ The following code, although simple, tries to illustrate the occurrence of this code smell. The multi-clause function ``drive/1`` is extracting fields of an ``%User{}`` struct for usage in the clause expression (e.g. ``age``) and for usage in the function body (e.g., ``name``). Ideally, a function should not mix pattern matching extractions for usage in its clauses expressions and also in the function body.
 
 
   ```elixir
