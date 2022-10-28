@@ -522,7 +522,7 @@ ___
 
 * __Problem:__ When we use multi-clause functions, it is possible to extract values in the clauses for further usage and for pattern matching/guard checking. This extraction itself does not represent a code smell, but when you have too many clauses or too many arguments, it becomes hard to know which extracted parts are used for pattern/guards and what is used only inside the function body. This smell is related to [Unrelated multi-clause function](#unrelated-multi-clause-function), but with implications of its own. It impairs the code readability in a different way.
 
-* __Example:__ The following code, although simple, tries to illustrate the occurrence of this code smell. The multi-clause function ``drive/1`` is extracting fields of an ``%User{}`` struct for usage in the clause expression (e.g. ``age``) and for usage in the function body (e.g., ``name``). Ideally, a function should not mix pattern matching extractions for usage in its clauses expressions and also in the function boby.
+* __Example:__ The following code, although simple, tries to illustrate the occurrence of this code smell. The multi-clause function ``drive/1`` is extracting fields of an ``%User{}`` struct for usage in the clause expression (e.g. ``age``) and for usage in the function body (e.g., ``name``). Ideally, a function should not mix pattern matching extractions for usage in its clauses expressions and also in the function body.
 
 
   ```elixir
@@ -1837,7 +1837,7 @@ ___
   iex(4)> Identifier.generate(string_from_API_response)
   :my_id   #<= atom repeated was created!
   ```
-  
+
   When we use the ``String.to_atom/1`` function to dynamically create an ``atom``, it is created regardless of whether there is already another one with the same value in memory, so when this happens automatically, we will not have control over meeting the limits established by BEAM.
 
 * __Refactoring:__ To remove this smell, as shown below, first you must ensure that all the identifier ``atoms`` are created statically, only once, at the beginning of an application's execution:
@@ -1863,13 +1863,13 @@ ___
 
   #...Use examples...
 
-  iex(1)> Identifier.generate("my_id")   
+  iex(1)> Identifier.generate("my_id")
   :my_id
 
   iex(2)> Identifier.generate("my_id2")
   :my_id2
 
-  iex(3)> Identifier.generate("non_existent_id")  
+  iex(3)> Identifier.generate("non_existent_id")
     ** (ArgumentError) errors were found at the given arguments:
     * 1st argument: not an already existing atom
   ```
@@ -1877,7 +1877,7 @@ ___
   Note that in the third use example, when a ``string`` different from an already existing ``atom`` is given, Elixir shows an error instead of performing the conversion. This demonstrates that this refactoring creates a more controlled and predictable scenario for the application in terms of memory usage.
 
   This example and the refactoring are based on the Elixir's official documentation. Sources: [1][to_atom], [2][to_existing_atom]
-  
+
 [▲ back to Index](#table-of-contents)
 
 ## About
