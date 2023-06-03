@@ -301,7 +301,7 @@ Counter.bump(7)
   0
   ```
 
-  These examples are based on codes written in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-spawning-unsupervised-processes)
+  These examples are based on codes written in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-spawning-unsupervised-processes)
 
 <!-- livebook:{"branch_parent_index":1} -->
 
@@ -373,7 +373,7 @@ Sender.send_msg(pid, msg)
 #   }}
 ```
 
-This example is based on a original code by Samuel Mullen. Source: [link](https://samuelmullen.com/articles/elixir-processes-send-and-receive/)
+This example is based on a original code by Samuel Mullen. Source: [link](https://samuelmullen.com/articles/elixir-processes-send-and-receive)
 
 <!-- livebook:{"branch_parent_index":1} -->
 
@@ -803,7 +803,7 @@ Calculator.subtract(2, 3)
 # -1
 ```
 
-This example is based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-using-processes-for-code-organization)
+This example is based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-using-processes-for-code-organization)
 
 <!-- livebook:{"branch_parent_index":1} -->
 
@@ -999,7 +999,7 @@ This example and the refactoring are proposed by José Valim ([@josevalim](https
 
 <!-- livebook:{"branch_parent_index":1} -->
 
-## Global configuration for functions
+## Using App Configuration for libraries
 
 * __Category:__ Design-related smells.
 
@@ -1023,7 +1023,7 @@ This example and the refactoring are proposed by José Valim ([@josevalim](https
   ```elixir
   defmodule DashSplitter do
     def split(string) when is_binary(string) do
-      parts = Application.fetch_env!(:app_config, :parts) # <= retrieve global config
+      parts = Application.fetch_env!(:app_config, :parts) # <= retrieve parameterized value
       String.split(string, "-", parts: parts)             # <= parts: 3
     end
   end
@@ -1060,7 +1060,7 @@ DashSplitter.split("Lucas-Francisco-da-Matta-Vegi")
 # ["Lucas", "Francisco-da-Matta-Vegi"]
 ```
 
-These examples are based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-application-configuration)
+These examples are based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-application-configuration)
 
 <!-- livebook:{"branch_parent_index":1} -->
 
@@ -1122,7 +1122,7 @@ defmodule DashSplitter do
 end
 ```
 
-These examples are based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-application-configuration)
+These examples are based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-application-configuration)
 
 * __Remark:__ This code smell can be detected by [Credo](https://hexdocs.pm/credo/overview.html), a static code analysis tool. During its checks, Credo raises this [warning](https://hexdocs.pm/credo/Credo.Check.Warning.ApplicationConfigInModuleAttribute.html) when this smell is found.
 
@@ -1210,7 +1210,7 @@ ClientApp.from_client_app()
 # "From Library - Local function from client app"
 ```
 
-These examples are based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-use-when-an-import-is-enough)
+These examples are based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-use-when-an-import-is-enough)
 
 ## Low-level concerns smells
 
@@ -1281,7 +1281,7 @@ Low-level concerns smells are more simple than design-related smells and affect 
     my_app.ex:6: MyApp.foo/1
   ```
 
-  This example is based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-working-with-invalid-data)
+  This example is based on code provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-working-with-invalid-data)
 
 <!-- livebook:{"branch_parent_index":16} -->
 
@@ -1750,7 +1750,7 @@ MyLibrary.Utils.Foo.from_module_two()
 # "Function from module two!"
 ```
 
-This example is based on the description provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-defining-modules-that-are-not-in-your-namespace)
+This example is based on the description provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-defining-modules-that-are-not-in-your-namespace)
 
 <!-- livebook:{"branch_parent_index":16} -->
 
@@ -1785,7 +1785,7 @@ MyMath.sum(3 + 1, 5 + 6)
 # 15
 ```
 
-* __Refactoring:__ To remove this code smell, the developer must replace the unnecessary macro with structures that are simpler to write and understand, such as named functions. The code shown below is the result of the refactoring of the previous example. Basically, the `sum/2` macro has been transformed into a conventional named function:
+* __Refactoring:__ To remove this code smell, the developer must replace the unnecessary macro with structures that are simpler to write and understand, such as named functions. The code shown below is the result of the refactoring of the previous example. Basically, the `sum/2` macro has been transformed into a conventional named function. Note that the `require` command is no longer needed:
 
 ```elixir
 defmodule MyMath do
@@ -1808,7 +1808,7 @@ MyMath.sum(3 + 1, 5 + 6)
 # 15
 ```
 
-This example is based on the description provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-macros)
+This example is based on the description provided in Elixir's official documentation. Source: [link](https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-macros)
 
 <!-- livebook:{"branch_parent_index":16} -->
 
