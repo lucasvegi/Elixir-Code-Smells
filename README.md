@@ -1776,7 +1776,7 @@ ___
   15
   ```
 
-* __Refactoring:__ To remove this code smell, the developer must replace the unnecessary macro with structures that are simpler to write and understand, such as named functions. The code shown below is the result of the refactoring of the previous example. Basically, the ``sum/2`` macro has been transformed into a conventional named function:
+* __Refactoring:__ To remove this code smell, the developer must replace the unnecessary macro with structures that are simpler to write and understand, such as named functions. The code shown below is the result of the refactoring of the previous example. Basically, the ``sum/2`` macro has been transformed into a conventional named function. Note that the ``require`` command is no longer needed:
 
   ```elixir
   defmodule MyMath do
@@ -1919,26 +1919,26 @@ Our research is also part of the initiative called __[Research with Elixir][Rese
 [DataManipulationByMigrationExamples]: https://www.idopterlabs.com.br/post/criando-uma-mix-task-em-elixir
 [Migration]: https://hexdocs.pm/ecto_sql/Ecto.Migration.html
 [MixTask]: https://hexdocs.pm/mix/Mix.html#module-mix-task
-[CodeOrganizationByProcessExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-using-processes-for-code-organization
+[CodeOrganizationByProcessExample]: https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-using-processes-for-code-organization
 [GenServer]: https://hexdocs.pm/elixir/master/GenServer.html
-[UnsupervisedProcessExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-spawning-unsupervised-processes
+[UnsupervisedProcessExample]: https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-spawning-unsupervised-processes
 [Supervisor]: https://hexdocs.pm/elixir/master/Supervisor.html
 [Discussions]: https://github.com/lucasvegi/Elixir-Code-Smells/discussions
 [Issues]: https://github.com/lucasvegi/Elixir-Code-Smells/issues
-[LargeMessageExample]: https://samuelmullen.com/articles/elixir-processes-send-and-receive/
+[LargeMessageExample]: https://samuelmullen.com/articles/elixir-processes-send-and-receive
 [Agent]: https://hexdocs.pm/elixir/1.13/Agent.html
 [Task]: https://hexdocs.pm/elixir/1.13/Task.html
 [GenServer]: https://hexdocs.pm/elixir/1.13/GenServer.html
 [AgentObsessionExample]: https://elixir-lang.org/getting-started/mix-otp/agent.html#agents
 [ElixirInProduction]: https://elixir-companies.com/
-[WorkingWithInvalidDataExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-working-with-invalid-data
-[ModulesWithIdenticalNamesExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-defining-modules-that-are-not-in-your-namespace
-[UnnecessaryMacroExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-macros
+[WorkingWithInvalidDataExample]: https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-working-with-invalid-data
+[ModulesWithIdenticalNamesExample]: https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-defining-modules-that-are-not-in-your-namespace
+[UnnecessaryMacroExample]: https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-macros
 [ApplicationEnvironment]: https://hexdocs.pm/elixir/1.13/Config.html
-[AppConfigurationForCodeLibsExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-application-configuration
+[AppConfigurationForCodeLibsExample]: https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-application-configuration
 [CredoWarningApplicationConfigInModuleAttribute]: https://hexdocs.pm/credo/Credo.Check.Warning.ApplicationConfigInModuleAttribute.html
 [Credo]: https://hexdocs.pm/credo/overview.html
-[DependencyWithUseExample]: https://hexdocs.pm/elixir/master/library-guidelines.html#avoid-use-when-an-import-is-enough
+[DependencyWithUseExample]: https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-use-when-an-import-is-enough
 [ICPC-ERA]: https://conf.researchr.org/track/icpc-2022/icpc-2022-era
 [preprint-copy]: https://doi.org/10.48550/arXiv.2203.08877
 [jose-valim]: https://github.com/josevalim
