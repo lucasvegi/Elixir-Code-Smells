@@ -1799,8 +1799,7 @@ end
 ```elixir
 # ...Use examples...
 
-require MyMath
-# MyMath
+# No need to require anymore!
 
 MyMath.sum(3, 5)
 # 8

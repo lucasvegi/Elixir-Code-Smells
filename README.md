@@ -1789,13 +1789,12 @@ ___
 
   #...Use examples...
 
-  iex(1)> require MyMath
-  MyMath
+  # No need to require anymore!
 
-  iex(2)> MyMath.sum(3, 5)
+  iex(1)> MyMath.sum(3, 5)
   8
 
-  iex(3)> MyMath.sum(3+1, 5+6)
+  iex(2)> MyMath.sum(3+1, 5+6)
   15
   ```
 
