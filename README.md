@@ -1751,10 +1751,10 @@ ___
 
 * __Problem:__ ``Macros`` are powerful meta-programming mechanisms that can be used in Elixir to extend the language. While implementing ``macros`` is not a code smell in itself, this meta-programming mechanism should only be used when absolutely necessary. Whenever a macro is implemented, and it was possible to solve the same problem using functions or other pre-existing Elixir structures, the code becomes unnecessarily more complex and less readable. Because ``macros`` are more difficult to implement and understand, their indiscriminate use can compromise the evolution of a system, reducing its maintainability.
 
-* __Example:__ The code shown below is an example of this smell. The ``MyMacro`` module implements the ``sum/2`` macro to perform the sum of two numbers received as parameters. While this code has no syntax errors and can be executed correctly to get the desired result, it is unnecessarily more complex. By implementing this functionality as a macro rather than a conventional function, the code became less clear and less objective:
+* __Example:__ The code shown below is an example of this smell. The ``MyMath`` module implements the ``sum/2`` macro to perform the sum of two numbers received as parameters. While this code has no syntax errors and can be executed correctly to get the desired result, it is unnecessarily more complex. By implementing this functionality as a macro rather than a conventional function, the code became less clear and less objective:
 
   ```elixir
-  defmodule MyMacro do
+  defmodule MyMath do
 
     defmacro sum(v1, v2) do
       quote do
@@ -1766,20 +1766,20 @@ ___
 
   #...Use examples...
 
-  iex(1)> require MyMacro
-  MyMacro
+  iex(1)> require MyMath
+  MyMath
 
-  iex(2)> MyMacro.sum(3, 5)
+  iex(2)> MyMath.sum(3, 5)
   8
 
-  iex(3)> MyMacro.sum(3+1, 5+6)
+  iex(3)> MyMath.sum(3+1, 5+6)
   15
   ```
 
 * __Refactoring:__ To remove this code smell, the developer must replace the unnecessary macro with structures that are simpler to write and understand, such as named functions. The code shown below is the result of the refactoring of the previous example. Basically, the ``sum/2`` macro has been transformed into a conventional named function:
 
   ```elixir
-  defmodule MyMacro do
+  defmodule MyMath do
 
     def sum(v1, v2) do   # <= macro became a named function!
       v1 + v2
@@ -1789,13 +1789,13 @@ ___
 
   #...Use examples...
 
-  iex(1)> require MyMacro
-  MyMacro
+  iex(1)> require MyMath
+  MyMath
 
-  iex(2)> MyMacro.sum(3, 5)
+  iex(2)> MyMath.sum(3, 5)
   8
 
-  iex(3)> MyMacro.sum(3+1, 5+6)
+  iex(3)> MyMath.sum(3+1, 5+6)
   15
   ```
 
