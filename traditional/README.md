@@ -60,7 +60,7 @@ ___
 
 ### Long Parameter List
 
-* __Problem:__ In a functional language like Elixir, ``functions`` tend to be pure and therefore do not access or manipulate values outside their scopes. Since the input values of these ``functions`` are just their parameters, it is natural to expect that ``functions`` with a long list of parameters be created to keep them pure. However, when this list has <u>more than three or four parameters</u>, the function's interface becomes confusing and prone to errors during use.
+* __Problem:__ In a functional language like Elixir, ``functions`` tend to be pure and therefore do not access or manipulate values outside their scopes. Since the input values of these ``functions`` are just their parameters, it is natural to expect that ``functions`` with a long list of parameters be created to keep them pure. However, when this list has <ins>more than three or four parameters</ins>, the function's interface becomes confusing and prone to errors during use.
 
 * __Example:__
   
@@ -78,7 +78,7 @@ ___
 
 ### Long Function
 
-* __Problem:__ Poorly cohesive ``function``, made up of too many lines of code that group together many different responsibilities that could be separated into smaller functions with a single responsibility each. Generally, <u>any function longer than ten lines should make you start asking questions</u>.
+* __Problem:__ Poorly cohesive ``function``, made up of too many lines of code that group together many different responsibilities that could be separated into smaller functions with a single responsibility each. Generally, <ins>any function longer than ten lines should make you start asking questions</ins>.
 
 * __Example:__ ``print/2`` is a long function (low-cohesion), so is necessary to separate it in blocks and add comments to understand. This is a bad practice.
   
@@ -168,7 +168,7 @@ ___
 
 ### Duplicated Code
 
-* __Problem:__ This smell occurs <u>when two or more code fragments look almost identical</u>. Duplicated code can cause maintenance issues especially when changes are needed. Since multiple code fragments will have to be updated, there is the risk that one of them will not be changed, causing unwanted system behavior.
+* __Problem:__ This smell occurs <ins>when two or more code fragments look almost identical</ins>. Duplicated code can cause maintenance issues especially when changes are needed. Since multiple code fragments will have to be updated, there is the risk that one of them will not be changed, causing unwanted system behavior.
 
 * __Example:__
 
@@ -258,7 +258,7 @@ ___
 
 ### Inappropriate Intimacy
 
-* __Problem:__ In Elixir, this code smell can be felt in ``impure functions``. These functions can access internal values of other ``modules`` that are not received via parameters, <u>generating excessive coupling</u>. Particularly, the values accessed by impure functions of a ``module`` “A”, can be internal details of a ``module`` “B”, obtained by calling functions of ``module`` “B”, inside functions of ``module`` “A”.
+* __Problem:__ In Elixir, this code smell can be felt in ``impure functions``. These functions can access internal values of other ``modules`` that are not received via parameters, <ins>generating excessive coupling</ins>. Particularly, the values accessed by impure functions of a ``module`` “A”, can be internal details of a ``module`` “B”, obtained by calling functions of ``module`` “B”, inside functions of ``module`` “A”.
 
 * __Example:__ ``Order.charge/2`` function is impure. This function creates an overly tight coupling because it knows internal details that should be encapsulated in the ``User``, ``Card``, and ``Gateway`` modules.
 
@@ -281,7 +281,7 @@ ___
 
 ### Large Class
 
-* __Problem:__ Although Elixir does not support classes, ``functions`` can be grouped by ``modules`` in a similar way. When a ``module`` is not cohesive, it deals with multiple distinct business rules, tending to have <u>many functions and lines of code, becoming large</u>. This makes maintenance difficult. [Duplicated code](#duplicated-code) can contribute to the increase in the size of the modules, thus showing that some code smells can also be related.
+* __Problem:__ Although Elixir does not support classes, ``functions`` can be grouped by ``modules`` in a similar way. When a ``module`` is not cohesive, it deals with multiple distinct business rules, tending to have <ins>many functions and lines of code, becoming large</ins>. This makes maintenance difficult. [Duplicated code](#duplicated-code) can contribute to the increase in the size of the modules, thus showing that some code smells can also be related.
 
 * __Example:__ ``ShoppingCart`` module is unnecessarily large due to its lack of cohesion. It groups functions for many distinct and not directly related business rules. Therefore, these functions could be extracted to other modules, thus increasing the overall cohesion of the system.
 
