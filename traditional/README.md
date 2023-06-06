@@ -105,7 +105,7 @@ ___
   end
   ```
 
-  This example is based on code written by Elaine Watanabe. Source: [link][ElaineYoutube]
+  This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -161,7 +161,7 @@ ___
   end
   ```
 
-  This example is based on code written by Elaine Watanabe. Source: [link][ElaineYoutube]
+  This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -192,7 +192,7 @@ ___
   end
   ```
 
-  This example is based on code written by Elaine Watanabe. Source: [link][ElaineYoutube]
+  This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -219,7 +219,7 @@ ___
   end
   ```
 
-  This example is based on code written by Elaine Watanabe. Source: [link][ElaineYoutube]
+  This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -250,7 +250,7 @@ ___
   end
   ```
 
-  This example is based on code written by Elaine Watanabe. Source: [link][ElaineYoutube]
+  This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
 
 [▲ back to Index](#table-of-contents)
 
@@ -274,7 +274,7 @@ ___
   end
   ```
 
-  This example is based on code written by Elaine Watanabe. Source: [link][ElaineYoutube]
+  This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -317,7 +317,7 @@ ___
   end
   ```
 
-  This example is based on code written by Elaine Watanabe. Source: [link][ElaineYoutube]
+  This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -338,7 +338,7 @@ ___
   end
   ```
 
-  This example is based on code written by Elaine Watanabe. Source: [link][ElaineYoutube]
+  This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
 
 [▲ back to Index](#table-of-contents)
 ___
