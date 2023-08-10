@@ -40,4 +40,6 @@ preferred-citation:
   start: 1 # First page number
   end: 32 # Last page number
   title: "Understanding code smells in Elixir functional language"
+  issue: 102
+  volume: 28
   year: 2023
