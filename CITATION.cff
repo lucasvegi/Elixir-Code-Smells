@@ -1,4 +1,4 @@
-cff-version: 1.2.0
+cff-version: 1.2.1
 message: 'If you use this catalog in your work, please cite it as below.'
 authors:
   - given-names: Lucas Francisco da Matta
@@ -21,7 +21,7 @@ keywords:
   - functional programming
 license: MIT
 preferred-citation:
-  type: conference-paper
+  type: article
   message: 'If you use this catalog in your work, please cite it as below.'
   authors:
   - given-names: Lucas Francisco da Matta
@@ -34,10 +34,10 @@ preferred-citation:
     email: mtov@dcc.ufmg.br
     affiliation: Federal University of Minas Gerais (UFMG)
     orcid: 'https://orcid.org/0000-0002-8180-7548'
-  doi: "10.1145/3524610.3527881"  
-  collection-title: "30th International Conference on Program Comprehension (ICPC'22)"
-  pages: 5
-  start: 580 # First page number
-  end: 584 # Last page number
-  title: "Code smells in Elixir: early results from a grey literature review"
-  year: 2022
+  doi: "10.1007/s10664-023-10343-6"  
+  journal: "Empirical Software Engineering"
+  pages: 32
+  start: 1 # First page number
+  end: 32 # Last page number
+  title: "Understanding code smells in Elixir functional language"
+  year: 2023
