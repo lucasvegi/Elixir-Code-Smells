@@ -1886,6 +1886,7 @@ This catalog was proposed by Lucas Vegi and Marco Tulio Valente, from [ASERG/DCC
 For more info see the following paper:
 
 * [Code Smells in Elixir: Early Results from a Grey Literature Review][preprint-copy], International Conference on Program Comprehension (ICPC), 2022.  [[slides]][ICPC22-PDF] [[video]][ICPC22-YouTube] [[podcast (pt-BR) - English subtitles available]][Podcast-Spotify]
+* [Understanding code smells in Elixir functional language][emse-paper], Empirical Software Engineering Journal (EMSE), 2023.
 
 Please feel free to make pull requests and suggestions ([Issues][Issues] tab).
 
@@ -1941,6 +1942,7 @@ Our research is also part of the initiative called __[Research with Elixir][Rese
 [DependencyWithUseExample]: https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-use-when-an-import-is-enough
 [ICPC-ERA]: https://conf.researchr.org/track/icpc-2022/icpc-2022-era
 [preprint-copy]: https://doi.org/10.48550/arXiv.2203.08877
+[emse-paper]: https://link.springer.com/epdf/10.1007/s10664-023-10343-6?sharing_token=-a5aIHuxjO5IVwjuWKcGDve4RwlQNchNByi7wbcMAY7M-LcfCdzMaX7W988J1lKodpMwih75AE3ZQ9gFhldJBeLq53jeNkeHR7W04UAwrxBvoXDh5P83TYkQfuz-PrYpU1J5KqxUgojIbDDFDV_jVtrEE8oVtobDqNSSrInauuI%3D
 [jose-valim]: https://github.com/josevalim
 [syamilmj]: https://github.com/syamilmj
 [Complex-extraction-in-clauses-issue]: https://github.com/lucasvegi/Elixir-Code-Smells/issues/9
