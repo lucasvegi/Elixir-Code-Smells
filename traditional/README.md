@@ -28,6 +28,7 @@ We present these smells using the following structure for each one:
 * __Name:__ A name is important to facilitate communication between developers;
 * __Problem:__ How the code smell can harm code quality and the impacts it can have on software maintenance, comprehension, and evolution;
 * __Example:__ Code and textual descriptions to illustrate the occurrence of the code smell;
+* __Treatments:__ How to remove a code smell in a *__disciplined way__* with the assistance of *__refactoring strategies__*.  When a refactoring should be used alone, it is listed in its own bullet point (*i.e.*, &bull;). Conversely, when a refactoring is part of a sequence of operations to assist the removal, it is listed using a pipeline to define its order (*e.g.*, Refactoring1 |> Refactoring2 |> Refactoring3 |> etc.). This disciplined way to refactor a smell will help you change your code one small step at a time, thus minimizing the chances of introducing bugs or altering the original behavior of the system. All the refactoring strategies mapped to the code smells are part of our [Catalog of Elixir Refactorings](https://github.com/lucasvegi/Elixir-Refactorings).
 
 [▲ back to Index](#table-of-contents)
 
@@ -55,6 +56,15 @@ ___
   end
   ```
 
+* __Treatments:__
+
+  * [Extract function](https://github.com/lucasvegi/Elixir-Refactorings?#extract-function)
+  * [Extract expressions](https://github.com/lucasvegi/Elixir-Refactorings?#extract-expressions)
+  * [Extract constant](https://github.com/lucasvegi/Elixir-Refactorings?#extract-constant)
+  * [Rename an identifier](https://github.com/lucasvegi/Elixir-Refactorings?#rename-an-identifier)
+  * [Typing parameters and return values](https://github.com/lucasvegi/Elixir-Refactorings?#typing-parameters-and-return-values)
+  * [Add type declarations and contracts](https://github.com/lucasvegi/Elixir-Refactorings?#add-type-declarations-and-contracts)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -72,6 +82,12 @@ ___
     end
   end
   ```
+
+* __Treatments:__
+
+  * [Add or remove a parameter](https://github.com/lucasvegi/Elixir-Refactorings?#add-or-remove-a-parameter)
+  * [Reorder parameter](https://github.com/lucasvegi/Elixir-Refactorings?#reorder-parameter)
+  * [Grouping parameters in tuple](https://github.com/lucasvegi/Elixir-Refactorings?#grouping-parameters-in-tuple) |> [From tuple to struct](https://github.com/lucasvegi/Elixir-Refactorings?#from-tuple-to-struct)
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -107,6 +123,26 @@ ___
 
   This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
 
+* __Treatments:__
+
+  * [Extract function](https://github.com/lucasvegi/Elixir-Refactorings?#extract-function)
+  * [Transform nested "if" statements into a "cond"](https://github.com/lucasvegi/Elixir-Refactorings?#transform-nested-if-statements-into-a-cond)
+  * [Folding against a function definition](https://github.com/lucasvegi/Elixir-Refactorings?#folding-against-a-function-definition)
+  * [Remove dead code](https://github.com/lucasvegi/Elixir-Refactorings?#remove-dead-code)
+  * [Simplifying checks by using truthness condition](https://github.com/lucasvegi/Elixir-Refactorings?#simplifying-checks-by-using-truthness-condition)
+  * [Generalise a function definition](https://github.com/lucasvegi/Elixir-Refactorings?#generalise-a-function-definition)
+  * [Introduce pattern matching over a parameter](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-pattern-matching-over-a-parameter)
+  * [Replace pipeline with a function](https://github.com/lucasvegi/Elixir-Refactorings?#replace-pipeline-with-a-function)
+  * [Default value for an absent key in a Map](https://github.com/lucasvegi/Elixir-Refactorings?#default-value-for-an-absent-key-in-a-map)
+  * [Defining a subset of a Map](https://github.com/lucasvegi/Elixir-Refactorings?#defining-a-subset-of-a-map)
+  * [Pipeline using "with"](https://github.com/lucasvegi/Elixir-Refactorings?#pipeline-using-with)
+  * [Remove redundant last clause in "with"](https://github.com/lucasvegi/Elixir-Refactorings?#remove-redundant-last-clause-in-with)
+  * [Modifying keys in a Map](https://github.com/lucasvegi/Elixir-Refactorings?#modifying-keys-in-a-map)
+  * [Remove nested conditional statements in function calls](https://github.com/lucasvegi/Elixir-Refactorings?#remove-nested-conditional-statements-in-function-calls)
+  * [Splitting a definition](https://github.com/lucasvegi/Elixir-Refactorings?#splitting-a-definition)
+  * [Merging match expressions into a list pattern](https://github.com/lucasvegi/Elixir-Refactorings?#merging-match-expressions-into-a-list-pattern)
+  * [Convert nested conditionals to pipeline](https://github.com/lucasvegi/Elixir-Refactorings?#convert-nested-conditionals-to-pipeline) |> [Replace function call with raw value in a pipeline start](https://github.com/lucasvegi/Elixir-Refactorings?#replace-function-call-with-raw-value-in-a-pipeline-start)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -115,6 +151,11 @@ ___
 * __Problem:__ This code smell can be felt when Elixir basic types (e.g., ``integer``, ``float``, and ``string``) are abusively used in function parameters and code variables, rather than creating specific composite data types (e.g., ``protocols``, ``structs``, and ``@type``) that can better represent a domain.
 
 * __Example:__ Use a ``float`` value to represent ``Money`` or use a ``string`` to represent an ``Address``. ``Money`` and ``Address`` are more complex structures than a simple primitive value.
+
+* __Treatments:__
+
+  * [Grouping parameters in tuple](https://github.com/lucasvegi/Elixir-Refactorings?#grouping-parameters-in-tuple) |> [From tuple to struct](https://github.com/lucasvegi/Elixir-Refactorings?#from-tuple-to-struct)
+  * [Add type declarations and contracts](https://github.com/lucasvegi/Elixir-Refactorings?#add-type-declarations-and-contracts)
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -163,6 +204,10 @@ ___
 
   This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
 
+* __Treatments:__
+
+  * [Moving a definition](https://github.com/lucasvegi/Elixir-Refactorings?#moving-a-definition)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -194,6 +239,24 @@ ___
 
   This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
 
+* __Treatments:__
+
+  * [Defining a subset of a Map](https://github.com/lucasvegi/Elixir-Refactorings?#defining-a-subset-of-a-map)
+  * [Modifying keys in a Map](https://github.com/lucasvegi/Elixir-Refactorings?#modifying-keys-in-a-map)
+  * [Folding against a function definition](https://github.com/lucasvegi/Elixir-Refactorings?#folding-against-a-function-definition)
+  * [Extract expressions](https://github.com/lucasvegi/Elixir-Refactorings?#extract-expressions)
+  * [Extract function](https://github.com/lucasvegi/Elixir-Refactorings?#extract-function)
+  * [Reducing a boolean equality expression](https://github.com/lucasvegi/Elixir-Refactorings?#reducing-a-boolean-equality-expression)
+  * [Generalise a function definition](https://github.com/lucasvegi/Elixir-Refactorings?#generalise-a-function-definition)
+  * [Turning anonymous into local functions](https://github.com/lucasvegi/Elixir-Refactorings?#turning-anonymous-into-local-functions)
+  * [Merging multiple definitions](https://github.com/lucasvegi/Elixir-Refactorings?#merging-multiple-definitions)
+  * [Move expression out of case](https://github.com/lucasvegi/Elixir-Refactorings?#move-expression-out-of-case)
+  * [Remove redundant last clause in "with"](https://github.com/lucasvegi/Elixir-Refactorings?#remove-redundant-last-clause-in-with)
+  * [Static structure reuse](https://github.com/lucasvegi/Elixir-Refactorings?#static-structure-reuse)
+  * [Introduce import](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-import)
+  * [Widen or narrow definition scope](https://github.com/lucasvegi/Elixir-Refactorings?#widen-or-narrow-definition-scope)
+  * [Introduce Enum.map/2](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-enummap2) |> [Transform to list comprehension](https://github.com/lucasvegi/Elixir-Refactorings?#transform-to-list-comprehension) |> [List comprehension simplifications](https://github.com/lucasvegi/Elixir-Refactorings?#list-comprehension-simplifications)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -220,6 +283,11 @@ ___
   ```
 
   This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
+
+* __Treatments:__
+
+  * [Extract function](https://github.com/lucasvegi/Elixir-Refactorings?#extract-function) |> [Moving a definition](https://github.com/lucasvegi/Elixir-Refactorings?#moving-a-definition)
+  * [Remove import attributes](https://github.com/lucasvegi/Elixir-Refactorings?#remove-import-attributes)
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -252,6 +320,12 @@ ___
 
   This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
 
+* __Treatments:__
+
+  * [Splitting a large module](https://github.com/lucasvegi/Elixir-Refactorings?#splitting-a-large-module) |> [Rename an identifier](https://github.com/lucasvegi/Elixir-Refactorings?#rename-an-identifier)
+  * [Moving a definition](https://github.com/lucasvegi/Elixir-Refactorings?#moving-a-definition)
+  * [Behaviour extraction](https://github.com/lucasvegi/Elixir-Refactorings?#behaviour-extraction)
+
 [▲ back to Index](#table-of-contents)
 
 ___
@@ -275,6 +349,12 @@ ___
   ```
 
   This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
+
+* __Treatments:__
+
+  * [Closure conversion](https://github.com/lucasvegi/Elixir-Refactorings?#closure-conversion) |> [Add or remove a parameter](https://github.com/lucasvegi/Elixir-Refactorings?#add-or-remove-a-parameter)
+  * [Moving a definition](https://github.com/lucasvegi/Elixir-Refactorings?#moving-a-definition)
+  * [Splitting a large module](https://github.com/lucasvegi/Elixir-Refactorings?#splitting-a-large-module) |> [Rename an identifier](https://github.com/lucasvegi/Elixir-Refactorings?#rename-an-identifier)
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -319,6 +399,12 @@ ___
 
   This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
 
+* __Treatments:__
+
+  * [Splitting a large module](https://github.com/lucasvegi/Elixir-Refactorings?#splitting-a-large-module) |> [Rename an identifier](https://github.com/lucasvegi/Elixir-Refactorings?#rename-an-identifier)
+  * [Behaviour extraction](https://github.com/lucasvegi/Elixir-Refactorings?#behaviour-extraction)
+  * [Moving a definition](https://github.com/lucasvegi/Elixir-Refactorings?#moving-a-definition)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -340,12 +426,29 @@ ___
 
   This example is based on code written by Elaine Watanabe ([@elainenaomi](https://github.com/elainenaomi)). Source: [link][ElaineYoutube]
 
+* __Treatments:__
+
+  * [Inline function](https://github.com/lucasvegi/Elixir-Refactorings?#inline-function)
+  * [Inline macro](https://github.com/lucasvegi/Elixir-Refactorings?#inline-macro)
+  * [Add or remove a parameter](https://github.com/lucasvegi/Elixir-Refactorings?#add-or-remove-a-parameter)
+  * [Rename an identifier](https://github.com/lucasvegi/Elixir-Refactorings?#rename-an-identifier)
+  * [Behaviour inlining](https://github.com/lucasvegi/Elixir-Refactorings?#behaviour-inlining)
+  * [Remove dead code](https://github.com/lucasvegi/Elixir-Refactorings?#remove-dead-code)
+  * [Eliminate single branch](https://github.com/lucasvegi/Elixir-Refactorings?#eliminate-single-branch)
+
 [▲ back to Index](#table-of-contents)
 ___
 
 ### Switch Statements
 
 * __Problem:__ It can be felt when the same sequence of conditional statements, whether via ``if/else``, ``case``, ``cond`` or ``with`` appear duplicated by the code, forcing changes in multiple parts of the code whenever a new check needs to be added to their conditional statements.
+
+* __Treatments:__
+
+  * [Replace conditional with polymorphism via Protocols](https://github.com/lucasvegi/Elixir-Refactorings?#replace-conditional-with-polymorphism-via-protocols) |> [Converts guards to conditionals](https://github.com/lucasvegi/Elixir-Refactorings?#converts-guards-to-conditionals)
+  * [Introduce pattern matching over a parameter](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-pattern-matching-over-a-parameter)
+  * [Introduce overloading](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-overloading)
+  * [Extract function](https://github.com/lucasvegi/Elixir-Refactorings?#extract-function) |> [Moving a definition](https://github.com/lucasvegi/Elixir-Refactorings?#moving-a-definition) |> [Generalise a function definition](https://github.com/lucasvegi/Elixir-Refactorings?#generalise-a-function-definition) |> [Folding against a function definition](https://github.com/lucasvegi/Elixir-Refactorings?#folding-against-a-function-definition)
 
 [▲ back to Index](#table-of-contents)
 
