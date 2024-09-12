@@ -52,7 +52,9 @@ As a result of this investigation, we have initially proposed a catalog of 18 ne
 * __Category:__ The portion of code affected by smell and its severity;
 * __Problem:__ How the code smell can harm code quality and what impacts this can have for developers;
 * __Example:__ Code and textual descriptions to illustrate the occurrence of the code smell;
-* __Refactoring:__ Ways to change smelly code in order to improve its qualities. Examples of refactored code are presented to illustrate these changes.
+* __Refactoring:__ Examples of refactored code are presented to illustrate higher-quality alternatives compared to smelly code;<!--Ways to change smelly code in order to improve its qualities.-->
+
+* __Treatments:__ How to remove a code smell in a *__disciplined way__* with the assistance of *__refactoring strategies__*.  When a refactoring should be used alone, it is listed in its own bullet point (*i.e.*, &bull;). Conversely, when a refactoring is part of a sequence of operations to assist the removal, it is listed using a pipeline to define its order (*e.g.*, Refactoring1 |> Refactoring2 |> Refactoring3 |> etc.). This disciplined way to refactor a smell will help you change your code one small step at a time, thus minimizing the chances of introducing bugs or altering the original behavior of the system. All the refactoring strategies mapped to the code smells are part of our [Catalog of Elixir Refactorings](https://github.com/lucasvegi/Elixir-Refactorings).
 
 In addition to the Elixir-specific code smells, our catalog also documents 12 [traditional code smells][TraditionalSmells] discussed in the context of Elixir systems.
 
@@ -81,6 +83,10 @@ Design-related smells are more complex, affect a coarse-grained code element, an
   Examples of this code smell appear when ``Agents`` or ``Tasks`` are used for general purposes and not only for specialized ones such as their documentation suggests. To illustrate some smell occurrences, we will cite two specific situations. 1) When a ``Task`` is used not only to async execute an action, but also to frequently exchange messages with other processes; 2) When an ``Agent``, beside sharing some global value between processes, is also frequently used to execute isolated tasks that are not of interest to other processes.
 
 * __Refactoring:__ When an ``Agent`` or ``Task`` goes beyond its suggested use cases and becomes painful, it is better to refactor it into a ``GenServer``.
+
+* __Treatments:__
+
+  * [Generalise a process abstraction](https://github.com/lucasvegi/Elixir-Refactorings?#generalise-a-process-abstraction) |> [Introduce processes](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-processes) |> [Register a process](https://github.com/lucasvegi/Elixir-Refactorings?#register-a-process) |> [Remove dead code](https://github.com/lucasvegi/Elixir-Refactorings?#remove-dead-code)
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -203,6 +209,11 @@ ___
   ```
 
   These examples are based on code written in Elixir's official documentation. Source: [link][AgentObsessionExample]
+
+* __Treatments:__
+
+  * [Generalise a function definition](https://github.com/lucasvegi/Elixir-Refactorings?#generalise-a-function-definition) |> [Moving a definition](https://github.com/lucasvegi/Elixir-Refactorings?#moving-a-definition) |> [Add or remove a parameter](https://github.com/lucasvegi/Elixir-Refactorings?#add-or-remove-a-parameter)
+  * [Behaviour extraction](https://github.com/lucasvegi/Elixir-Refactorings?#behaviour-extraction)
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -347,6 +358,11 @@ ___
 
   These examples are based on codes written in Elixir's official documentation. Source: [link][UnsupervisedProcessExample]
 
+* __Treatments:__
+
+  * [Moving error-handling mechanisms to supervision trees](https://github.com/lucasvegi/Elixir-Refactorings?#moving-error-handling-mechanisms-to-supervision-trees)
+  * [Moving a definition](https://github.com/lucasvegi/Elixir-Refactorings?#moving-a-definition)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -419,6 +435,12 @@ ___
   ```
 
   This example is based on a original code by Samuel Mullen. Source: [link][LargeMessageExample]
+
+* __Treatments:__
+
+  * [Defining a subset of a Map](https://github.com/lucasvegi/Elixir-Refactorings?#defining-a-subset-of-a-map)
+  * [Extract expressions](https://github.com/lucasvegi/Elixir-Refactorings?#extract-expressions)
+  * [Add a tag to messages](https://github.com/lucasvegi/Elixir-Refactorings?#add-a-tag-to-messages)
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -511,6 +533,17 @@ ___
 
   This example is based on a original code by Syamil MJ ([@syamilmj][syamilmj]). Source: [link][MultiClauseExample]
 
+* __Treatments:__
+
+  * [Rename an identifier](https://github.com/lucasvegi/Elixir-Refactorings?#rename-an-identifier) |> [Function clauses to/from case clauses](https://github.com/lucasvegi/Elixir-Refactorings?#function-clauses-tofrom-case-clauses)
+  * [Moving a definition](https://github.com/lucasvegi/Elixir-Refactorings?#moving-a-definition)
+  * [Struct guard to matching](https://github.com/lucasvegi/Elixir-Refactorings?#struct-guard-to-matching)
+  * [Equality guard to pattern matching](https://github.com/lucasvegi/Elixir-Refactorings?#equality-guard-to-pattern-matching)
+  * [Simplifying guard sequences](https://github.com/lucasvegi/Elixir-Refactorings?#simplifying-guard-sequences)
+  * [Converts guards to conditionals](https://github.com/lucasvegi/Elixir-Refactorings?#converts-guards-to-conditionals)
+  * [Simplifying pattern matching with nested structs](https://github.com/lucasvegi/Elixir-Refactorings?#simplifying-pattern-matching-with-nested-structs)
+  * [Remove unnecessary calls to length/1](https://github.com/lucasvegi/Elixir-Refactorings?#remove-unnecessary-calls-to-length1)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -552,6 +585,16 @@ ___
   ```
 
   This example and the refactoring are proposed by José Valim ([@josevalim][jose-valim])
+
+* __Treatments:__
+
+  * [Simplifying pattern matching with nested structs](https://github.com/lucasvegi/Elixir-Refactorings?#simplifying-pattern-matching-with-nested-structs)
+  * [Converts guards to conditionals](https://github.com/lucasvegi/Elixir-Refactorings?#converts-guards-to-conditionals)
+  * [Equality guard to pattern matching](https://github.com/lucasvegi/Elixir-Refactorings?#equality-guard-to-pattern-matching)
+  * [Struct guard to matching](https://github.com/lucasvegi/Elixir-Refactorings?#struct-guard-to-matching)
+  * [Remove unnecessary calls to length/1](https://github.com/lucasvegi/Elixir-Refactorings?#remove-unnecessary-calls-to-length1)
+  * [Function clauses to/from case clauses](https://github.com/lucasvegi/Elixir-Refactorings?#function-clauses-tofrom-case-clauses)
+  * [Introduce a temporary duplicate definition](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-a-temporary-duplicate-definition) |> [Temporary variable elimination](https://github.com/lucasvegi/Elixir-Refactorings?#temporary-variable-elimination)
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -663,6 +706,11 @@ ___
 
   This example is based on code written by Tim Austin <sup>[neenjaw][neenjaw]</sup> and Angelika Tyborska <sup>[angelikatyborska][angelikatyborska]</sup>. Source: [link][ExceptionsForControlFlowExamples]
 
+* __Treatments:__
+
+  * [Rename an identifier](https://github.com/lucasvegi/Elixir-Refactorings?#rename-an-identifier) |> [Introduce a temporary duplicate definition](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-a-temporary-duplicate-definition) |> [Folding against a function definition](https://github.com/lucasvegi/Elixir-Refactorings?#folding-against-a-function-definition)
+  * [Introduce processes](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-processes) |> [Moving error-handling mechanisms to supervision trees](https://github.com/lucasvegi/Elixir-Refactorings?#moving-error-handling-mechanisms-to-supervision-trees)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -748,6 +796,11 @@ ___
 
   This example is based on code written by José Valim ([@josevalim][jose-valim]). Source: [link][JoseValimExamples]
 
+* __Treatments:__
+
+  * [Introduce overloading](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-overloading) |> [Folding against a function definition](https://github.com/lucasvegi/Elixir-Refactorings?#folding-against-a-function-definition)
+  * [Typing parameters and return values](https://github.com/lucasvegi/Elixir-Refactorings?#typing-parameters-and-return-values)
+
 [▲ back to Index](#table-of-contents)
 
 ___
@@ -832,6 +885,10 @@ ___
 
   This example is based on code provided in Elixir's official documentation. Source: [link][CodeOrganizationByProcessExample]
 
+* __Treatments:__
+
+  * [Remove processes](https://github.com/lucasvegi/Elixir-Refactorings?#remove-processes) |> [Remove dead code](https://github.com/lucasvegi/Elixir-Refactorings?#remove-dead-code)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -896,6 +953,10 @@ ___
   ```
 
   This example and the refactoring are proposed by José Valim ([@josevalim][jose-valim])
+
+* __Treatments:__
+
+  * [Extract function](https://github.com/lucasvegi/Elixir-Refactorings?#extract-function) |> [Moving a definition](https://github.com/lucasvegi/Elixir-Refactorings?#moving-a-definition)
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -1031,6 +1092,12 @@ ___
 
   This example is based on code originally written by Carlos Souza. Source: [link][DataManipulationByMigrationExamples]
 
+* __Treatments:__
+
+  * [Splitting a large module](https://github.com/lucasvegi/Elixir-Refactorings?#splitting-a-large-module) |> [Rename an identifier](https://github.com/lucasvegi/Elixir-Refactorings?#rename-an-identifier) |> [Extract function](https://github.com/lucasvegi/Elixir-Refactorings?#extract-function) |> [Moving a definition](https://github.com/lucasvegi/Elixir-Refactorings?#moving-a-definition) |> [Remove dead code](https://github.com/lucasvegi/Elixir-Refactorings?#remove-dead-code)
+  * [Simplifying Ecto schema fields validation](https://github.com/lucasvegi/Elixir-Refactorings?#simplifying-ecto-schema-fields-validation)
+  * [Pipeline for database transactions](https://github.com/lucasvegi/Elixir-Refactorings?#pipeline-for-database-transactions)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -1095,6 +1162,10 @@ ___
 
   These examples are based on code provided in Elixir's official documentation. Source: [link][AppConfigurationForCodeLibsExample]
 
+* __Treatments:__
+
+  * [Add or remove a parameter](https://github.com/lucasvegi/Elixir-Refactorings?#add-or-remove-a-parameter) |> [Typing parameters and return values](https://github.com/lucasvegi/Elixir-Refactorings?#typing-parameters-and-return-values)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -1144,6 +1215,12 @@ ___
   ```
 
   These examples are based on code provided in Elixir's official documentation. Source: [link][AppConfigurationForCodeLibsExample]
+
+* __Treatments:__
+
+  * [Extract constant](https://github.com/lucasvegi/Elixir-Refactorings?#extract-constant)
+  * [Introduce a temporary duplicate definition](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-a-temporary-duplicate-definition)
+  * [Folding against a function definition](https://github.com/lucasvegi/Elixir-Refactorings?#folding-against-a-function-definition) |> [Remove dead code](https://github.com/lucasvegi/Elixir-Refactorings?#remove-dead-code)
 
 * __Remark:__ This code smell can be detected by [Credo][Credo], a static code analysis tool. During its checks, Credo raises this [warning][CredoWarningApplicationConfigInModuleAttribute] when this smell is found.
 
@@ -1233,8 +1310,13 @@ ___
 
   These examples are based on code provided in Elixir's official documentation. Source: [link][DependencyWithUseExample]
 
-[▲ back to Index](#table-of-contents)
+* __Treatments:__
 
+  * [Introduce import](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-import) |> [Remove dead code](https://github.com/lucasvegi/Elixir-Refactorings?#remove-dead-code)
+  * [Alias expansion](https://github.com/lucasvegi/Elixir-Refactorings?#alias-expansion)
+  * [Remove import attributes](https://github.com/lucasvegi/Elixir-Refactorings?#remove-import-attributes)
+
+[▲ back to Index](#table-of-contents)
 
 ## Low-level concerns smells
 
@@ -1305,6 +1387,14 @@ Low-level concerns smells are more simple than design-related smells and affect 
 
   This example is based on code provided in Elixir's official documentation. Source: [link][WorkingWithInvalidDataExample]
 
+* __Treatments:__
+
+  * [Typing parameters and return values](https://github.com/lucasvegi/Elixir-Refactorings?#typing-parameters-and-return-values) |> [Add type declarations and contracts](https://github.com/lucasvegi/Elixir-Refactorings?#add-type-declarations-and-contracts)
+  * [Introduce pattern matching over a parameter](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-pattern-matching-over-a-parameter)
+  * [Struct guard to matching](https://github.com/lucasvegi/Elixir-Refactorings?#struct-guard-to-matching)
+  * [Simplifying guard sequences](https://github.com/lucasvegi/Elixir-Refactorings?#simplifying-guard-sequences)
+  * [Converts guards to conditionals](https://github.com/lucasvegi/Elixir-Refactorings?#converts-guards-to-conditionals)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -1358,6 +1448,11 @@ ___
 
   This example is based on code written by Zack <sup>[MrDoops][MrDoops]</sup> and Dimitar Panayotov <sup>[dimitarvp][dimitarvp]</sup>. Source: [link][ComplexErrorHandleExample]. We got suggestions from José Valim ([@josevalim][jose-valim]) on the refactoring.
 
+* __Treatments:__
+
+  * [Extract function](https://github.com/lucasvegi/Elixir-Refactorings?#extract-function)
+  * [Introduce pattern matching over a parameter](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-pattern-matching-over-a-parameter)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -1409,6 +1504,12 @@ ___
   ```
 
   This example and the refactoring are proposed by José Valim ([@josevalim][jose-valim])
+
+* __Treatments:__
+
+  * [Extract function](https://github.com/lucasvegi/Elixir-Refactorings?#extract-function) |> [Remove dead code](https://github.com/lucasvegi/Elixir-Refactorings?#remove-dead-code)
+  * [Remove redundant last clause in "with"](https://github.com/lucasvegi/Elixir-Refactorings?#remove-redundant-last-clause-in-with)
+  * [Moving "with" clauses without pattern matching](https://github.com/lucasvegi/Elixir-Refactorings?#moving-with-clauses-without-pattern-matching)
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -1472,6 +1573,10 @@ ___
   ```
 
   This example and the refactoring are proposed by José Valim ([@josevalim][jose-valim])
+
+* __Treatments:__
+
+  * [Introduce a temporary duplicate definition](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-a-temporary-duplicate-definition) |> [Rename an identifier](https://github.com/lucasvegi/Elixir-Refactorings?#rename-an-identifier) |> [Add or remove a parameter](https://github.com/lucasvegi/Elixir-Refactorings?#add-or-remove-a-parameter) |> [Typing parameters and return values](https://github.com/lucasvegi/Elixir-Refactorings?#typing-parameters-and-return-values) |> [Remove dead code](https://github.com/lucasvegi/Elixir-Refactorings?#remove-dead-code)
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -1567,6 +1672,14 @@ ___
 
   These examples are based on code written by José Valim ([@josevalim][jose-valim]). Source: [link][JoseValimExamples]
 
+* __Treatments:__
+
+  * [Default value for an absent key in a Map](https://github.com/lucasvegi/Elixir-Refactorings?#default-value-for-an-absent-key-in-a-map)
+  * [Introduce pattern matching over a parameter](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-pattern-matching-over-a-parameter)
+  * [Simplifying checks by using truthness condition](https://github.com/lucasvegi/Elixir-Refactorings?#simplifying-checks-by-using-truthness-condition)
+  * [Explicit a double boolean negation](https://github.com/lucasvegi/Elixir-Refactorings?#explicit-a-double-boolean-negation)
+  * [Struct field access elimination](https://github.com/lucasvegi/Elixir-Refactorings?#struct-field-access-elimination) |> [Equality guard to pattern matching](https://github.com/lucasvegi/Elixir-Refactorings?#equality-guard-to-pattern-matching)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -1646,6 +1759,11 @@ ___
   ```
 
   These examples are based on code written by José Valim ([@josevalim][jose-valim]). Source: [link][JoseValimExamples]
+
+* __Treatments:__
+
+  * [Introduce pattern matching over a parameter](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-pattern-matching-over-a-parameter)
+  * [Pipeline using "with"](https://github.com/lucasvegi/Elixir-Refactorings?#pipeline-using-with)
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -1742,6 +1860,12 @@ ___
 
   This example is based on the description provided in Elixir's official documentation. Source: [link][ModulesWithIdenticalNamesExample]
 
+* __Treatments:__
+
+  * [Rename an identifier](https://github.com/lucasvegi/Elixir-Refactorings?#rename-an-identifier)
+  * [Introduce a temporary duplicate definition](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-a-temporary-duplicate-definition) |> [Remove dead code](https://github.com/lucasvegi/Elixir-Refactorings?#remove-dead-code)
+  * [Move file](https://github.com/lucasvegi/Elixir-Refactorings?#move-file)
+
 [▲ back to Index](#table-of-contents)
 ___
 
@@ -1799,6 +1923,11 @@ ___
   ```
 
   This example is based on the description provided in Elixir's official documentation. Source: [link][UnnecessaryMacroExample]
+
+* __Treatments:__
+
+  * [Inline macro](https://github.com/lucasvegi/Elixir-Refactorings?#inline-macro)
+  * [Extract function](https://github.com/lucasvegi/Elixir-Refactorings?#extract-function) |> [Moving a definition](https://github.com/lucasvegi/Elixir-Refactorings?#moving-a-definition)
 
 [▲ back to Index](#table-of-contents)
 ___
@@ -1876,6 +2005,12 @@ ___
   Note that in the third use example, when a ``string`` different from an already existing ``atom`` is given, Elixir shows an error instead of performing the conversion. This demonstrates that this refactoring creates a more controlled and predictable scenario for the application in terms of memory usage.
 
   This example and the refactoring are based on the Elixir's official documentation. Sources: [1][to_atom], [2][to_existing_atom]
+
+* __Treatments:__
+
+  * [Extract function](https://github.com/lucasvegi/Elixir-Refactorings?#extract-function) |> [Introduce pattern matching over a parameter](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-pattern-matching-over-a-parameter)
+  * [Folding against a function definition](https://github.com/lucasvegi/Elixir-Refactorings?#folding-against-a-function-definition)
+  * [Introduce a temporary duplicate definition](https://github.com/lucasvegi/Elixir-Refactorings?#introduce-a-temporary-duplicate-definition) |> [Remove dead code](https://github.com/lucasvegi/Elixir-Refactorings?#remove-dead-code)
 
 [▲ back to Index](#table-of-contents)
 
